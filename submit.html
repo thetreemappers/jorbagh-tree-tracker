@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add a Tree · Jor Bagh Tree Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bark:#2c1f14;--bark2:#3d2b1f;--moss:#4a6741;--leaf:#7aab5e;
+  --canopy:#b5d99c;--gold:#c9a84c;--cream:#f5f0e8;--soil:#8b6347;
+  --text:#1e1a14;--border:#d4cbbf;--white:#ffffff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+/* HEADER */
+header{
+  background:var(--bark2);padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:100;
+}
+.back-btn{color:var(--canopy);text-decoration:none;font-size:13px;
+  display:flex;align-items:center;gap:6px;letter-spacing:0.5px;}
+.back-btn:hover{color:var(--gold);}
+header h1{font-family:'Playfair Display',serif;font-size:18px;color:var(--canopy);}
+header h1 span{color:var(--gold);}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,var(--bark) 0%,var(--moss) 100%);
+  padding:28px 20px;text-align:center;color:white;
+}
+.hero-icon{font-size:48px;margin-bottom:8px;}
+.hero h2{font-family:'Playfair Display',serif;font-size:24px;color:var(--canopy);margin-bottom:6px;}
+.hero p{font-size:13px;color:rgba(181,217,156,0.7);max-width:320px;margin:0 auto;}
+
+/* FORM */
+.form-wrap{max-width:560px;margin:0 auto;padding:24px 16px 40px;}
+
+/* GPS CARD */
+.gps-card{
+  background:white;border:2px solid var(--border);border-radius:10px;
+  padding:16px;margin-bottom:20px;text-align:center;
+}
+.gps-card .gps-icon{font-size:28px;margin-bottom:6px;}
+.gps-card h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--bark);margin-bottom:4px;}
+.gps-card p{font-size:12px;color:#888;margin-bottom:12px;}
+.gps-result{
+  background:#f0fae8;border:1px solid #c3e6a0;border-radius:6px;
+  padding:8px 12px;font-size:12px;color:var(--moss);margin-top:8px;
+  display:none;font-weight:500;
+}
+.gps-result.show{display:block;}
+
+/* PHOTO */
+.photo-section{
+  background:white;border:2px dashed var(--border);border-radius:10px;
+  padding:20px;text-align:center;margin-bottom:20px;cursor:pointer;
+  transition:border-color 0.2s;position:relative;
+}
+.photo-section:hover{border-color:var(--moss);}
+.photo-section input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-preview{display:none;width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-top:8px;}
+.photo-preview.show{display:block;}
+.photo-icon{font-size:32px;margin-bottom:6px;}
+.photo-section h3{font-size:14px;font-weight:600;color:var(--bark);margin-bottom:3px;}
+.photo-section p{font-size:12px;color:#888;}
+
+/* FORM GROUPS */
+.section-title{
+  font-family:'Playfair Display',serif;font-size:15px;color:var(--bark);
+  margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  margin-top:4px;
+}
+
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.form-group{margin-bottom:14px;}
+.form-group label{
+  display:block;font-size:11px;font-weight:600;letter-spacing:0.8px;
+  text-transform:uppercase;color:#777;margin-bottom:5px;
+}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:7px;
+  font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--moss);box-shadow:0 0 0 3px rgba(74,103,65,0.1);
+}
+.form-group textarea{resize:vertical;height:72px;}
+
+/* CONDITION PICKER */
+.cond-picker{display:flex;gap:8px;}
+.cond-opt{
+  flex:1;padding:10px 6px;border:2px solid var(--border);border-radius:7px;
+  text-align:center;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.15s;
+}
+.cond-opt:hover{border-color:var(--moss);}
+.cond-opt.selected-good{border-color:#2d6a4f;background:#d4edda;color:#2d6a4f;}
+.cond-opt.selected-fair{border-color:#856404;background:#fff3cd;color:#856404;}
+.cond-opt.selected-poor{border-color:#721c24;background:#f8d7da;color:#721c24;}
+.cond-icon{font-size:18px;display:block;margin-bottom:2px;}
+
+/* SPECIES SUGGESTIONS */
+.suggestions{
+  position:absolute;top:100%;left:0;right:0;background:white;
+  border:1px solid var(--border);border-top:none;border-radius:0 0 7px 7px;
+  z-index:50;max-height:180px;overflow-y:auto;display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+.suggestions.show{display:block;}
+.suggestion-item{padding:9px 12px;cursor:pointer;font-size:13px;transition:background 0.1s;}
+.suggestion-item:hover{background:var(--cream);}
+.suggestion-item .sci{font-style:italic;font-size:11px;color:#888;display:block;}
+.input-wrap{position:relative;}
+
+/* SUBMIT */
+.submit-btn{
+  width:100%;padding:15px;background:var(--moss);color:white;
+  border:none;border-radius:10px;font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.5px;
+  transition:all 0.2s;margin-top:8px;
+}
+.submit-btn:hover{background:var(--bark);transform:translateY(-1px);}
+.submit-btn:active{transform:translateY(0);}
+.submit-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;}
+
+/* SUCCESS */
+#success{display:none;text-align:center;padding:40px 20px;}
+#success .big-icon{font-size:64px;margin-bottom:16px;}
+#success h2{font-family:'Playfair Display',serif;font-size:26px;color:var(--moss);margin-bottom:8px;}
+#success p{color:#666;font-size:14px;margin-bottom:20px;}
+.success-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.sbtn{
+  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;text-decoration:none;border:none;transition:all 0.2s;
+}
+.sbtn-primary{background:var(--moss);color:white;}
+.sbtn-primary:hover{background:var(--bark);}
+.sbtn-secondary{background:white;color:var(--moss);border:2px solid var(--moss);}
+.sbtn-secondary:hover{background:var(--moss);color:white;}
+
+/* TIPS */
+.tip-box{
+  background:linear-gradient(135deg,rgba(74,103,65,0.08),rgba(201,168,76,0.06));
+  border:1px solid rgba(74,103,65,0.2);border-radius:8px;
+  padding:12px 14px;margin-bottom:20px;
+}
+.tip-box h4{font-size:12px;font-weight:600;color:var(--moss);margin-bottom:6px;letter-spacing:0.5px;}
+.tip-box ul{list-style:none;font-size:12px;color:#666;}
+.tip-box ul li{padding:2px 0;}
+.tip-box ul li::before{content:'🌿 ';font-size:10px;}
+
+/* ERROR */
+.field-error{font-size:11px;color:#c0392b;margin-top:3px;display:none;}
+.field-error.show{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html" class="back-btn">← Back to Map</a>
+  <h1>🌳 Add a <span>Tree</span></h1>
+  <div style="width:80px"></div>
+</header>
+
+<div class="hero">
+  <div class="hero-icon">🌱</div>
+  <h2>Log a Tree in Jor Bagh</h2>
+  <p>Every tree you add helps build a living record of our neighbourhood's urban forest</p>
+</div>
+
+<div class="form-wrap">
+
+  <!-- SUCCESS STATE -->
+  <div id="success">
+    <div class="big-icon">🌳</div>
+    <h2>Tree Added!</h2>
+    <p>Thank you for contributing to the Jor Bagh Tree Tracker.<br>Your tree is now live on the map.</p>
+    <div class="success-btns">
+      <a href="index.html" class="sbtn sbtn-primary">View on Map</a>
+      <button class="sbtn sbtn-secondary" onclick="resetForm()">Add Another Tree</button>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div id="form-content">
+
+    <!-- GPS -->
+    <div class="gps-card">
+      <div class="gps-icon">📍</div>
+      <h3>Get Your Location</h3>
+      <p>Stand next to the tree and tap to get exact GPS coordinates</p>
+      <button class="submit-btn" style="margin-top:0;padding:10px" onclick="getGPS()">
+        📡 Use My Current Location
+      </button>
+      <div class="gps-result" id="gps-result">✅ Location captured!</div>
+    </div>
+
+    <!-- PHOTO -->
+    <div class="photo-section" onclick="document.getElementById('photo-input').click()">
+      <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="previewPhoto(this)">
+      <div class="photo-icon">📷</div>
+      <h3>Take a Photo</h3>
+      <p>Photograph leaves, bark, and full tree for best species ID</p>
+      <img class="photo-preview" id="photo-preview" alt="Tree photo">
+    </div>
+
+    <!-- TIPS -->
+    <div class="tip-box">
+      <h4>📚 IDENTIFICATION TIPS FOR JOR BAGH</h4>
+      <ul>
+        <li>Neem — Pinnate leaves, slightly bitter smell</li>
+        <li>Peepal — Heart-shaped leaf with long drip tip</li>
+        <li>Gulmohar — Feathery leaves, red-orange flowers (April-May)</li>
+        <li>Amaltas — Yellow hanging flower clusters right now!</li>
+        <li>Bargad — Aerial roots hanging from branches</li>
+      </ul>
+    </div>
+
+    <!-- SPECIES -->
+    <div class="section-title">Tree Identity</div>
+
+    <div class="form-group">
+      <label>Common Name *</label>
+      <div class="input-wrap">
+        <input type="text" id="common_name" placeholder="e.g. Neem, Peepal, Gulmohar"
+          oninput="showSuggestions(this.value)" autocomplete="off" required>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <div class="field-error" id="err-name">Please enter the tree name</div>
+    </div>
+
+    <div class="form-group">
+      <label>Scientific Name</label>
+      <input type="text" id="scientific_name" placeholder="e.g. Azadirachta indica">
+    </div>
+
+    <!-- LOCATION -->
+    <div class="section-title">Location</div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Latitude *</label>
+        <input type="number" id="latitude" placeholder="28.5921" step="0.0001" required>
+        <div class="field-error" id="err-lat">Required — use GPS button above</div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Longitude *</label>
+        <input type="number" id="longitude" placeholder="77.2197" step="0.0001" required>
+      </div>
+    </div>
+
+    <!-- MEASUREMENTS -->
+    <div class="section-title" style="margin-top:18px">Measurements</div>
+    <div class="form-row">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Trunk Diameter (cm)</label>
+        <input type="number" id="trunk_diameter" placeholder="e.g. 45" min="1" max="500">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Height</label>
+        <select id="height">
+          <option value="Small">Small (&lt;5m)</option>
+          <option value="Medium" selected>Medium (5–15m)</option>
+          <option value="Large">Large (15–25m)</option>
+          <option value="Very Large">Very Large (&gt;25m)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- CONDITION -->
+    <div class="form-group" style="margin-top:14px">
+      <label>Condition</label>
+      <div class="cond-picker">
+        <div class="cond-opt selected-good" onclick="selectCond('Good',this)">
+          <span class="cond-icon">💚</span>Good
+        </div>
+        <div class="cond-opt" onclick="selectCond('Fair',this)">
+          <span class="cond-icon">💛</span>Fair
+        </div>
+        <div class="cond-opt" onclick="selectCond('Poor',this)">
+          <span class="cond-icon">❤️</span>Poor
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTES & NAME -->
+    <div class="section-title">Details</div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="notes" placeholder="Near which gate/landmark? Flowers/fruit visible? Unusual features?"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Your Name</label>
+      <input type="text" id="submitted_by" placeholder="Your name or 'Anonymous'">
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submitTree()">
+      🌳 Add This Tree to the Map
+    </button>
+
+  </div><!-- /form-content -->
+</div>
+
+<script>
+// ── CONFIG — same as index.html ───────────────────────────────
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const USE_SUPABASE = SUPABASE_URL !== 'YOUR_SUPABASE_URL';
+
+// ── SPECIES DATABASE ─────────────────────────────────────────
+const SPECIES_DB = [
+  {common:'Neem',sci:'Azadirachta indica'},
+  {common:'Peepal',sci:'Ficus religiosa'},
+  {common:'Gulmohar',sci:'Delonix regia'},
+  {common:'Jamun',sci:'Syzygium cumini'},
+  {common:'Amaltas',sci:'Cassia fistula'},
+  {common:'Ashoka',sci:'Polyalthia longifolia'},
+  {common:'Arjun',sci:'Terminalia arjuna'},
+  {common:'Pilkhan',sci:'Ficus virens'},
+  {common:'Bargad',sci:'Ficus benghalensis'},
+  {common:'Kadamba',sci:'Neolamarckia cadamba'},
+  {common:'Imli',sci:'Tamarindus indica'},
+  {common:'Mango',sci:'Mangifera indica'},
+  {common:'Moringa',sci:'Moringa oleifera'},
+  {common:'Eucalyptus',sci:'Eucalyptus globulus'},
+  {common:'Laburnum',sci:'Cassia fistula'},
+  {common:'Silk Cotton',sci:'Bombax ceiba'},
+  {common:'Teak',sci:'Tectona grandis'},
+  {common:'Indian Coral',sci:'Erythrina variegata'},
+  {common:'Flame of Forest',sci:'Butea monosperma'},
+  {common:'Chandni',sci:'Tabernaemontana divaricata'},
+];
+
+let selectedCondition = 'Good';
+
+// ── GPS ───────────────────────────────────────────────────────
+function getGPS(){
+  const btn=document.querySelector('.gps-card button');
+  btn.textContent='📡 Getting location...';
+  btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      document.getElementById('latitude').value=pos.coords.latitude.toFixed(6);
+      document.getElementById('longitude').value=pos.coords.longitude.toFixed(6);
+      const res=document.getElementById('gps-result');
+      res.textContent=`✅ ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} (±${Math.round(pos.coords.accuracy)}m)`;
+      res.classList.add('show');
+      btn.textContent='📡 Location Captured ✓';
+    },
+    err=>{
+      btn.textContent='📡 Use My Current Location';
+      btn.disabled=false;
+      alert('Could not get location. Please enter coordinates manually, or enable location in your browser settings.');
+    },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+
+// ── PHOTO PREVIEW ─────────────────────────────────────────────
+function previewPhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const prev=document.getElementById('photo-preview');
+    prev.src=e.target.result;
+    prev.classList.add('show');
+    document.querySelector('.photo-section .photo-icon').style.display='none';
+    document.querySelector('.photo-section h3').textContent='Photo Added ✓';
+    document.querySelector('.photo-section p').textContent='Tap to change photo';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── SPECIES SUGGESTIONS ───────────────────────────────────────
+function showSuggestions(val){
+  const box=document.getElementById('suggestions');
+  if(!val||val.length<1){box.classList.remove('show');return;}
+  const matches=SPECIES_DB.filter(s=>s.common.toLowerCase().includes(val.toLowerCase())||s.sci.toLowerCase().includes(val.toLowerCase()));
+  if(!matches.length){box.classList.remove('show');return;}
+  box.innerHTML=matches.slice(0,6).map(s=>`
+    <div class="suggestion-item" onclick="selectSpecies('${s.common}','${s.sci}')">
+      ${s.common}<span class="sci">${s.sci}</span>
+    </div>
+  `).join('');
+  box.classList.add('show');
+}
+
+function selectSpecies(common,sci){
+  document.getElementById('common_name').value=common;
+  document.getElementById('scientific_name').value=sci;
+  document.getElementById('suggestions').classList.remove('show');
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.input-wrap'))
+    document.getElementById('suggestions').classList.remove('show');
+});
+
+// ── CONDITION ─────────────────────────────────────────────────
+function selectCond(val,el){
+  selectedCondition=val;
+  document.querySelectorAll('.cond-opt').forEach(o=>{
+    o.className='cond-opt';
+  });
+  el.classList.add('selected-'+val.toLowerCase());
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────
+async function submitTree(){
+  // validate
+  let valid=true;
+  const name=document.getElementById('common_name').value.trim();
+  const lat=parseFloat(document.getElementById('latitude').value);
+  const lng=parseFloat(document.getElementById('longitude').value);
+
+  if(!name){document.getElementById('err-name').classList.add('show');valid=false;}
+  else document.getElementById('err-name').classList.remove('show');
+  if(isNaN(lat)||isNaN(lng)){document.getElementById('err-lat').classList.add('show');valid=false;}
+  else document.getElementById('err-lat').classList.remove('show');
+  if(!valid)return;
+
+  const btn=document.getElementById('submit-btn');
+  btn.textContent='🌱 Saving...';
+  btn.disabled=true;
+
+  const tree={
+    common_name:name,
+    scientific_name:document.getElementById('scientific_name').value.trim()||null,
+    latitude:lat,
+    longitude:lng,
+    trunk_diameter:parseInt(document.getElementById('trunk_diameter').value)||30,
+    height:document.getElementById('height').value,
+    condition:selectedCondition,
+    notes:document.getElementById('notes').value.trim()||null,
+    submitted_by:document.getElementById('submitted_by').value.trim()||'Community',
+  };
+
+  if(USE_SUPABASE){
+    try{
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/trees`,{
+        method:'POST',
+        headers:{
+          'apikey':SUPABASE_KEY,
+          'Authorization':'Bearer '+SUPABASE_KEY,
+          'Content-Type':'application/json',
+          'Prefer':'return=minimal'
+        },
+        body:JSON.stringify(tree)
+      });
+      if(!r.ok)throw new Error('Save failed: '+r.status);
+    }catch(e){
+      console.error(e);
+      alert('Could not save to database. Please check your Supabase connection.\n\nError: '+e.message);
+      btn.textContent='🌳 Add This Tree to the Map';
+      btn.disabled=false;
+      return;
+    }
+  }else{
+    // Demo mode — just simulate a save
+    await new Promise(r=>setTimeout(r,800));
+    console.log('Demo mode — tree data:', tree);
+  }
+
+  // Success!
+  document.getElementById('form-content').style.display='none';
+  document.getElementById('success').style.display='block';
+  window.scrollTo(0,0);
+}
+
+function resetForm(){
+  document.getElementById('form-content').style.display='block';
+  document.getElementById('success').style.display='none';
+  document.querySelectorAll('input,textarea').forEach(el=>el.value='');
+  document.getElementById('height').value='Medium';
+  selectedCondition='Good';
+  document.querySelectorAll('.cond-opt').forEach(o=>o.className='cond-opt');
+  document.querySelector('.cond-opt').classList.add('selected-good');
+  document.getElementById('photo-preview').classList.remove('show');
+  document.getElementById('gps-result').classList.remove('show');
+}
+</script>
+</body>
+</html>
