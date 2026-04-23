@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a3a0f">
+<title>Identify a Tree · Jor Bagh</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-deep:#1a3a0f; --green-mid:#2d6a1e; --green:#3d9e2a; --green-light:#6dc94e;
+  --green-pale:#e8f5e0; --gold:#e8b84b; --cream:#f8f4ed; --cream2:#efe9de;
+  --text:#1a2e12; --text2:#4a6b3a; --text3:#8aaa7a; --white:#fff;
+  --shadow:0 4px 20px rgba(26,58,15,0.12); --shadow-lg:0 8px 40px rgba(26,58,15,0.2);
+  --radius:18px; --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,20px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);}
+
+/* HEADER */
+.header {
+  background:linear-gradient(135deg,var(--green-deep),var(--green-mid));
+  padding:calc(var(--safe-top) + 14px) 16px 20px;
+  position:sticky;top:0;z-index:100;
+}
+.header-top{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+.back-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;}
+.back-btn:active{background:rgba(255,255,255,0.25);}
+.header h1{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:white;}
+.header p{font-size:12px;color:rgba(255,255,255,0.6);padding-left:48px;}
+
+/* MAIN */
+.main{padding:16px;max-width:560px;margin:0 auto;padding-bottom:calc(var(--safe-bottom) + 20px);}
+
+/* CAMERA ZONE */
+.camera-zone {
+  background:white;border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);margin-bottom:16px;
+  border:2px dashed #d4cbbf;cursor:pointer;transition:all 0.2s;
+  position:relative;min-height:220px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.camera-zone.has-photo{border-style:solid;border-color:var(--green);}
+.camera-zone:active{border-color:var(--green);background:var(--green-pale);}
+.camera-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.cz-placeholder{text-align:center;padding:30px 20px;pointer-events:none;}
+.cz-icon{font-size:52px;margin-bottom:12px;display:block;}
+.cz-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.cz-sub{font-size:13px;color:var(--text3);line-height:1.5;}
+.cz-hint{display:inline-block;margin-top:10px;background:var(--green-pale);color:var(--green-mid);padding:5px 12px;border-radius:10px;font-size:11px;font-weight:600;}
+
+#photo-preview {
+  width:100%;max-height:320px;object-fit:cover;display:none;
+  border-radius:calc(var(--radius) - 2px);
+}
+#photo-preview.show{display:block;}
+
+.photo-overlay {
+  position:absolute;bottom:10px;right:10px;
+  background:rgba(255,255,255,0.9);border-radius:10px;padding:6px 10px;
+  font-size:11px;font-weight:600;color:var(--green-deep);
+  display:none;gap:5px;align-items:center;backdrop-filter:blur(8px);
+}
+.photo-overlay.show{display:flex;}
+
+/* PHOTO TIPS */
+.tips-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;}
+.tips-row::-webkit-scrollbar{display:none;}
+.tip-chip{flex-shrink:0;background:white;border:1.5px solid var(--cream2);border-radius:12px;padding:8px 12px;text-align:center;font-size:11px;color:var(--text2);box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.tip-chip .ti{font-size:22px;display:block;margin-bottom:3px;}
+.tip-chip.active{border-color:var(--green);background:var(--green-pale);color:var(--green-deep);}
+
+/* IDENTIFY BUTTON */
+.id-btn {
+  width:100%;padding:16px;border:none;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--green),var(--green-mid));
+  color:white;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;box-shadow:0 6px 20px rgba(61,158,42,0.35);
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin-bottom:16px;
+}
+.id-btn:active{transform:scale(0.97);}
+.id-btn:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;}
+
+/* ANALYZING CARD */
+#analyzing-card{display:none;background:white;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin-bottom:16px;text-align:center;}
+#analyzing-card.show{display:block;}
+.analyzing-spinner{width:48px;height:48px;border:3px solid var(--green-pale);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing-step{font-size:13px;color:var(--text3);margin-top:6px;}
+.analyzing-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);font-weight:600;}
+
+/* RESULTS CARD */
+#results-card{display:none;margin-bottom:16px;}
+#results-card.show{display:block;animation:slideUp 0.5s cubic-bezier(.4,0,.2,1);}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.result-hero {
+  background:linear-gradient(135deg,var(--green-deep),var(--green-mid));
+  border-radius:var(--radius) var(--radius) 0 0;
+  padding:20px;position:relative;overflow:hidden;
+}
+.result-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06);}
+.result-hero::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04);}
+.result-source{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px;}
+.result-name{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:white;line-height:1.1;margin-bottom:4px;}
+.result-sci{font-style:italic;font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:14px;}
+
+/* CONFIDENCE BAR */
+.conf-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.conf-label{font-size:11px;color:rgba(255,255,255,0.7);width:70px;flex-shrink:0;}
+.conf-track{flex:1;height:8px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;}
+.conf-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.conf-pct{font-size:13px;font-weight:700;color:white;width:38px;text-align:right;flex-shrink:0;}
+
+.result-body{background:white;border-radius:0 0 var(--radius) var(--radius);padding:16px;box-shadow:var(--shadow);}
+
+.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--cream2);}
+.result-row:last-child{border:none;padding-bottom:0;}
+.rr-label{font-size:11px;color:var(--text3);font-weight:500;}
+.rr-val{font-size:13px;font-weight:600;color:var(--text);text-align:right;max-width:60%;line-height:1.4;}
+
+/* AI NOTE */
+.ai-note{background:var(--green-pale);border-left:3px solid var(--green);border-radius:0 10px 10px 0;padding:10px 14px;margin:12px 0;font-size:13px;color:var(--green-deep);line-height:1.6;}
+
+/* ALTERNATIVES */
+.alt-section{margin-top:12px;}
+.alt-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+.alt-card{background:var(--cream);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.15s;border:1.5px solid transparent;}
+.alt-card:active{border-color:var(--green);background:var(--green-pale);}
+.alt-emoji{font-size:28px;flex-shrink:0;}
+.alt-body{flex:1;}
+.alt-name{font-size:14px;font-weight:600;color:var(--text);}
+.alt-sci{font-style:italic;font-size:11px;color:var(--text3);}
+.alt-conf{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--green-mid);flex-shrink:0;}
+
+/* ACTION BUTTONS */
+.action-row{display:flex;gap:10px;margin-top:16px;}
+.action-btn{flex:1;padding:13px 8px;border-radius:14px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.action-btn:active{transform:scale(0.97);}
+.action-btn-primary{background:var(--green);color:white;box-shadow:0 4px 14px rgba(61,158,42,0.3);}
+.action-btn-secondary{background:white;color:var(--text2);border:1.5px solid var(--cream2);box-shadow:var(--shadow);}
+
+/* COMMUNITY VERIFY */
+.verify-card{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:16px;display:none;}
+.verify-card.show{display:block;animation:slideUp 0.4s ease;}
+.verify-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.verify-sub{font-size:12px;color:var(--text3);margin-bottom:14px;}
+.verify-btns{display:flex;gap:8px;}
+.vbtn{flex:1;padding:10px 6px;border-radius:12px;border:2px solid var(--cream2);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.2s;}
+.vbtn .vi{font-size:20px;display:block;margin-bottom:3px;}
+.vbtn:active{transform:scale(0.95);}
+.vbtn.agree{border-color:var(--green);background:#dcf5d0;color:#2d6a1e;}
+.vbtn.unsure{border-color:var(--gold);background:#fef3cd;color:#8a6400;}
+.vbtn.disagree{border-color:#c0392b;background:#fde8e8;color:#c0392b;}
+
+/* RETAKE */
+.retake-btn{width:100%;padding:13px;border:1.5px solid var(--cream2);border-radius:var(--radius);background:white;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;}
+.retake-btn:active{background:var(--cream2);}
+
+/* ERROR */
+#error-card{display:none;background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;text-align:center;}
+#error-card.show{display:block;}
+.err-icon{font-size:40px;margin-bottom:10px;}
+.err-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);margin-bottom:6px;}
+.err-msg{font-size:13px;color:var(--text3);line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <h1>🔬 Identify a Tree</h1>
+  </div>
+  <p>Take a photo — AI will identify the species instantly</p>
+</div>
+
+<div class="main">
+
+  <!-- PHOTO TIPS -->
+  <div class="tips-row">
+    <div class="tip-chip active" id="tip-leaves" onclick="selectTip(this,'leaves')">
+      <span class="ti">🍃</span>Leaves
+    </div>
+    <div class="tip-chip" id="tip-bark" onclick="selectTip(this,'bark')">
+      <span class="ti">🪵</span>Bark
+    </div>
+    <div class="tip-chip" id="tip-flower" onclick="selectTip(this,'flower')">
+      <span class="ti">🌸</span>Flower
+    </div>
+    <div class="tip-chip" id="tip-fruit" onclick="selectTip(this,'fruit')">
+      <span class="ti">🍋</span>Fruit/Pod
+    </div>
+    <div class="tip-chip" id="tip-whole" onclick="selectTip(this,'whole')">
+      <span class="ti">🌳</span>Full Tree
+    </div>
+  </div>
+
+  <!-- CAMERA ZONE -->
+  <div class="camera-zone" id="camera-zone" onclick="document.getElementById('photo-input').click()">
+    <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
+    <div class="cz-placeholder" id="cz-placeholder">
+      <span class="cz-icon">📷</span>
+      <div class="cz-title">Take a Photo</div>
+      <div class="cz-sub">Point at leaves, bark, flowers or the full tree for best results</div>
+      <span class="cz-hint">📍 Best in daylight, close up</span>
+    </div>
+    <img id="photo-preview" alt="Tree photo">
+    <div class="photo-overlay" id="photo-overlay">✅ Photo ready</div>
+  </div>
+
+  <!-- IDENTIFY BUTTON -->
+  <button class="id-btn" id="id-btn" onclick="identifyTree()" disabled>
+    🔬 Identify This Tree
+  </button>
+
+  <!-- ANALYZING -->
+  <div id="analyzing-card">
+    <div class="analyzing-spinner"></div>
+    <div class="analyzing-title">Analysing your photo...</div>
+    <div class="analyzing-step" id="analyzing-step">Connecting to PlantNet AI...</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="error-card">
+    <div class="err-icon">🌿</div>
+    <div class="err-title">Couldn't identify</div>
+    <div class="err-msg" id="error-msg">Try a clearer photo of the leaves or bark in good light.</div>
+    <button class="retake-btn" style="margin-top:14px" onclick="resetAll()">📷 Try Again</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-card">
+    <div class="result-hero">
+      <div class="result-source" id="result-source">IDENTIFIED BY PLANTNET AI</div>
+      <div class="result-name" id="result-name">—</div>
+      <div class="result-sci" id="result-sci">—</div>
+      <div class="conf-row">
+        <div class="conf-label">Confidence</div>
+        <div class="conf-track"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+        <div class="conf-pct" id="conf-pct">—</div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="result-row">
+        <div class="rr-label">Family</div>
+        <div class="rr-val" id="r-family">—</div>
+      </div>
+      <div class="result-row">
+        <div class="rr-label">Common in Jor Bagh</div>
+        <div class="rr-val" id="r-common">—</div>
+      </div>
+      <div class="result-row">
+        <div class="rr-label">What you photographed</div>
+        <div class="rr-val" id="r-organ">—</div>
+      </div>
+      <div class="ai-note" id="r-note" style="display:none"></div>
+
+      <!-- ALTERNATIVES -->
+      <div class="alt-section" id="alt-section" style="display:none">
+        <div class="alt-title">Other Possibilities</div>
+        <div id="alt-list"></div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="action-row">
+        <button class="action-btn action-btn-primary" onclick="useThisID()">
+          ✅ Use This ID
+        </button>
+        <button class="action-btn action-btn-secondary" onclick="resetAll()">
+          📷 Retake
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMUNITY VERIFY -->
+  <div class="verify-card" id="verify-card">
+    <div class="verify-title">🤝 Community Verification</div>
+    <div class="verify-sub">Help others by confirming or questioning this ID</div>
+    <div class="verify-btns">
+      <div class="vbtn agree" onclick="vote('agree',this)">
+        <span class="vi">✅</span>Agree
+      </div>
+      <div class="vbtn unsure" onclick="vote('unsure',this)">
+        <span class="vi">🤔</span>Not Sure
+      </div>
+      <div class="vbtn disagree" onclick="vote('disagree',this)">
+        <span class="vi">❌</span>Disagree
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+// Get your free PlantNet API key at: https://my.plantnet.org
+const PLANTNET_KEY = 'YOUR_PLANTNET_API_KEY';
+// Anthropic API key for Claude fallback
+const ANTHROPIC_KEY = 'YOUR_ANTHROPIC_API_KEY';
+
+// ── SPECIES KNOWLEDGE BASE (common Jor Bagh trees) ───────────
+const TREE_KB = {
+  'Azadirachta indica':   { common:'Neem',     emoji:'🌿', family:'Meliaceae',     inJorBagh:true,  hindi:'Neem (नीम)',      note:'Very common in Jor Bagh. Recognised by pinnate leaves with toothed leaflets and distinctive bitter smell.' },
+  'Ficus religiosa':      { common:'Peepal',   emoji:'🍀', family:'Moraceae',      inJorBagh:true,  hindi:'Peepal (पीपल)',   note:'Sacred fig tree. The long drip-tip on the heart-shaped leaf is unmistakable. Often found near temples and shrines.' },
+  'Delonix regia':        { common:'Gulmohar', emoji:'🌸', family:'Fabaceae',      inJorBagh:true,  hindi:'Gulmohar (गुलमोहर)', note:'Spectacular red-orange flowers in April–June. Feathery bipinnate leaves. One of Delhi\'s most beautiful street trees.' },
+  'Syzygium cumini':      { common:'Jamun',    emoji:'🫐', family:'Myrtaceae',     inJorBagh:true,  hindi:'Jamun (जामुन)',   note:'Dark purple berries in summer. Oval, glossy leaves. The fruit is edible and much loved.' },
+  'Cassia fistula':       { common:'Amaltas',  emoji:'🌻', family:'Fabaceae',      inJorBagh:true,  hindi:'Amaltas (अमलतास)', note:'Golden shower tree. Hanging clusters of bright yellow flowers in May. Long brown seed pods visible year-round.' },
+  'Ficus benghalensis':   { common:'Bargad',   emoji:'🌳', family:'Moraceae',      inJorBagh:true,  hindi:'Bargad (बरगद)',   note:'National tree of India. Recognisable by aerial prop roots hanging from branches. Can spread to enormous size.' },
+  'Polyalthia longifolia':{ common:'Ashoka',   emoji:'🌲', family:'Annonaceae',    inJorBagh:true,  hindi:'Ashoka (अशोका)',  note:'Tall, narrow columnar shape. Wavy, lance-shaped leaves. Often planted along roadsides as a wind-break.' },
+  'Terminalia arjuna':    { common:'Arjun',    emoji:'🪵', family:'Combretaceae',  inJorBagh:true,  hindi:'Arjun (अर्जुन)',   note:'Distinctive buttressed trunk. Pale green oblong leaves. Traditionally found near water. Medicinal properties.' },
+  'Ficus virens':         { common:'Pilkhan',  emoji:'🍃', family:'Moraceae',      inJorBagh:true,  hindi:'Pilkhan (पिलखन)', note:'Large spreading shade tree. Similar to Peepal but with different leaf shape. Common in Delhi\'s older neighbourhoods.' },
+  'Mangifera indica':     { common:'Mango',    emoji:'🥭', family:'Anacardiaceae', inJorBagh:false, hindi:'Aam (आम)',         note:'India\'s national fruit. Long lance-shaped leaves, reddish when young. Heavenly fruit in summer!' },
+  'Tamarindus indica':    { common:'Imli',     emoji:'🟤', family:'Fabaceae',      inJorBagh:false, hindi:'Imli (इमली)',      note:'Feathery pinnate leaves that close at night. Long brown pods with tangy pulp. Ancient, spreading canopy.' },
+};
+
+let selectedPhotoBase64 = null;
+let selectedPhotoType = null;
+let selectedOrgan = 'leaf';
+let currentResult = null;
+
+// ── TIP SELECTION ─────────────────────────────────────────────
+const organMap = { leaves:'leaf', bark:'bark', flower:'flower', fruit:'fruit', whole:'auto' };
+function selectTip(el, type) {
+  document.querySelectorAll('.tip-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedOrgan = organMap[type] || 'auto';
+}
+
+// ── PHOTO HANDLING ────────────────────────────────────────────
+function onPhotoSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    selectedPhotoBase64 = dataUrl.split(',')[1];
+    selectedPhotoType = file.type;
+    const prev = document.getElementById('photo-preview');
+    prev.src = dataUrl;
+    prev.classList.add('show');
+    document.getElementById('cz-placeholder').style.display = 'none';
+    document.getElementById('photo-overlay').classList.add('show');
+    document.getElementById('camera-zone').classList.add('has-photo');
+    document.getElementById('id-btn').disabled = false;
+    // hide previous results
+    hideResults();
+  };
+  reader.readAsDataURL(file);
+}
+
+function hideResults() {
+  document.getElementById('results-card').classList.remove('show');
+  document.getElementById('results-card').style.display = 'none';
+  document.getElementById('verify-card').classList.remove('show');
+  document.getElementById('error-card').classList.remove('show');
+  document.getElementById('analyzing-card').classList.remove('show');
+}
+
+// ── MAIN IDENTIFY FUNCTION ────────────────────────────────────
+async function identifyTree() {
+  if (!selectedPhotoBase64) return;
+  const btn = document.getElementById('id-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Analysing...';
+  hideResults();
+  document.getElementById('analyzing-card').classList.add('show');
+
+  let result = null;
+
+  // Step 1: Try PlantNet
+  setStep('🌿 Asking PlantNet plant AI...');
+  if (PLANTNET_KEY !== 'YOUR_PLANTNET_API_KEY') {
+    result = await tryPlantNet();
+  }
+
+  // Step 2: Fall back to Claude if PlantNet fails or not configured
+  if (!result) {
+    setStep('🤖 Asking Claude AI for identification...');
+    result = await tryClaude();
+  }
+
+  // Step 3: Show results or error
+  document.getElementById('analyzing-card').classList.remove('show');
+  btn.disabled = false;
+  btn.innerHTML = '🔬 Identify This Tree';
+
+  if (result) {
+    showResults(result);
+  } else {
+    document.getElementById('error-card').classList.add('show');
+  }
+}
+
+function setStep(msg) {
+  document.getElementById('analyzing-step').textContent = msg;
+}
+
+// ── PLANTNET API ──────────────────────────────────────────────
+async function tryPlantNet() {
+  try {
+    setStep('🌿 Sending photo to PlantNet AI...');
+    const resp = await fetch('/api/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service: 'plantnet',
+        imageBase64: selectedPhotoBase64,
+        imageType: selectedPhotoType || 'image/jpeg',
+        organ: selectedOrgan || 'leaf'
+      })
+    });
+    if (!resp.ok) throw new Error('Proxy error: ' + resp.status);
+    const json = await resp.json();
+    if (!json.success || !json.data?.results?.length) return null;
+
+    setStep('✅ PlantNet identified the tree!');
+    const data = json.data;
+    const top = data.results[0];
+    const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
+    const confidence = Math.round((top.score || 0) * 100);
+    const kb = TREE_KB[sciName] || {};
+    const commonName = kb.common || top.species?.commonNames?.[0] || sciName;
+
+    const alternatives = data.results.slice(1, 4).map(r => ({
+      name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
+      sci: r.species?.scientificNameWithoutAuthor,
+      conf: Math.round((r.score || 0) * 100),
+      emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji || '🌿'
+    }));
+
+    return {
+      source: 'PLANTNET AI',
+      common: commonName,
+      sci: sciName,
+      confidence,
+      family: top.species?.family?.scientificNameWithoutAuthor || kb.family || '—',
+      inJorBagh: kb.inJorBagh ? '✅ Yes, common here' : '❓ Less common',
+      hindi: kb.hindi || '—',
+      note: kb.note || null,
+      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+      alternatives
+    };
+  } catch(e) {
+    console.warn('PlantNet failed:', e.message);
+    return null;
+  }
+}
+
+// ── CLAUDE AI FALLBACK ────────────────────────────────────────
+async function tryClaude() {
+  try {
+    setStep('🤖 Claude AI is examining your photo...');
+    const resp = await fetch('/api/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service: 'claude',
+        imageBase64: selectedPhotoBase64,
+        imageType: selectedPhotoType || 'image/jpeg',
+        organ: selectedOrgan || 'leaf'
+      })
+    });
+    if (!resp.ok) throw new Error('Proxy error: ' + resp.status);
+    const json = await resp.json();
+    if (!json.success || !json.data) return null;
+
+    setStep('✅ Claude identified the tree!');
+    const parsed = json.data;
+    if (!parsed.common_name || parsed.confidence < 20) return null;
+    const kb = TREE_KB[parsed.scientific_name] || {};
+
+    return {
+      source: 'CLAUDE AI',
+      common: parsed.common_name,
+      sci: parsed.scientific_name,
+      confidence: parsed.confidence,
+      family: parsed.family || kb.family || '—',
+      inJorBagh: parsed.in_jor_bagh ? '✅ Yes, common here' : '❓ Less common',
+      hindi: parsed.hindi_name || kb.hindi || '—',
+      note: parsed.identification_notes,
+      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+      alternatives: (parsed.alternatives || []).map(a => ({
+        name: a.common, sci: a.sci, conf: a.confidence,
+        emoji: TREE_KB[a.sci]?.emoji || '🌿'
+      }))
+    };
+  } catch(e) {
+    console.warn('Claude failed:', e.message);
+    return null;
+  }
+}
+
+// ── SHOW RESULTS ──────────────────────────────────────────────
+function showResults(r) {
+  currentResult = r;
+
+  document.getElementById('result-source').textContent = `IDENTIFIED BY ${r.source}`;
+  document.getElementById('result-name').textContent = r.common;
+  document.getElementById('result-sci').textContent = r.sci;
+  document.getElementById('conf-pct').textContent = r.confidence + '%';
+
+  // confidence bar color
+  const fill = document.getElementById('conf-fill');
+  const color = r.confidence > 75 ? '#6dc94e' : r.confidence > 50 ? '#e8b84b' : '#e07040';
+  fill.style.background = color;
+  setTimeout(() => { fill.style.width = r.confidence + '%'; }, 100);
+
+  document.getElementById('r-family').textContent = r.family;
+  document.getElementById('r-common').textContent = r.inJorBagh;
+  document.getElementById('r-organ').textContent = r.organ;
+
+  const noteEl = document.getElementById('r-note');
+  if (r.note) { noteEl.textContent = r.note; noteEl.style.display = 'block'; }
+  else noteEl.style.display = 'none';
+
+  // alternatives
+  const altSection = document.getElementById('alt-section');
+  const altList = document.getElementById('alt-list');
+  if (r.alternatives && r.alternatives.length > 0) {
+    altSection.style.display = 'block';
+    altList.innerHTML = r.alternatives.map(a => `
+      <div class="alt-card" onclick="selectAlternative('${a.name}','${a.sci}',${a.conf})">
+        <div class="alt-emoji">${a.emoji}</div>
+        <div class="alt-body">
+          <div class="alt-name">${a.name || a.sci}</div>
+          <div class="alt-sci">${a.sci}</div>
+        </div>
+        <div class="alt-conf">${a.conf}%</div>
+      </div>
+    `).join('');
+  } else {
+    altSection.style.display = 'none';
+  }
+
+  document.getElementById('results-card').style.display = 'block';
+  setTimeout(() => document.getElementById('results-card').classList.add('show'), 10);
+  document.getElementById('verify-card').classList.add('show');
+
+  // scroll to results
+  setTimeout(() => document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'start' }), 200);
+}
+
+function selectAlternative(name, sci, conf) {
+  if (!currentResult) return;
+  currentResult.common = name;
+  currentResult.sci = sci;
+  currentResult.confidence = conf;
+  const kb = TREE_KB[sci] || {};
+  currentResult.family = kb.family || '—';
+  currentResult.inJorBagh = kb.inJorBagh ? '✅ Yes, common here' : '❓ Less common';
+  currentResult.hindi = kb.hindi || '—';
+  currentResult.note = kb.note || null;
+  showResults(currentResult);
+}
+
+// ── USE THIS ID ───────────────────────────────────────────────
+function useThisID() {
+  if (!currentResult) return;
+  // Pass data to app.html add form via URL params
+  const params = new URLSearchParams({
+    common: currentResult.common,
+    sci: currentResult.sci,
+    conf: currentResult.confidence
+  });
+  window.location.href = `app.html?identify=1&${params.toString()}`;
+}
+
+// ── COMMUNITY VOTE ────────────────────────────────────────────
+function vote(type, el) {
+  document.querySelectorAll('.vbtn').forEach(b => {
+    b.style.opacity = '0.4';
+    b.style.transform = 'scale(0.95)';
+  });
+  el.style.opacity = '1';
+  el.style.transform = 'scale(1.05)';
+  const msgs = {
+    agree: '✅ Thanks! Your agreement helps confirm this ID.',
+    unsure: '🤔 Noted. More photos from different angles may help.',
+    disagree: '❌ Thanks for flagging! Try retaking with a clearer photo.'
+  };
+  setTimeout(() => {
+    document.getElementById('verify-card').innerHTML = `
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:32px;margin-bottom:8px">${type==='agree'?'✅':type==='unsure'?'🤔':'❌'}</div>
+        <div style="font-family:'Fraunces',serif;font-size:16px;color:var(--text);margin-bottom:4px">Feedback recorded!</div>
+        <div style="font-size:13px;color:var(--text3)">${msgs[type]}</div>
+      </div>`;
+  }, 400);
+}
+
+// ── RESET ─────────────────────────────────────────────────────
+function resetAll() {
+  selectedPhotoBase64 = null;
+  document.getElementById('photo-preview').classList.remove('show');
+  document.getElementById('photo-preview').src = '';
+  document.getElementById('cz-placeholder').style.display = 'block';
+  document.getElementById('photo-overlay').classList.remove('show');
+  document.getElementById('camera-zone').classList.remove('has-photo');
+  document.getElementById('photo-input').value = '';
+  document.getElementById('id-btn').disabled = true;
+  hideResults();
+  currentResult = null;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── CHECK FOR PRE-FILLED DATA FROM app.html ───────────────────
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  // If came back from identify with result — nothing to do, form already has data
+});
+</script>
+</body>
+</html>
