@@ -157,12 +157,52 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(245,240,228
   .form-header{padding:18px 20px;}
   .tips-panel{padding:16px 20px;}
 }
+
+/* ── LOGO ── */
+.nav-logo, .nav-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1px !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+}
+.logo-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+.logo-main .logo-name { color: #5aad3f; }
+.logo-main .logo-tracker { color: #c9a84c; }
+.logo-tagline {
+  font-family: 'DM Sans', 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #8b6347;
+  padding-left: 32px;
+  margin-top: 1px;
+}
+
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="website.html" class="nav-logo">🌳 The Tree <em>Mappers</em></a>
+  <a href="index.html" class="nav-logo nav-brand">
+    <div class="logo-main">
+      <span style="font-size:22px;line-height:1">🌳</span>
+      <span class="logo-name">Jor Bagh</span>
+      <span class="logo-tracker">Tree Tracker</span>
+    </div>
+    <div class="logo-tagline">New Delhi Urban Forest Map</div>
+  </a>
   <a href="website.html" class="nav-back">← Back to Map</a>
 </nav>
 

@@ -165,6 +165,39 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
 .err-icon{font-size:40px;margin-bottom:10px;}
 .err-title{font-family:'Fraunces',serif;font-size:18px;color:var(--text);margin-bottom:6px;}
 .err-msg{font-size:13px;color:var(--text3);line-height:1.5;}
+
+/* ── LOGO ── */
+.nav-logo, .nav-brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1px !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+}
+.logo-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.2px;
+}
+.logo-main .logo-name { color: #5aad3f; }
+.logo-main .logo-tracker { color: #c9a84c; }
+.logo-tagline {
+  font-family: 'DM Sans', 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #8b6347;
+  padding-left: 32px;
+  margin-top: 1px;
+}
+
 </style>
 </head>
 <body>
@@ -402,28 +435,25 @@ function setStep(msg) {
 // ── PLANTNET API ──────────────────────────────────────────────
 async function tryPlantNet() {
   try {
-    setStep('🌿 Sending photo to PlantNet AI...');
-    const resp = await fetch('/api/identify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service: 'plantnet',
-        imageBase64: selectedPhotoBase64,
-        imageType: selectedPhotoType || 'image/jpeg',
-        organ: selectedOrgan || 'leaf'
-      })
-    });
-    if (!resp.ok) throw new Error('Proxy error: ' + resp.status);
-    const json = await resp.json();
-    if (!json.success || !json.data?.results?.length) return null;
+    setStep('🌿 Sending photo to PlantNet...');
+    const blob = await (await fetch(`data:${selectedPhotoType};base64,${selectedPhotoBase64}`)).blob();
+    const formData = new FormData();
+    formData.append('images', blob, 'tree.jpg');
+    formData.append('organs', selectedOrgan);
 
-    setStep('✅ PlantNet identified the tree!');
-    const data = json.data;
+    const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_KEY}&nb-results=5&lang=en`;
+    const resp = await fetch(url, { method:'POST', body:formData });
+    if (!resp.ok) throw new Error('PlantNet error: ' + resp.status);
+    const data = await resp.json();
+
+    if (!data.results || data.results.length === 0) return null;
+
+    setStep('✅ PlantNet responded! Processing results...');
     const top = data.results[0];
     const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
     const confidence = Math.round((top.score || 0) * 100);
     const kb = TREE_KB[sciName] || {};
-    const commonName = kb.common || top.species?.commonNames?.[0] || sciName;
+    const commonName = kb.common || top.species?.commonNames?.[0] || sciName.split(' ')[1];
 
     const alternatives = data.results.slice(1, 4).map(r => ({
       name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
@@ -445,7 +475,7 @@ async function tryPlantNet() {
       alternatives
     };
   } catch(e) {
-    console.warn('PlantNet failed:', e.message);
+    console.warn('PlantNet failed:', e);
     return null;
   }
 }
@@ -454,23 +484,55 @@ async function tryPlantNet() {
 async function tryClaude() {
   try {
     setStep('🤖 Claude AI is examining your photo...');
-    const resp = await fetch('/api/identify', {
+    const prompt = `You are an expert botanist specialising in Indian trees, especially those found in Delhi and Jor Bagh neighbourhood.
+
+A user has taken a photo of a tree (specifically the ${selectedOrgan === 'auto' ? 'plant' : selectedOrgan}) and wants you to identify it.
+
+Please respond with ONLY a JSON object in this exact format (no markdown, no explanation outside JSON):
+{
+  "common_name": "Common English name",
+  "hindi_name": "Hindi name with Devanagari",
+  "scientific_name": "Genus species",
+  "family": "Plant family",
+  "confidence": 85,
+  "in_jor_bagh": true,
+  "identification_notes": "2-3 sentences explaining what features suggest this species and what to look for to confirm",
+  "alternatives": [
+    {"common": "Alternative 1", "sci": "Scientific name", "confidence": 45},
+    {"common": "Alternative 2", "sci": "Scientific name", "confidence": 25}
+  ]
+}
+
+Be honest about confidence. If you cannot identify it, set confidence below 30.`;
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        service: 'claude',
-        imageBase64: selectedPhotoBase64,
-        imageType: selectedPhotoType || 'image/jpeg',
-        organ: selectedOrgan || 'leaf'
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: selectedPhotoType || 'image/jpeg', data: selectedPhotoBase64 }
+            },
+            { type: 'text', text: prompt }
+          ]
+        }]
       })
     });
-    if (!resp.ok) throw new Error('Proxy error: ' + resp.status);
-    const json = await resp.json();
-    if (!json.success || !json.data) return null;
+
+    if (!resp.ok) throw new Error('Claude error');
+    const data = await resp.json();
+    const text = data.content?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    if (!parsed.common_name || parsed.confidence < 20) return null;
 
     setStep('✅ Claude identified the tree!');
-    const parsed = json.data;
-    if (!parsed.common_name || parsed.confidence < 20) return null;
     const kb = TREE_KB[parsed.scientific_name] || {};
 
     return {
@@ -489,7 +551,7 @@ async function tryClaude() {
       }))
     };
   } catch(e) {
-    console.warn('Claude failed:', e.message);
+    console.warn('Claude failed:', e);
     return null;
   }
 }
