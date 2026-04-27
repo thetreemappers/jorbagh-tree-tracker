@@ -311,26 +311,51 @@ img { display: block; max-width: 100%; }
 /* MAP POPUP */
 .tree-popup-card {
   position: absolute; bottom: 28px; left: 28px; z-index: 500;
-  background: white; border-radius: 18px; width: 290px;
+  background: white; border-radius: 20px; width: 320px;
   overflow: hidden; box-shadow: var(--shadow-lg);
-  transform: translateY(12px); opacity: 0;
-  transition: all .32s cubic-bezier(.4,0,.2,1);
+  transform: translateY(16px); opacity: 0;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
   pointer-events: none; display: none;
 }
 .tree-popup-card.open { transform: translateY(0); opacity: 1; pointer-events: all; display: block; }
-.tpc-photo { width: 100%; height: 140px; object-fit: cover; display: none; }
-.tpc-photo.show { display: block; }
-.tpc-head { background: var(--sage-dark); padding: 14px 16px; position: relative; }
-.tpc-close { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* Photo hero */
+.tpc-photo-wrap { position: relative; display: none; }
+.tpc-photo-wrap.show { display: block; }
+.tpc-photo { width: 100%; height: 200px; object-fit: cover; display: block; }
+.tpc-photo-gradient {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%);
+}
+.tpc-photo-info {
+  position: absolute; bottom: 14px; left: 14px; right: 40px;
+}
+.tpc-photo-tag { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 3px; }
+.tpc-photo-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: white; line-height: 1.1; }
+.tpc-photo-sci { font-style: italic; font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+/* Text header (no photo) */
+.tpc-head { background: var(--sage-dark); padding: 16px 16px; position: relative; display: none; }
+.tpc-head.show { display: block; }
+.tpc-close {
+  position: absolute; top: 10px; right: 10px; width: 28px; height: 28px;
+  border-radius: 50%; background: rgba(255,255,255,0.15); border: none;
+  color: white; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; transition: background .2s;
+}
+.tpc-close:hover { background: rgba(255,255,255,0.25); }
 .tpc-tag { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--lime); margin-bottom: 4px; }
 .tpc-name { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: white; }
 .tpc-sci { font-style: italic; font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
 .tpc-body { padding: 14px 16px; }
 .tpc-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
 .tpc-row:last-child { border: none; }
 .tpc-row span:first-child { color: var(--text3); }
 .tpc-row span:last-child { font-weight: 600; }
 .tpc-note { font-size: 12px; color: var(--text2); background: var(--mist); border-radius: 8px; padding: 9px 11px; margin-top: 10px; line-height: 1.5; }
+.tpc-by { font-size: 11px; color: var(--text3); margin-top: 10px; display: flex; align-items: center; gap: 4px; }
 
 /* MAP SIDEBAR */
 .map-sidebar {
@@ -682,19 +707,34 @@ footer {
     <div id="main-map">
       <!-- Tree popup -->
       <div class="tree-popup-card" id="tree-popup">
-        <button class="tpc-close" onclick="closePopup()">✕</button>
-        <img class="tpc-photo" id="tpc-photo">
-        <div class="tpc-head">
+
+        <!-- Close button (always visible) -->
+        <button class="tpc-close" onclick="closePopup()" style="position:absolute;top:10px;right:10px;z-index:20">✕</button>
+
+        <!-- Photo hero (shown when photo exists) -->
+        <div class="tpc-photo-wrap" id="tpc-photo-wrap">
+          <img class="tpc-photo" id="tpc-photo" alt="Tree photo">
+          <div class="tpc-photo-gradient"></div>
+          <div class="tpc-photo-info">
+            <div class="tpc-photo-tag" id="tpc-tag-photo">🌳 Tree</div>
+            <div class="tpc-photo-name" id="tpc-name-photo">—</div>
+            <div class="tpc-photo-sci" id="tpc-sci-photo"></div>
+          </div>
+        </div>
+
+        <!-- Text header (shown when no photo) -->
+        <div class="tpc-head" id="tpc-head">
           <div class="tpc-tag" id="tpc-tag">🌳 Tree</div>
           <div class="tpc-name" id="tpc-name">—</div>
           <div class="tpc-sci" id="tpc-sci"></div>
         </div>
+
         <div class="tpc-body">
           <div class="tpc-row"><span>Trunk diameter</span><span id="tpc-diam">—</span></div>
           <div class="tpc-row"><span>Height</span><span id="tpc-height">—</span></div>
           <div class="tpc-row"><span>Condition</span><span id="tpc-cond">—</span></div>
-          <div class="tpc-row"><span>Added by</span><span id="tpc-by">—</span></div>
           <div class="tpc-note" id="tpc-note" style="display:none"></div>
+          <div class="tpc-by" id="tpc-by-wrap" style="display:none">🌱 <span id="tpc-by"></span></div>
         </div>
       </div>
     </div>
@@ -919,20 +959,53 @@ function renderMarkers(trees) {
 
 // ── POPUP ─────────────────────────────────────────────
 function showPopup(t) {
-  document.getElementById('tpc-tag').textContent = ge(t.common_name) + ' ' + t.common_name;
-  document.getElementById('tpc-name').textContent = t.common_name;
-  document.getElementById('tpc-sci').textContent = t.scientific_name || '';
+  const hasPhoto = !!t.photo_url;
+  const photoWrap = document.getElementById('tpc-photo-wrap');
+  const textHead = document.getElementById('tpc-head');
+
+  if (hasPhoto) {
+    // Show photo hero
+    const ph = document.getElementById('tpc-photo');
+    ph.src = t.photo_url;
+    ph.onerror = () => {
+      photoWrap.classList.remove('show');
+      textHead.classList.add('show');
+    };
+    photoWrap.classList.add('show');
+    textHead.classList.remove('show');
+    // Name on photo
+    document.getElementById('tpc-tag-photo').textContent = ge(t.common_name) + ' ' + t.common_name;
+    document.getElementById('tpc-name-photo').textContent = t.common_name;
+    document.getElementById('tpc-sci-photo').textContent = t.scientific_name || '';
+  } else {
+    // No photo — show text header
+    photoWrap.classList.remove('show');
+    textHead.classList.add('show');
+    document.getElementById('tpc-tag').textContent = ge(t.common_name) + ' ' + t.common_name;
+    document.getElementById('tpc-name').textContent = t.common_name;
+    document.getElementById('tpc-sci').textContent = t.scientific_name || '';
+  }
+
+  // Details
   document.getElementById('tpc-diam').textContent = (t.trunk_diameter||'?') + ' cm';
   document.getElementById('tpc-height').textContent = t.height || 'Medium';
   document.getElementById('tpc-cond').textContent = t.condition || 'Good';
-  document.getElementById('tpc-by').textContent = t.submitted_by || 'Community';
+
+  // Notes
   const ne = document.getElementById('tpc-note');
-  if (t.notes) { ne.textContent = t.notes; ne.style.display = 'block'; } else ne.style.display = 'none';
-  const ph = document.getElementById('tpc-photo');
-  if (t.photo_url) { ph.src = t.photo_url; ph.classList.add('show'); ph.onerror = () => ph.classList.remove('show'); }
-  else ph.classList.remove('show');
+  if (t.notes) { ne.textContent = t.notes; ne.style.display = 'block'; }
+  else ne.style.display = 'none';
+
+  // Who added it
+  const byWrap = document.getElementById('tpc-by-wrap');
+  if (t.submitted_by) {
+    document.getElementById('tpc-by').textContent = t.submitted_by;
+    byWrap.style.display = 'flex';
+  } else byWrap.style.display = 'none';
+
   document.getElementById('tree-popup').classList.add('open');
   mainMap.panTo([t.latitude, t.longitude]);
+
   // Highlight sidebar
   document.querySelectorAll('.msb-item').forEach(el => el.classList.remove('active'));
   const si = document.getElementById('si-' + t.id);
