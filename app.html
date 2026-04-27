@@ -251,6 +251,7 @@ html,body{height:100%;width:100%;overflow:hidden;position:fixed;background:var(-
   <div id="tree-sheet">
     <div class="sheet-drag"></div>
     <div class="sheet-body">
+      <img id="sh-photo" style="width:100%;max-height:200px;object-fit:cover;border-radius:14px;margin-bottom:12px;display:none;" alt="Tree photo">
       <div class="sheet-badge" id="sh-badge">🌳 Tree</div>
       <div class="sheet-name" id="sh-name"></div>
       <div class="sheet-sci" id="sh-sci"></div>
@@ -479,6 +480,12 @@ function fitAll(){
 }
 
 function showSheet(t){
+  // Show photo if available
+  const ph=document.getElementById('sh-photo');
+  if(ph){
+    if(t.photo_url){ph.src=t.photo_url;ph.style.display='block';ph.onerror=()=>ph.style.display='none';}
+    else ph.style.display='none';
+  }
   document.getElementById('sh-badge').innerHTML=`${getEmoji(t.common_name)} ${t.common_name}`;
   document.getElementById('sh-name').textContent=t.common_name;
   document.getElementById('sh-sci').textContent=t.scientific_name||'';
@@ -494,17 +501,33 @@ function showSheet(t){
 function buildTreeList(trees){
   document.getElementById('explore-count').textContent=trees.length+' Trees Found';
   const c=document.getElementById('tree-list');
-  if(!trees.length){c.innerHTML='<div class="empty-state"><div class="empty-emoji">🌱</div><div class="empty-msg">No trees yet!</div></div>';return;}
-  c.innerHTML=trees.map(t=>`
-    <div class="tree-card" onclick="flyTo(${t.latitude},${t.longitude})">
-      <div class="tc-av" style="background:${getColor(t.common_name)}22">${getEmoji(t.common_name)}</div>
-      <div class="tc-body">
-        <div class="tc-name">${t.common_name}</div>
-        <div class="tc-sci">${t.scientific_name||''}</div>
-        <div class="tc-tags"><span class="tc-tag ${(t.condition||'good').toLowerCase()}">${t.condition||'Good'}</span><span class="tc-tag">${t.trunk_diameter||'?'}cm</span><span class="tc-tag">${t.height||'Med'}</span></div>
+  if(!trees.length){
+    c.innerHTML='<div class="empty-state"><div class="empty-emoji">🌱</div><div class="empty-msg">No trees yet.<br>Be the first to add one!</div></div>';
+    return;
+  }
+  c.innerHTML=trees.map(t=>{
+    const photoHtml=t.photo_url
+      ?`<img src="${t.photo_url}" style="width:100%;height:130px;object-fit:cover;border-radius:12px 12px 0 0;display:block;" onerror="this.style.display='none'">`
+      :'';
+    const byHtml=t.submitted_by?`<div style="font-size:10px;color:var(--text3);margin-top:4px;">🌱 ${t.submitted_by}</div>`:'';
+    return `<div class="tree-card" style="padding:0;overflow:hidden" onclick="flyToAndShow(${t.latitude},${t.longitude},${t.id})">
+      ${photoHtml}
+      <div style="padding:11px;display:flex;align-items:center;gap:10px;">
+        <div class="tc-av" style="background:${getColor(t.common_name)}22;flex-shrink:0">${getEmoji(t.common_name)}</div>
+        <div class="tc-body">
+          <div class="tc-name">${t.common_name}</div>
+          <div class="tc-sci">${t.scientific_name||''}</div>
+          <div class="tc-tags">
+            <span class="tc-tag ${(t.condition||'good').toLowerCase()}">${t.condition||'Good'}</span>
+            <span class="tc-tag">${t.trunk_diameter||'?'}cm</span>
+            <span class="tc-tag">${t.height||'Med'}</span>
+          </div>
+          ${byHtml}
+        </div>
+        <div class="tc-arr">›</div>
       </div>
-      <div class="tc-arr">›</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function searchTrees(q){
@@ -513,6 +536,15 @@ function searchTrees(q){
 }
 
 function flyTo(lat,lng){goTo('map-screen');setTimeout(()=>map.setView([lat,lng],18),400);}
+
+function flyToAndShow(lat,lng,id){
+  goTo('map-screen');
+  setTimeout(()=>{
+    map.setView([lat,lng],18);
+    const tree=allTrees.find(t=>t.id===id||(t.latitude===lat&&t.longitude===lng));
+    if(tree) setTimeout(()=>showSheet(tree),400);
+  },400);
+}
 
 function buildStats(){
   document.getElementById('st-total').textContent=allTrees.length;
@@ -557,9 +589,42 @@ function setCond(val,el){
   selectedCond=val;document.querySelectorAll('.cond-opt').forEach(b=>b.className='cond-opt');el.classList.add('sel-'+val.toLowerCase());
 }
 
+let selectedPhotoFile = null;
+
 function previewPhoto(input){
   const file=input.files[0];if(!file)return;
-  const r=new FileReader();r.onload=e=>{const img=document.getElementById('photo-prev');img.src=e.target.result;img.classList.add('show');};r.readAsDataURL(file);
+  selectedPhotoFile = file;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=document.getElementById('photo-prev');
+    img.src=e.target.result;
+    img.classList.add('show');
+    document.querySelector('.pz-title').textContent='Photo ready ✓';
+    document.querySelector('.pz-sub').textContent='Tap to change';
+  };
+  r.readAsDataURL(file);
+}
+
+async function uploadPhoto(file){
+  try{
+    const ext = file.name.split('.').pop()||'jpg';
+    const filename = `tree_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/tree-photos/${filename}`,{
+      method:'POST',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':file.type||'image/jpeg',
+        'x-upsert':'true'
+      },
+      body:file
+    });
+    if(!r.ok) throw new Error('Upload failed: '+r.status);
+    return `${SUPABASE_URL}/storage/v1/object/public/tree-photos/${filename}`;
+  }catch(e){
+    console.warn('Photo upload failed:',e.message);
+    return null;
+  }
 }
 
 async function submitTree(){
@@ -567,13 +632,39 @@ async function submitTree(){
   const lat=parseFloat(document.getElementById('f-lat').value);
   const lng=parseFloat(document.getElementById('f-lng').value);
   if(!name||isNaN(lat)||isNaN(lng)){alert('Please enter tree name + location (use GPS button)');return;}
-  const btn=document.getElementById('submit-btn');btn.textContent='🌱 Saving...';btn.disabled=true;
-  const tree={common_name:name,scientific_name:document.getElementById('f-sci').value.trim()||null,latitude:lat,longitude:lng,trunk_diameter:parseInt(document.getElementById('f-diam').value)||30,height:document.getElementById('f-height').value,condition:selectedCond,notes:document.getElementById('f-notes').value.trim()||null,submitted_by:document.getElementById('f-name').value.trim()||'Community'};
+  const btn=document.getElementById('submit-btn');btn.disabled=true;
+
+  // Upload photo first if selected
+  let photoUrl=null;
+  if(selectedPhotoFile){
+    btn.textContent='📷 Uploading photo...';
+    photoUrl=await uploadPhoto(selectedPhotoFile);
+  }
+
+  // Save tree with photo URL
+  btn.textContent='🌱 Saving tree...';
+  const tree={
+    common_name:name,
+    scientific_name:document.getElementById('f-sci').value.trim()||null,
+    latitude:lat,longitude:lng,
+    trunk_diameter:parseInt(document.getElementById('f-diam').value)||30,
+    height:document.getElementById('f-height').value,
+    condition:selectedCond,
+    notes:document.getElementById('f-notes').value.trim()||null,
+    submitted_by:document.getElementById('f-name').value.trim()||'Community',
+    photo_url:photoUrl
+  };
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/trees`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tree)});
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/trees`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify(tree)
+    });
     if(!r.ok)throw new Error();
-  }catch(e){console.log('Demo mode');}
-  allTrees.unshift({...tree,id:Date.now()});renderMarkers(allTrees);buildFilterBar(allTrees);
+  }catch(e){console.log('Demo mode — not saved to DB');}
+
+  allTrees.unshift({...tree,id:Date.now()});
+  renderMarkers(allTrees);buildFilterBar(allTrees);
   btn.textContent='🌳 Add This Tree to the Map';btn.disabled=false;
   document.getElementById('success-overlay').classList.add('show');
 }
@@ -583,6 +674,9 @@ function hideSuccess(){
   ['f-common','f-sci','f-lat','f-lng','f-diam','f-notes','f-name'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('gps-result').classList.remove('show');
   document.getElementById('photo-prev').classList.remove('show');
+  selectedPhotoFile=null;
+  if(document.querySelector('.pz-title')) document.querySelector('.pz-title').textContent='Take a photo';
+  if(document.querySelector('.pz-sub')) document.querySelector('.pz-sub').textContent='Leaves, bark & full tree for best ID';
   document.getElementById('gps-btn').textContent='📡 Use GPS';
   document.getElementById('gps-btn').disabled=false;
   selectedCond='Good';document.querySelectorAll('.cond-opt').forEach(b=>b.className='cond-opt');
