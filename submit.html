@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add a Tree · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#0d1a08; --forest:#1a3a0f; --canopy:#2d6a1e; --leaf:#4a9e32;
+  --lime:#8ecf5e; --pale:#d4f0b8; --parchment:#f5f0e4; --cream:#faf7f0;
+  --gold:#c8922a; --gold-light:#e8b84b; --bark:#6b4423; --mist:#e8f4dc;
+  --border:rgba(26,58,15,0.12); --shadow:0 4px 24px rgba(13,26,8,0.10);
+  --shadow-lg:0 12px 48px rgba(13,26,8,0.16); --radius:16px;
+  --text2:#4a6b3a; --text3:#8aaa7a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Instrument Sans',sans-serif;background:var(--cream);color:var(--ink);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(245,240,228,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;height:64px;}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--forest);text-decoration:none;}
+.nav-logo em{color:var(--gold);font-style:normal;}
+.nav-back{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--canopy);text-decoration:none;padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;transition:all .2s;}
+.nav-back:hover{border-color:var(--canopy);background:var(--mist);}
+
+/* PAGE LAYOUT */
+.page-wrap{max-width:1100px;margin:0 auto;padding:100px 40px 60px;display:grid;grid-template-columns:1fr 420px;gap:60px;align-items:start;}
+
+/* LEFT — INTRO */
+.page-left{position:sticky;top:100px;}
+.page-eyebrow{font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:block;}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(32px,3.5vw,52px);font-weight:900;line-height:1.05;color:var(--ink);margin-bottom:16px;letter-spacing:-.5px;}
+.page-title em{color:var(--canopy);font-style:italic;}
+.page-desc{font-size:15px;line-height:1.7;color:var(--text2);margin-bottom:32px;}
+
+.info-cards{display:flex;flex-direction:column;gap:12px;}
+.info-card{background:white;border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow);}
+.ic-icon{font-size:28px;flex-shrink:0;}
+.ic-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.ic-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+
+.species-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px;}
+.sc-chip{display:flex;align-items:center;gap:5px;padding:5px 11px;background:white;border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.sc-chip:hover{border-color:var(--leaf);background:var(--mist);color:var(--forest);}
+
+/* RIGHT — FORM */
+.form-card{background:white;border-radius:20px;border:1px solid var(--border);box-shadow:var(--shadow-lg);overflow:hidden;}
+.form-header{background:linear-gradient(135deg,var(--forest),var(--canopy));padding:24px 28px;}
+.form-header h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:white;margin-bottom:4px;}
+.form-header p{font-size:13px;color:rgba(255,255,255,.6);}
+.ai-btn{display:inline-flex;align-items:center;gap:7px;margin-top:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-decoration:none;color:white;font-size:12px;font-weight:600;transition:background .2s;}
+.ai-btn:hover{background:rgba(255,255,255,.22);}
+
+.form-body{padding:24px 28px;}
+
+/* GPS */
+.gps-zone{background:var(--mist);border:1.5px solid rgba(26,58,15,.15);border-radius:var(--radius);padding:18px;margin-bottom:20px;}
+.gps-zone-top{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.gps-icon-box{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#dcf5d0,var(--pale));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.gps-zone h3{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.gps-zone p{font-size:11px;color:var(--text3);}
+.gps-readings{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.gps-reading{background:white;border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border);}
+.gps-reading .gv{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--canopy);}
+.gps-reading .gl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.gps-acc-bar{height:5px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden;margin-bottom:10px;}
+.gps-acc-fill{height:100%;border-radius:3px;transition:width .5s ease,background .5s;}
+.gps-btn{width:100%;padding:10px;background:var(--forest);border:none;border-radius:10px;color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:'Instrument Sans',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.gps-btn:hover{background:var(--canopy);}
+.gps-btn:disabled{background:#aaa;cursor:not-allowed;}
+.gps-status{font-size:11px;color:var(--canopy);font-weight:500;text-align:center;margin-top:8px;display:none;}
+.gps-status.show{display:block;}
+
+/* FORM SECTIONS */
+.fsec{margin-bottom:20px;}
+.fsec-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.3px;}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid #e8e0d5;border-radius:11px;color:var(--ink);font-family:'Instrument Sans',sans-serif;font-size:14px;background:var(--parchment);transition:all .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--leaf);background:white;box-shadow:0 0 0 3px rgba(74,158,50,.1);}
+.field textarea{height:76px;resize:vertical;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sugg-wrap{position:relative;}
+.sugg-list{position:absolute;top:calc(100%+4px);left:0;right:0;background:white;border-radius:12px;box-shadow:var(--shadow-lg);z-index:200;overflow:hidden;display:none;border:1px solid #eee;}
+.sugg-list.show{display:block;}
+.sugg-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5f5f5;display:flex;align-items:center;gap:8px;transition:background .1s;}
+.sugg-item:last-child{border:none;}
+.sugg-item:hover{background:var(--mist);}
+.sugg-sci{font-style:italic;font-size:11px;color:var(--text3);display:block;}
+
+/* CONDITION */
+.cond-row{display:flex;gap:8px;}
+.cond-opt{flex:1;padding:10px 8px;border-radius:12px;border:2px solid #e8e0d5;background:var(--parchment);cursor:pointer;text-align:center;transition:all .2s;}
+.cond-opt .ci{font-size:22px;display:block;margin-bottom:3px;}
+.cond-opt .cl{font-size:11px;font-weight:600;color:var(--text3);}
+.cond-opt.sel-good{border-color:#2d9e1a;background:#dcf5d0;}.cond-opt.sel-good .cl{color:#2d6a1e;}
+.cond-opt.sel-fair{border-color:#d4a017;background:#fef3cd;}.cond-opt.sel-fair .cl{color:#8a6400;}
+.cond-opt.sel-poor{border-color:#c0392b;background:#fde8e8;}.cond-opt.sel-poor .cl{color:#c0392b;}
+.cond-opt:hover{transform:translateY(-1px);}
+
+/* PHOTO UPLOAD */
+.photo-upload-zone{border:2px dashed #d4cbbf;border-radius:var(--radius);padding:0;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;background:var(--parchment);}
+.photo-upload-zone:hover{border-color:var(--leaf);background:var(--mist);}
+.photo-upload-zone.has-photo{border-style:solid;border-color:var(--leaf);}
+.photo-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.puz-placeholder{padding:30px;text-align:center;}
+.puz-icon{font-size:40px;margin-bottom:10px;display:block;}
+.puz-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;}
+.puz-sub{font-size:12px;color:var(--text3);}
+.puz-hint{display:inline-block;margin-top:10px;background:var(--pale);color:var(--canopy);padding:4px 12px;border-radius:10px;font-size:11px;font-weight:600;}
+#photo-preview-img{width:100%;max-height:280px;object-fit:cover;display:none;border-radius:calc(var(--radius) - 2px);}
+#photo-preview-img.show{display:block;}
+.photo-change-bar{background:rgba(26,58,15,.7);color:white;font-size:12px;font-weight:600;padding:8px;text-align:center;display:none;}
+.photo-change-bar.show{display:block;}
+.photo-upload-progress{height:3px;background:var(--pale);border-radius:0;overflow:hidden;display:none;}
+.photo-upload-progress.show{display:block;}
+.pup-fill{height:100%;background:linear-gradient(90deg,var(--leaf),var(--lime));border-radius:0;transition:width .3s ease;}
+
+/* SUBMIT */
+.submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--leaf),var(--canopy));border:none;border-radius:var(--radius);color:white;font-family:'Instrument Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(74,158,50,.3);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(74,158,50,.4);}
+.submit-btn:active{transform:scale(.98);}
+.submit-btn:disabled{background:#aaa;box-shadow:none;cursor:not-allowed;transform:none;}
+
+/* SUCCESS */
+#success-state{display:none;}
+#success-state.show{display:block;}
+#form-state.hide{display:none;}
+.success-inner{text-align:center;padding:60px 40px;}
+.suc-emoji{font-size:80px;display:block;margin-bottom:20px;animation:popIn .6s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes popIn{from{transform:scale(0) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.suc-title{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;color:var(--forest);margin-bottom:10px;}
+.suc-sub{font-size:15px;color:var(--text2);margin-bottom:32px;line-height:1.6;}
+.suc-photo{width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius);margin-bottom:20px;display:none;}
+.suc-photo.show{display:block;}
+.suc-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.suc-btn{padding:12px 24px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Instrument Sans',sans-serif;border:none;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+.suc-btn:hover{transform:translateY(-1px);}
+.suc-btn-p{background:var(--forest);color:white;box-shadow:0 4px 14px rgba(26,58,15,.25);}
+.suc-btn-s{background:white;color:var(--forest);border:1.5px solid var(--border);box-shadow:var(--shadow);}
+
+/* TIPS PANEL */
+.tips-panel{background:var(--parchment);border-top:1px solid var(--border);padding:20px 28px;}
+.tips-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;}
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tip-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text2);line-height:1.4;}
+.tip-item span:first-child{font-size:16px;flex-shrink:0;margin-top:1px;}
+
+@media(max-width:900px){
+  .page-wrap{grid-template-columns:1fr;padding:90px 20px 40px;}
+  .page-left{position:static;}
+  nav{padding:0 20px;}
+  .form-body{padding:18px 20px;}
+  .form-header{padding:18px 20px;}
+  .tips-panel{padding:16px 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="website.html" class="nav-logo">🌳 The Tree <em>Mappers</em></a>
+  <a href="website.html" class="nav-back">← Back to Map</a>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- LEFT -->
+  <div class="page-left">
+    <span class="page-eyebrow">🌿 Jor Bagh Community</span>
+    <h1 class="page-title">Add a Tree to<br>the <em>Living Map</em></h1>
+    <p class="page-desc">Every tree you log becomes a permanent part of Jor Bagh's urban forest record. Take a photo, capture the GPS location, and help us build the most complete tree map in the neighbourhood.</p>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="ic-icon">📍</div>
+        <div>
+          <div class="ic-title">Precision GPS</div>
+          <div class="ic-desc">We take 5 readings and average them for ±5m accuracy — enough to pinpoint exactly which tree you mean.</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="ic-icon">📷</div>
+        <div>
+          <div class="ic-title">Photos are stored permanently</div>
+          <div class="ic-desc">Your photo is uploaded to our cloud and shown on the map forever — visible to everyone who taps that tree.</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="ic-icon">🔬</div>
+        <div>
+          <div class="ic-title">Not sure of the species?</div>
+          <div class="ic-desc">Use our AI identification tool — take a photo of the leaves or bark and it will identify the tree instantly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Common Jor Bagh Trees</div>
+      <div class="species-chips" id="species-chips"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT — FORM -->
+  <div class="form-card">
+
+    <!-- FORM STATE -->
+    <div id="form-state">
+      <div class="form-header">
+        <h2>🌱 Log a Tree</h2>
+        <p>Fill in what you can — even partial info helps</p>
+        <a href="identify.html" class="ai-btn">🔬 Identify species with AI →</a>
+      </div>
+
+      <div class="form-body">
+
+        <!-- GPS -->
+        <div class="gps-zone">
+          <div class="gps-zone-top">
+            <div class="gps-icon-box">📍</div>
+            <div>
+              <h3>Capture Precise Location</h3>
+              <p>Stand next to the tree — we take 5 readings for best accuracy</p>
+            </div>
+          </div>
+          <div class="gps-acc-bar"><div class="gps-acc-fill" id="gps-acc-fill" style="width:0%;background:#ccc"></div></div>
+          <div class="gps-readings">
+            <div class="gps-reading"><div class="gv" id="gr-lat">—</div><div class="gl">Latitude</div></div>
+            <div class="gps-reading"><div class="gv" id="gr-lng">—</div><div class="gl">Longitude</div></div>
+            <div class="gps-reading"><div class="gv" id="gr-acc">—</div><div class="gl">Accuracy</div></div>
+          </div>
+          <button class="gps-btn" id="gps-btn" onclick="startGPS()">📡 Start Precision GPS</button>
+          <div class="gps-status" id="gps-status"></div>
+        </div>
+        <input type="hidden" id="f-lat">
+        <input type="hidden" id="f-lng">
+
+        <!-- IDENTITY -->
+        <div class="fsec">
+          <div class="fsec-title">🌳 Tree Identity</div>
+          <div class="field sugg-wrap">
+            <label>Common Name *</label>
+            <input type="text" id="f-common" placeholder="e.g. Neem, Peepal, Gulmohar" oninput="showSugg(this.value)" autocomplete="off">
+            <div class="sugg-list" id="sugg-list"></div>
+          </div>
+          <div class="field">
+            <label>Scientific Name</label>
+            <input type="text" id="f-sci" placeholder="e.g. Azadirachta indica">
+          </div>
+        </div>
+
+        <!-- DETAILS -->
+        <div class="fsec">
+          <div class="fsec-title">📏 Tree Details</div>
+          <div class="field-row" style="margin-bottom:12px">
+            <div class="field"><label>Trunk Diameter (cm)</label><input type="number" id="f-diam" placeholder="e.g. 45" min="1"></div>
+            <div class="field"><label>Estimated Height</label>
+              <select id="f-height"><option>Small (&lt;5m)</option><option selected>Medium (5–15m)</option><option>Large (15–25m)</option><option>Very Large (&gt;25m)</option></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Condition</label>
+            <div class="cond-row">
+              <div class="cond-opt sel-good" onclick="setCond('Good',this)"><span class="ci">💚</span><span class="cl">Good</span></div>
+              <div class="cond-opt" onclick="setCond('Fair',this)"><span class="ci">💛</span><span class="cl">Fair</span></div>
+              <div class="cond-opt" onclick="setCond('Poor',this)"><span class="ci">❤️</span><span class="cl">Poor</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHOTO -->
+        <div class="fsec">
+          <div class="fsec-title">📷 Photo</div>
+          <div class="photo-upload-zone" id="photo-zone">
+            <input type="file" id="photo-input" accept="image/*" onchange="onPhotoSelected(this)">
+            <div class="puz-placeholder" id="puz-placeholder">
+              <span class="puz-icon">🌿</span>
+              <div class="puz-title">Click to upload a photo</div>
+              <div class="puz-sub">Photograph leaves, bark, flowers or the full tree</div>
+              <span class="puz-hint">📸 Drag & drop also works</span>
+            </div>
+            <img id="photo-preview-img" alt="Tree photo">
+            <div class="photo-change-bar" id="photo-change-bar">📷 Click to change photo</div>
+          </div>
+          <div class="photo-upload-progress" id="photo-progress">
+            <div class="pup-fill" id="pup-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- NOTES -->
+        <div class="fsec">
+          <div class="fsec-title">📝 Notes & Info</div>
+          <div class="field"><label>Observations</label><textarea id="f-notes" placeholder="Near which gate or landmark? Flowers or fruit visible? Hollow trunk? Unusual features? Any history?"></textarea></div>
+          <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="Your name, or leave blank for Anonymous"></div>
+        </div>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitTree()">
+          🌳 Add This Tree to the Map
+        </button>
+
+      </div><!-- /form-body -->
+
+      <!-- TIPS -->
+      <div class="tips-panel">
+        <div class="tips-title">📚 Quick Identification Tips</div>
+        <div class="tips-grid">
+          <div class="tip-item"><span>🌿</span><span><b>Neem</b> — Pinnate leaves, bitter smell, common everywhere</span></div>
+          <div class="tip-item"><span>🍀</span><span><b>Peepal</b> — Heart-shaped leaf with long drip tip</span></div>
+          <div class="tip-item"><span>🌸</span><span><b>Gulmohar</b> — Feathery leaves, red flowers in May</span></div>
+          <div class="tip-item"><span>🌳</span><span><b>Bargad</b> — Aerial roots hanging from branches</span></div>
+          <div class="tip-item"><span>🌻</span><span><b>Amaltas</b> — Bright yellow hanging flower clusters</span></div>
+          <div class="tip-item"><span>🫐</span><span><b>Jamun</b> — Glossy oval leaves, dark purple berries</span></div>
+        </div>
+      </div>
+
+    </div><!-- /form-state -->
+
+    <!-- SUCCESS STATE -->
+    <div id="success-state">
+      <div class="success-inner">
+        <span class="suc-emoji">🌳</span>
+        <div class="suc-title">Tree Added!</div>
+        <div class="suc-sub">Your tree is now live on the Jor Bagh map.<br>Thank you for growing our urban forest record 🌿</div>
+        <img class="suc-photo" id="suc-photo" alt="Your tree">
+        <div class="suc-actions">
+          <a href="website.html" class="suc-btn suc-btn-p">🗺️ View on Map</a>
+          <button class="suc-btn suc-btn-s" onclick="resetForm()">➕ Add Another Tree</button>
+          <a href="identify.html" class="suc-btn suc-btn-s">🔬 Identify a Tree</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</div><!-- /page-wrap -->
+
+<script>
+const SUPABASE_URL = 'https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+
+const SPECIES_DB = [
+  {c:'Neem',      s:'Azadirachta indica',    e:'🌿'},
+  {c:'Peepal',    s:'Ficus religiosa',        e:'🍀'},
+  {c:'Gulmohar',  s:'Delonix regia',          e:'🌸'},
+  {c:'Jamun',     s:'Syzygium cumini',        e:'🫐'},
+  {c:'Amaltas',   s:'Cassia fistula',         e:'🌻'},
+  {c:'Ashoka',    s:'Polyalthia longifolia',  e:'🌲'},
+  {c:'Arjun',     s:'Terminalia arjuna',      e:'🪵'},
+  {c:'Pilkhan',   s:'Ficus virens',           e:'🍃'},
+  {c:'Bargad',    s:'Ficus benghalensis',     e:'🌳'},
+  {c:'Kadamba',   s:'Neolamarckia cadamba',   e:'💐'},
+  {c:'Imli',      s:'Tamarindus indica',      e:'🟤'},
+  {c:'Mango',     s:'Mangifera indica',       e:'🥭'},
+  {c:'Moringa',   s:'Moringa oleifera',       e:'🥬'},
+  {c:'Silk Cotton',s:'Bombax ceiba',          e:'🌺'},
+  {c:'Flame of Forest',s:'Butea monosperma', e:'🔥'},
+];
+
+// Build species chips
+const chipsEl = document.getElementById('species-chips');
+SPECIES_DB.slice(0,10).forEach(sp => {
+  const chip = document.createElement('div');
+  chip.className = 'sc-chip';
+  chip.innerHTML = `<span>${sp.e}</span><span>${sp.c}</span>`;
+  chip.onclick = () => {
+    document.getElementById('f-common').value = sp.c;
+    document.getElementById('f-sci').value = sp.s;
+    document.getElementById('sugg-list').classList.remove('show');
+    document.getElementById('f-common').focus();
+  };
+  chipsEl.appendChild(chip);
+});
+
+// ── GPS ──────────────────────────────────────────────────
+let gpsWatcher = null, gpsReadings = [], selectedCond = 'Good';
+
+function startGPS(){
+  const btn = document.getElementById('gps-btn');
+  btn.textContent = '⏳ Getting location...'; btn.disabled = true;
+  gpsReadings = [];
+  let count = 0;
+  const MAX = 5;
+  const status = document.getElementById('gps-status');
+  status.classList.add('show');
+
+  gpsWatcher = navigator.geolocation.watchPosition(pos => {
+    const {latitude, longitude, accuracy} = pos.coords;
+    count++;
+    gpsReadings.push({lat:latitude, lng:longitude, acc:accuracy});
+
+    document.getElementById('gr-lat').textContent = latitude.toFixed(5);
+    document.getElementById('gr-lng').textContent = longitude.toFixed(5);
+    document.getElementById('gr-acc').textContent = `±${Math.round(accuracy)}m`;
+
+    const pct = Math.max(0, Math.min(100, 100 - accuracy * 3));
+    const col = accuracy < 10 ? '#3d9e2a' : accuracy < 20 ? '#e8b84b' : '#c0392b';
+    document.getElementById('gps-acc-fill').style.cssText = `width:${pct}%;background:${col}`;
+    status.textContent = `Reading ${count}/${MAX} · ±${Math.round(accuracy)}m`;
+
+    if(count >= MAX){
+      const sorted = [...gpsReadings].sort((a,b)=>a.acc-b.acc);
+      const best = sorted.slice(0, Math.ceil(sorted.length/2));
+      const avgLat = best.reduce((s,r)=>s+r.lat,0)/best.length;
+      const avgLng = best.reduce((s,r)=>s+r.lng,0)/best.length;
+      const avgAcc = best.reduce((s,r)=>s+r.acc,0)/best.length;
+
+      document.getElementById('f-lat').value = avgLat.toFixed(7);
+      document.getElementById('f-lng').value = avgLng.toFixed(7);
+      document.getElementById('gr-lat').textContent = avgLat.toFixed(5);
+      document.getElementById('gr-lng').textContent = avgLng.toFixed(5);
+      document.getElementById('gr-acc').textContent = `±${Math.round(avgAcc)}m`;
+
+      navigator.geolocation.clearWatch(gpsWatcher);
+      btn.textContent = '✅ Location Locked';
+      status.textContent = `📍 Precision locked · ±${Math.round(avgAcc)}m · ${best.length} readings averaged`;
+      document.getElementById('gps-acc-fill').style.background = '#3d9e2a';
+    }
+  }, err => {
+    btn.textContent = '📡 Start Precision GPS'; btn.disabled = false;
+    status.textContent = '❌ Could not get location — enable location access in browser';
+    status.style.color = '#c0392b';
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+}
+
+// ── SPECIES SUGGESTIONS ──────────────────────────────────
+function showSugg(v){
+  const box = document.getElementById('sugg-list');
+  if(!v){ box.classList.remove('show'); return; }
+  const m = SPECIES_DB.filter(s => s.c.toLowerCase().includes(v.toLowerCase()) || s.s.toLowerCase().includes(v.toLowerCase()));
+  if(!m.length){ box.classList.remove('show'); return; }
+  box.innerHTML = m.slice(0,6).map(s => `
+    <div class="sugg-item" onclick="pickSp('${s.c}','${s.s}')">
+      <span style="font-size:20px">${s.e}</span>
+      <span>${s.c}<span class="sugg-sci">${s.s}</span></span>
+    </div>`).join('');
+  box.classList.add('show');
+}
+function pickSp(c, s){
+  document.getElementById('f-common').value = c;
+  document.getElementById('f-sci').value = s;
+  document.getElementById('sugg-list').classList.remove('show');
+}
+document.addEventListener('click', e => {
+  if(!e.target.closest('.sugg-wrap')) document.getElementById('sugg-list').classList.remove('show');
+});
+
+// ── CONDITION ────────────────────────────────────────────
+function setCond(val, el){
+  selectedCond = val;
+  document.querySelectorAll('.cond-opt').forEach(b => b.className = 'cond-opt');
+  el.classList.add('sel-' + val.toLowerCase());
+}
+
+// ── PHOTO ────────────────────────────────────────────────
+let selectedPhotoFile = null;
+
+function onPhotoSelected(input){
+  const file = input.files[0]; if(!file) return;
+  selectedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('photo-preview-img');
+    img.src = e.target.result; img.classList.add('show');
+    document.getElementById('puz-placeholder').style.display = 'none';
+    document.getElementById('photo-change-bar').classList.add('show');
+    document.getElementById('photo-zone').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag & drop support
+const zone = document.getElementById('photo-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--leaf)'; });
+zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) {
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('photo-input').files = dt.files;
+    onPhotoSelected(document.getElementById('photo-input'));
+  }
+});
+
+async function uploadPhoto(file){
+  const ext = file.name.split('.').pop() || 'jpg';
+  const filename = `tree_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+  // Show progress bar
+  const prog = document.getElementById('photo-progress');
+  const fill = document.getElementById('pup-fill');
+  prog.classList.add('show');
+  fill.style.width = '30%';
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/storage/v1/object/tree-photos/${filename}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': file.type || 'image/jpeg',
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+    fill.style.width = '100%';
+    if(!r.ok) throw new Error('Upload failed: ' + r.status);
+    return `${SUPABASE_URL}/storage/v1/object/public/tree-photos/${filename}`;
+  } catch(e) {
+    console.warn('Photo upload failed:', e.message);
+    fill.style.background = '#e74c3c';
+    return null;
+  }
+}
+
+// ── SUBMIT ───────────────────────────────────────────────
+async function submitTree(){
+  const name = document.getElementById('f-common').value.trim();
+  const lat = parseFloat(document.getElementById('f-lat').value);
+  const lng = parseFloat(document.getElementById('f-lng').value);
+
+  if(!name){ alert('Please enter the tree name'); document.getElementById('f-common').focus(); return; }
+  if(isNaN(lat) || isNaN(lng)){ alert('Please capture the GPS location first — click "Start Precision GPS"'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+
+  // Upload photo
+  let photoUrl = null;
+  if(selectedPhotoFile){
+    btn.innerHTML = '📷 Uploading photo...';
+    photoUrl = await uploadPhoto(selectedPhotoFile);
+  }
+
+  // Save to database
+  btn.innerHTML = '🌱 Saving to map...';
+  const tree = {
+    common_name: name,
+    scientific_name: document.getElementById('f-sci').value.trim() || null,
+    latitude: lat, longitude: lng,
+    trunk_diameter: parseInt(document.getElementById('f-diam').value) || 30,
+    height: document.getElementById('f-height').value,
+    condition: selectedCond,
+    notes: document.getElementById('f-notes').value.trim() || null,
+    submitted_by: document.getElementById('f-name').value.trim() || 'Community',
+    photo_url: photoUrl
+  };
+
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/trees`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(tree)
+    });
+    if(!r.ok) throw new Error('Save failed: ' + r.status);
+  } catch(e) {
+    console.error('Save error:', e.message);
+  }
+
+  // Show success
+  document.getElementById('form-state').classList.add('hide');
+  const sucPhotoEl = document.getElementById('suc-photo');
+  if(photoUrl){ sucPhotoEl.src = photoUrl; sucPhotoEl.classList.add('show'); }
+  document.getElementById('success-state').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── RESET ────────────────────────────────────────────────
+function resetForm(){
+  document.getElementById('form-state').classList.remove('hide');
+  document.getElementById('success-state').classList.remove('show');
+  ['f-common','f-sci','f-diam','f-notes','f-name','f-lat','f-lng'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('photo-preview-img').classList.remove('show');
+  document.getElementById('photo-preview-img').src = '';
+  document.getElementById('puz-placeholder').style.display = 'block';
+  document.getElementById('photo-change-bar').classList.remove('show');
+  document.getElementById('photo-zone').classList.remove('has-photo');
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-progress').classList.remove('show');
+  document.getElementById('pup-fill').style.width = '0%';
+  document.getElementById('gps-status').classList.remove('show');
+  document.getElementById('gps-btn').textContent = '📡 Start Precision GPS';
+  document.getElementById('gps-btn').disabled = false;
+  document.getElementById('gps-acc-fill').style.cssText = 'width:0%;background:#ccc';
+  ['gr-lat','gr-lng','gr-acc'].forEach(id => document.getElementById(id).textContent = '—');
+  selectedPhotoFile = null; selectedCond = 'Good';
+  document.querySelectorAll('.cond-opt').forEach(b => b.className = 'cond-opt');
+  document.querySelector('.cond-opt').classList.add('sel-good');
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('submit-btn').innerHTML = '🌳 Add This Tree to the Map';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Check for pre-filled data from identify.html
+const urlP = new URLSearchParams(window.location.search);
+if(urlP.get('identify') === '1'){
+  if(urlP.get('common')) document.getElementById('f-common').value = urlP.get('common');
+  if(urlP.get('sci')) document.getElementById('f-sci').value = urlP.get('sci');
+}
+</script>
+</body>
+</html>
