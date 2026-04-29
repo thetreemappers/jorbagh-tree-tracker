@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/identify.js": {
-      "maxDuration": 30
-    }
-  },
   "redirects": [
     {
       "source": "/",
