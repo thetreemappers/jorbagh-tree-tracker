@@ -232,13 +232,13 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
   </div>
 
   <!-- CAMERA ZONE -->
-  <div class="camera-zone" id="camera-zone" onclick="document.getElementById('photo-input').click()">
-    <input type="file" id="photo-input" accept="image/*" capture="environment" onchange="onPhotoSelected(this)">
+  <div class="camera-zone" id="camera-zone">
+    <input type="file" id="photo-input" accept="image/*" onchange="onPhotoSelected(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;">
     <div class="cz-placeholder" id="cz-placeholder">
       <span class="cz-icon">📷</span>
-      <div class="cz-title">Take a Photo</div>
-      <div class="cz-sub">Point at leaves, bark, flowers or the full tree for best results</div>
-      <span class="cz-hint">📍 Best in daylight, close up</span>
+      <div class="cz-title">Click here to upload a photo</div>
+      <div class="cz-sub">From your camera, gallery or desktop<br>Leaves, bark, flower or full tree</div>
+      <span class="cz-hint" style="margin-top:12px;display:inline-block;background:var(--moss);color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;">📁 Choose Photo</span>
     </div>
     <img id="photo-preview" alt="Tree photo">
     <div class="photo-overlay" id="photo-overlay">✅ Photo ready</div>
@@ -435,128 +435,72 @@ function setStep(msg) {
 // ── PLANTNET API ──────────────────────────────────────────────
 async function tryPlantNet() {
   try {
-    setStep('🌿 Sending photo to PlantNet...');
-    const blob = await (await fetch(`data:${selectedPhotoType};base64,${selectedPhotoBase64}`)).blob();
+    setStep('🌿 Sending photo to PlantNet AI...');
+
+    // Convert base64 to blob directly
+    const byteChars = atob(selectedPhotoBase64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for(let i=0;i<byteChars.length;i++) byteArray[i]=byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray],{type:selectedPhotoType||'image/jpeg'});
+
     const formData = new FormData();
     formData.append('images', blob, 'tree.jpg');
-    formData.append('organs', selectedOrgan);
+    formData.append('organs', selectedOrgan||'leaf');
 
-    const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_KEY}&nb-results=5&lang=en`;
-    const resp = await fetch(url, { method:'POST', body:formData });
-    if (!resp.ok) throw new Error('PlantNet error: ' + resp.status);
+    const PLANTNET_KEY='2b10yJM6CuBvi9Sac1t84q0gk';
+    const url=`https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_KEY}&nb-results=5&lang=en`;
+
+    const resp = await fetch(url,{method:'POST',body:formData});
+    if(!resp.ok){const e=await resp.text();throw new Error(`PlantNet ${resp.status}: ${e}`);}
+
     const data = await resp.json();
+    if(!data.results||!data.results.length) return null;
 
-    if (!data.results || data.results.length === 0) return null;
-
-    setStep('✅ PlantNet responded! Processing results...');
-    const top = data.results[0];
-    const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
-    const confidence = Math.round((top.score || 0) * 100);
-    const kb = TREE_KB[sciName] || {};
-    const commonName = kb.common || top.species?.commonNames?.[0] || sciName.split(' ')[1];
-
-    const alternatives = data.results.slice(1, 4).map(r => ({
-      name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
-      sci: r.species?.scientificNameWithoutAuthor,
-      conf: Math.round((r.score || 0) * 100),
-      emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji || '🌿'
+    setStep('✅ PlantNet identified the tree!');
+    const top=data.results[0];
+    const sciName=top.species?.scientificNameWithoutAuthor||top.species?.scientificName;
+    const confidence=Math.round((top.score||0)*100);
+    const kb=TREE_KB[sciName]||{};
+    const commonName=kb.common||top.species?.commonNames?.[0]||sciName;
+    const alternatives=data.results.slice(1,4).map(r=>({
+      name:r.species?.commonNames?.[0]||r.species?.scientificNameWithoutAuthor,
+      sci:r.species?.scientificNameWithoutAuthor,
+      conf:Math.round((r.score||0)*100),
+      emoji:TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji||'🌿'
     }));
-
     return {
-      source: 'PLANTNET AI',
-      common: commonName,
-      sci: sciName,
-      confidence,
-      family: top.species?.family?.scientificNameWithoutAuthor || kb.family || '—',
-      inJorBagh: kb.inJorBagh ? '✅ Yes, common here' : '❓ Less common',
-      hindi: kb.hindi || '—',
-      note: kb.note || null,
-      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
-      alternatives
+      source:'PLANTNET AI',common:commonName,sci:sciName,confidence,
+      family:top.species?.family?.scientificNameWithoutAuthor||kb.family||'—',
+      inJorBagh:kb.inJorBagh?'✅ Yes, common here':'❓ Less common',
+      hindi:kb.hindi||'—',note:kb.note||null,
+      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,alternatives
     };
-  } catch(e) {
-    console.warn('PlantNet failed:', e);
+  }catch(e){
+    console.warn('PlantNet failed:',e.message);
     return null;
   }
 }
 
-// ── CLAUDE AI FALLBACK ────────────────────────────────────────
 async function tryClaude() {
   try {
-    setStep('🤖 Claude AI is examining your photo...');
-    const prompt = `You are an expert botanist specialising in Indian trees, especially those found in Delhi and Jor Bagh neighbourhood.
-
-A user has taken a photo of a tree (specifically the ${selectedOrgan === 'auto' ? 'plant' : selectedOrgan}) and wants you to identify it.
-
-Please respond with ONLY a JSON object in this exact format (no markdown, no explanation outside JSON):
-{
-  "common_name": "Common English name",
-  "hindi_name": "Hindi name with Devanagari",
-  "scientific_name": "Genus species",
-  "family": "Plant family",
-  "confidence": 85,
-  "in_jor_bagh": true,
-  "identification_notes": "2-3 sentences explaining what features suggest this species and what to look for to confirm",
-  "alternatives": [
-    {"common": "Alternative 1", "sci": "Scientific name", "confidence": 45},
-    {"common": "Alternative 2", "sci": "Scientific name", "confidence": 25}
-  ]
-}
-
-Be honest about confidence. If you cannot identify it, set confidence below 30.`;
-
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: selectedPhotoType || 'image/jpeg', data: selectedPhotoBase64 }
-            },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
-    });
-
-    if (!resp.ok) throw new Error('Claude error');
-    const data = await resp.json();
-    const text = data.content?.[0]?.text || '';
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    if (!parsed.common_name || parsed.confidence < 20) return null;
-
-    setStep('✅ Claude identified the tree!');
-    const kb = TREE_KB[parsed.scientific_name] || {};
-
+    setStep('🤖 Checking tree database...');
+    await new Promise(r=>setTimeout(r,1000));
     return {
-      source: 'CLAUDE AI',
-      common: parsed.common_name,
-      sci: parsed.scientific_name,
-      confidence: parsed.confidence,
-      family: parsed.family || kb.family || '—',
-      inJorBagh: parsed.in_jor_bagh ? '✅ Yes, common here' : '❓ Less common',
-      hindi: parsed.hindi_name || kb.hindi || '—',
-      note: parsed.identification_notes,
-      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
-      alternatives: (parsed.alternatives || []).map(a => ({
-        name: a.common, sci: a.sci, conf: a.confidence,
-        emoji: TREE_KB[a.sci]?.emoji || '🌿'
-      }))
+      source:'LOCAL DATABASE',
+      common:'Could not identify',sci:'Try a clearer photo',confidence:0,
+      family:'—',inJorBagh:'❓ Unknown',hindi:'—',
+      note:'PlantNet could not identify this tree. Try a clearer close-up photo of the leaves in good daylight. Make sure leaves fill most of the frame.',
+      organ:selectedOrgan||'leaf',
+      alternatives:[
+        {name:'Neem',sci:'Azadirachta indica',conf:0,emoji:'🌿'},
+        {name:'Peepal',sci:'Ficus religiosa',conf:0,emoji:'🍀'},
+        {name:'Gulmohar',sci:'Delonix regia',conf:0,emoji:'🌸'},
+      ]
     };
-  } catch(e) {
-    console.warn('Claude failed:', e);
-    return null;
-  }
+  }catch(e){return null;}
 }
 
-// ── SHOW RESULTS ──────────────────────────────────────────────
+
 function showResults(r) {
   currentResult = r;
 
