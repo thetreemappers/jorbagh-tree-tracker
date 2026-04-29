@@ -233,7 +233,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
 
   <!-- CAMERA ZONE -->
   <div class="camera-zone" id="camera-zone">
-    <input type="file" id="photo-input" accept="image/*" onchange="onPhotoSelected(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;">
+    <input type="file" id="photo-input" accept="image/*,.heic,.heif,.HEIC,.HEIF" onchange="onPhotoSelected(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;">
     <div class="cz-placeholder" id="cz-placeholder">
       <span class="cz-icon">📷</span>
       <div class="cz-title">Click here to upload a photo</div>
@@ -367,22 +367,52 @@ function selectTip(el, type) {
 function onPhotoSelected(input) {
   const file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    selectedPhotoBase64 = dataUrl.split(',')[1];
-    selectedPhotoType = file.type;
+
+  document.getElementById('cz-placeholder').style.display = 'none';
+  document.getElementById('photo-overlay').classList.add('show');
+  document.getElementById('photo-overlay').textContent = '⏳ Processing...';
+  document.getElementById('id-btn').disabled = true;
+  hideResults();
+
+  // Use canvas to convert ANY format (incl HEIC from iPhone) to JPEG
+  const objectUrl = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const MAX = 1200;
+    const ratio = Math.min(MAX/img.width, MAX/img.height, 1);
+    canvas.width = Math.round(img.width * ratio);
+    canvas.height = Math.round(img.height * ratio);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const jpeg = canvas.toDataURL('image/jpeg', 0.85);
+    selectedPhotoBase64 = jpeg.split(',')[1];
+    selectedPhotoType = 'image/jpeg';
     const prev = document.getElementById('photo-preview');
-    prev.src = dataUrl;
+    prev.src = jpeg;
     prev.classList.add('show');
-    document.getElementById('cz-placeholder').style.display = 'none';
-    document.getElementById('photo-overlay').classList.add('show');
+    document.getElementById('photo-overlay').textContent = '✅ Photo ready';
     document.getElementById('camera-zone').classList.add('has-photo');
     document.getElementById('id-btn').disabled = false;
-    // hide previous results
-    hideResults();
+    URL.revokeObjectURL(objectUrl);
   };
-  reader.readAsDataURL(file);
+  img.onerror = () => {
+    // Direct fallback
+    const reader = new FileReader();
+    reader.onload = e => {
+      selectedPhotoBase64 = e.target.result.split(',')[1];
+      selectedPhotoType = 'image/jpeg';
+      const prev = document.getElementById('photo-preview');
+      prev.src = e.target.result;
+      prev.classList.add('show');
+      document.getElementById('photo-overlay').textContent = '✅ Photo ready';
+      document.getElementById('camera-zone').classList.add('has-photo');
+      document.getElementById('id-btn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+    URL.revokeObjectURL(objectUrl);
+  };
+  img.src = objectUrl;
 }
 
 function hideResults() {
