@@ -8,10 +8,9 @@ export default async function handler(req, res) {
   const { imageBase64, imageType, organ, service } = req.body || {};
   if (!imageBase64) { res.status(400).json({ error: 'No image provided' }); return; }
 
-  // ── PLANTNET ──────────────────────────────────────────────
   if (service === 'plantnet') {
     try {
-      const PLANTNET_KEY = process.env.PLANTNET_API_KEY || '2b10yJM6CuBvi9Sac1t84q0gk';
+      const PLANTNET_KEY = '2b10yJM6CuBvi9Sac1t84q0gk';
       const byteChars = atob(imageBase64);
       const byteArray = new Uint8Array(byteChars.length);
       for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
@@ -21,59 +20,43 @@ export default async function handler(req, res) {
       formData.append('organs', organ || 'leaf');
       const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${PLANTNET_KEY}&nb-results=5&lang=en`;
       const response = await fetch(url, { method: 'POST', body: formData });
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`PlantNet ${response.status}: ${errText}`);
-      }
+      if (!response.ok) throw new Error(`PlantNet ${response.status}`);
       const data = await response.json();
       res.status(200).json({ success: true, source: 'plantnet', data });
     } catch (e) {
-      console.error('PlantNet error:', e.message);
       res.status(500).json({ success: false, error: e.message });
     }
     return;
   }
 
-  // ── CLAUDE ────────────────────────────────────────────────
-  if (service === 'claude') {
+  if (service === 'gemini') {
     try {
-      const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-      if (!ANTHROPIC_KEY) {
-        res.status(500).json({ success: false, error: 'ANTHROPIC_API_KEY not set in Vercel environment variables' });
-        return;
-      }
-      const prompt = `You are an expert botanist specialising in Indian trees in Delhi, especially Jor Bagh neighbourhood. The user photographed the ${organ||'plant'} of a tree. Identify it. Respond ONLY with valid JSON (no markdown, no extra text): {"common_name":"English name","hindi_name":"Hindi name with Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_jor_bagh":true,"identification_notes":"2-3 sentences on key identifying features","alternatives":[{"common":"Alt 1","sci":"Scientific name","confidence":40},{"common":"Alt 2","sci":"Scientific name","confidence":20}]}`;
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: imageType || 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: prompt }
-            ]
-          }]
-        })
-      });
-      if (!response.ok) throw new Error(`Claude ${response.status}`);
+      const GEMINI_KEY = 'AIzaSyDttmwgCRGUGMU43HjZIX8cjxObhxTdSfM';
+      const prompt = `You are an expert botanist specialising in Indian trees found in Delhi. Look at this photo and identify the tree species. Respond with ONLY valid JSON no markdown: {"common_name":"English name","hindi_name":"Hindi in Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_delhi":true,"identification_notes":"2-3 sentences on key visual features that helped identify it","alternatives":[{"common":"Alt 1","sci":"Scientific name","confidence":30},{"common":"Alt 2","sci":"Scientific name","confidence":15}]}`;
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [
+              { inline_data: { mime_type: imageType || 'image/jpeg', data: imageBase64 } },
+              { text: prompt }
+            ]}],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 800 }
+          })
+        }
+      );
+      if (!response.ok) { const e = await response.text(); throw new Error(`Gemini ${response.status}: ${e}`); }
       const data = await response.json();
-      const text = data.content?.[0]?.text || '';
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-      res.status(200).json({ success: true, source: 'claude', data: parsed });
+      res.status(200).json({ success: true, source: 'gemini', data: parsed });
     } catch (e) {
-      console.error('Claude error:', e.message);
       res.status(500).json({ success: false, error: e.message });
     }
     return;
   }
 
-  res.status(400).json({ error: 'Unknown service. Use plantnet or claude.' });
+  res.status(400).json({ error: 'Unknown service' });
 }
