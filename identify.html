@@ -433,33 +433,35 @@ function setStep(msg) {
 
 // ── PLANTNET (direct browser call) ───────────────────────────
 async function tryPlantNet() {
+  // Try PlantNet via proxy
   try {
     setStep('🌿 Asking PlantNet plant AI...');
-    const resp = await fetch('/api/identify', {
+    const resp = await fetch('https://my-api.plantnet.org/v2/identify/all?api-key=2b10yJM6CuBvi9Sac1t84q0gk&nb-results=5&lang=en', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service: 'plantnet',
-        imageBase64: selectedPhotoBase64,
-        imageType: selectedPhotoType || 'image/jpeg',
-        organ: selectedOrgan || 'leaf'
-      })
+      body: (() => {
+        const byteChars = atob(selectedPhotoBase64);
+        const byteArray = new Uint8Array(byteChars.length);
+        for(let i=0;i<byteChars.length;i++) byteArray[i]=byteChars.charCodeAt(i);
+        const blob = new Blob([byteArray],{type:selectedPhotoType||'image/jpeg'});
+        const fd = new FormData();
+        fd.append('images', blob, 'tree.jpg');
+        fd.append('organs', selectedOrgan||'leaf');
+        return fd;
+      })()
     });
-    if (!resp.ok) throw new Error('Proxy error ' + resp.status);
-    const json = await resp.json();
-    if (!json.success || !json.data?.results?.length) return null;
-
+    if (!resp.ok) throw new Error('PlantNet ' + resp.status);
+    const data = await resp.json();
+    if (!data.results?.length) return null;
     setStep('✅ PlantNet identified the tree!');
-    const data = json.data;
     const top = data.results[0];
     const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
     const confidence = Math.round((top.score||0)*100);
     const kb = TREE_KB[sciName]||{};
-    const commonName = kb.common || top.species?.commonNames?.[0] || sciName;
     return {
-      source:'PLANTNET AI', common:commonName, sci:sciName, confidence,
+      source:'PLANTNET AI', common:kb.common||top.species?.commonNames?.[0]||sciName,
+      sci:sciName, confidence,
       family:top.species?.family?.scientificNameWithoutAuthor||kb.family||'—',
-      inJorBagh:kb.inJorBagh?'✅ Yes, common in Delhi':'❓ Less common in Delhi',
+      inJorBagh:kb.inJorBagh?'✅ Yes, common in Delhi':'❓ Less common',
       hindi:kb.hindi||'—', note:kb.note||null,
       organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
       alternatives:data.results.slice(1,4).map(r=>({
@@ -476,44 +478,88 @@ async function tryPlantNet() {
 }
 
 async function tryClaudeVision() {
+  // Use Gemini via proxy
   try {
     setStep('🤖 Google Gemini AI is examining your photo...');
     const resp = await fetch('/api/identify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        service: 'gemini',
-        imageBase64: selectedPhotoBase64,
-        imageType: selectedPhotoType || 'image/jpeg',
-        organ: selectedOrgan || 'leaf'
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        service:'gemini',
+        imageBase64:selectedPhotoBase64,
+        imageType:selectedPhotoType||'image/jpeg',
+        organ:selectedOrgan||'leaf'
       })
     });
-    if (!resp.ok) throw new Error('Proxy error ' + resp.status);
+    if(!resp.ok) throw new Error('Proxy ' + resp.status);
     const json = await resp.json();
-    if (!json.success || !json.data) return null;
-
-    const parsed = json.data;
-    if (!parsed.common_name) return null;
-    const kb = TREE_KB[parsed.scientific_name]||{};
-
-    setStep('✅ Gemini AI identified the tree!');
+    if(!json.success||!json.data) throw new Error(json.error||'No result');
+    const p = json.data;
+    if(!p.common_name) return null;
+    const kb = TREE_KB[p.scientific_name]||{};
+    setStep('✅ Gemini identified the tree!');
     return {
-      source: 'GOOGLE GEMINI AI',
-      common: parsed.common_name,
-      sci: parsed.scientific_name,
-      confidence: parsed.confidence || 70,
-      family: parsed.family || kb.family || '—',
-      inJorBagh: parsed.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common in Delhi',
-      hindi: parsed.hindi_name || kb.hindi || '—',
-      note: parsed.identification_notes || null,
-      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
-      alternatives: (parsed.alternatives||[]).map(a=>({
-        name:a.common, sci:a.sci, conf:a.confidence,
+      source:'GOOGLE GEMINI AI',
+      common:p.common_name, sci:p.scientific_name,
+      confidence:p.confidence||70,
+      family:p.family||kb.family||'—',
+      inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
+      hindi:p.hindi_name||kb.hindi||'—',
+      note:p.identification_notes||null,
+      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
+      alternatives:(p.alternatives||[]).map(a=>({
+        name:a.common,sci:a.sci,conf:a.confidence,
         emoji:TREE_KB[a.sci]?.emoji||'🌿'
       }))
     };
   } catch(e) {
-    console.warn('Gemini failed:', e.message);
+    console.warn('Gemini proxy failed:', e.message);
+    // Last resort — use Gemini directly 
+    return await tryGeminiDirect();
+  }
+}
+
+async function tryGeminiDirect() {
+  try {
+    setStep('🤖 Trying Gemini directly...');
+    const GEMINI_KEY = 'AIzaSyDttmwgCRGUGMU43HjZIX8cjxObhxTdSfM';
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[
+            {inline_data:{mime_type:selectedPhotoType||'image/jpeg',data:selectedPhotoBase64}},
+            {text:`You are an expert botanist specialising in Indian trees found in Delhi. Look at this photo and identify the tree. Respond ONLY with valid JSON no markdown: {"common_name":"English name","hindi_name":"Hindi in Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_delhi":true,"identification_notes":"2-3 sentences on key visual features","alternatives":[{"common":"Alt 1","sci":"Sci name","confidence":30}]}`}
+          ]}],
+          generationConfig:{temperature:0.2,maxOutputTokens:800}
+        })
+      }
+    );
+    if(!resp.ok) throw new Error('Gemini direct ' + resp.status);
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const p = JSON.parse(text.replace(/```json|```/g,'').trim());
+    if(!p.common_name) return null;
+    const kb = TREE_KB[p.scientific_name]||{};
+    setStep('✅ Gemini identified the tree!');
+    return {
+      source:'GOOGLE GEMINI AI',
+      common:p.common_name, sci:p.scientific_name,
+      confidence:p.confidence||70,
+      family:p.family||kb.family||'—',
+      inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
+      hindi:p.hindi_name||kb.hindi||'—',
+      note:p.identification_notes||null,
+      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
+      alternatives:(p.alternatives||[]).map(a=>({
+        name:a.common,sci:a.sci,conf:a.confidence,
+        emoji:TREE_KB[a.sci]?.emoji||'🌿'
+      }))
+    };
+  } catch(e) {
+    console.warn('Gemini direct failed:', e.message);
     return null;
   }
 }
