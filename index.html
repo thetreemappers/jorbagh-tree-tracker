@@ -709,6 +709,110 @@ footer {
   .hstat-val { font-size: 24px; }
 }
 
+
+/* ── CRITICAL OVERFLOW FIX ── */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+* { max-width: 100%; }
+
+@media(max-width:768px){
+  /* Force everything to fit */
+  #hero {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    padding-top: 56px !important;
+  }
+  .hero-left {
+    width: 100% !important;
+    padding: 28px 20px 32px !important;
+    order: 1;
+  }
+  .hero-right {
+    width: 100% !important;
+    height: 220px !important;
+    position: relative !important;
+    order: 2;
+  }
+  #hero-map {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .hero-map-vignette { display: none; }
+  .hero-map-card { display: none; }
+
+  /* Hero text */
+  .hero-title {
+    font-size: 36px !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.5px !important;
+  }
+  .hero-tag { font-size: 10px !important; margin-bottom: 14px !important; }
+  .hero-desc { font-size: 14px !important; margin-bottom: 24px !important; max-width: 100% !important; }
+  .hero-btns { flex-direction: column !important; gap: 10px !important; }
+  .btn-fill, .btn-outline { width: 100% !important; justify-content: center !important; padding: 14px !important; border-radius: 12px !important; }
+  .hero-stats { gap: 0 !important; margin-top: 28px !important; padding-top: 24px !important; }
+  .hstat { padding-right: 16px !important; margin-right: 16px !important; }
+  .hstat:last-child { padding: 0 !important; margin: 0 !important; }
+  .hstat-val { font-size: 26px !important; }
+  .hstat-label { font-size: 10px !important; }
+
+  /* NAV */
+  #nav { padding: 0 16px !important; height: 56px !important; overflow: hidden !important; }
+  .nav-links { display: none !important; }
+  .nav-ham { display: flex !important; }
+  #mobile-nav a { font-size: 16px !important; }
+
+  /* MAP SECTION */
+  .map-top { padding: 14px 16px !important; flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+  .map-body { min-height: 400px !important; }
+  .map-sidebar { display: none !important; }
+  #main-map { width: 100% !important; }
+
+  /* POPUP */
+  .tree-popup-card {
+    width: calc(100% - 24px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    max-width: none !important;
+  }
+
+  /* ALL SECTIONS */
+  .section, #stats-section, #cta-section { padding: 44px 20px !important; }
+  .section-title { font-size: 28px !important; }
+
+  /* TRUST BAR */
+  #trust-bar { padding: 14px 20px !important; flex-direction: column !important; gap: 8px !important; align-items: flex-start !important; }
+  .trust-divider { display: none !important; }
+
+  /* STATS */
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-top: 28px !important; }
+  .sb-val { font-size: 36px !important; }
+
+  /* SPECIES */
+  .species-layout { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .species-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+
+  /* HOW */
+  .how-grid { grid-template-columns: 1fr !important; gap: 12px !important; margin-top: 28px !important; }
+  .how-card { padding: 22px 18px !important; }
+
+  /* CTA */
+  .cta-btns { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+  .cta-btns a { text-align: center !important; justify-content: center !important; }
+
+  /* FOOTER */
+  footer { padding: 32px 20px !important; }
+  .footer-top { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .footer-bottom { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
+}
+
 </style>
 </head>
 <body>
