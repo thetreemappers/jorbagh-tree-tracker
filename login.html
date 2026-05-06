@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --forest:#0f1f0c; --canopy:#1a3a0f; --sage:#2d6a1e; --leaf:#4a9e32;
+  --lime:#8ecf5e; --pale:#c8f0b8; --cream:#f8f4ed; --parchment:#efe9da;
+  --gold:#c8922a; --gold-light:#e8b84b;
+  --text:#1a2118; --text2:#3d5c30; --text3:#7a9e68;
+  --border:rgba(42,107,30,0.14); --r:14px;
+  --shadow:0 4px 24px rgba(15,31,12,0.10);
+  --shadow-lg:0 12px 48px rgba(15,31,12,0.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);}
+
+/* ── LAYOUT ── */
+.auth-wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 480px;
+}
+
+/* LEFT PANEL */
+.auth-left {
+  background: linear-gradient(160deg, var(--forest) 0%, var(--canopy) 50%, var(--sage) 100%);
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 48px 56px; position: relative; overflow: hidden;
+}
+.auth-left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(142,207,94,.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(200,146,42,.08) 0%, transparent 50%);
+}
+.al-logo { position: relative; z-index: 1; }
+.al-logo-main {
+  display: flex; flex-direction: column;
+  font-family: 'Cormorant Garamond', serif;
+  text-decoration: none;
+}
+.al-logo-row { display: flex; align-items: center; gap: 10px; }
+.al-logo-icon { font-size: 28px; }
+.al-logo-name { font-size: 24px; font-weight: 600; color: white; }
+.al-logo-name span { color: var(--gold-light); }
+.al-logo-tag { font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.4); margin-top: 4px; padding-left: 38px; }
+
+.al-content { position: relative; z-index: 1; }
+.al-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(32px, 3.5vw, 52px);
+  font-weight: 600; color: white; line-height: 1.08;
+  margin-bottom: 18px; letter-spacing: -.5px;
+}
+.al-title em { color: var(--gold-light); font-style: italic; }
+.al-desc { font-size: 15px; color: rgba(255,255,255,.55); line-height: 1.7; font-weight: 300; max-width: 380px; margin-bottom: 40px; }
+
+.al-features { display: flex; flex-direction: column; gap: 14px; }
+.al-feat { display: flex; align-items: center; gap: 12px; }
+.al-feat-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+}
+.al-feat-text { font-size: 13px; color: rgba(255,255,255,.7); font-weight: 400; }
+.al-feat-text strong { color: white; font-weight: 600; display: block; }
+
+.al-bottom { position: relative; z-index: 1; font-size: 12px; color: rgba(255,255,255,.25); }
+
+/* RIGHT PANEL */
+.auth-right {
+  background: white; display: flex; flex-direction: column;
+  justify-content: center; padding: 48px 44px;
+  border-left: 1px solid rgba(0,0,0,.06);
+  overflow-y: auto;
+}
+
+.auth-tabs {
+  display: flex; gap: 0; margin-bottom: 32px;
+  background: var(--cream); border-radius: 10px; padding: 4px;
+}
+.auth-tab {
+  flex: 1; padding: 9px; border: none; background: transparent;
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--text3); border-radius: 8px; cursor: pointer;
+  transition: all .2s;
+}
+.auth-tab.active { background: white; color: var(--text); box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
+.form-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; font-weight: 700; color: var(--text);
+  margin-bottom: 6px; letter-spacing: -.3px;
+}
+.form-sub { font-size: 13px; color: var(--text3); margin-bottom: 28px; line-height: 1.5; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: .3px; }
+.field input {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid #e8e0d5; border-radius: var(--r);
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  color: var(--text); background: var(--cream);
+  transition: all .2s; outline: none;
+}
+.field input:focus { border-color: var(--leaf); background: white; box-shadow: 0 0 0 3px rgba(74,158,50,.08); }
+.field input::placeholder { color: #b0a898; }
+
+/* Invite code field special */
+.invite-wrap { position: relative; }
+.invite-wrap input { padding-right: 100px; font-family: 'Outfit',sans-serif; letter-spacing: 2px; font-weight: 600; text-transform: uppercase; }
+.invite-badge {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 6px;
+  background: rgba(200,146,42,.1); color: var(--gold);
+  display: none;
+}
+.invite-badge.show { display: block; }
+.invite-badge.valid { background: rgba(74,158,50,.12); color: var(--sage); }
+.invite-badge.invalid { background: rgba(200,50,50,.1); color: #c03222; }
+
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 5px; line-height: 1.4; }
+
+.btn-submit {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--sage), var(--leaf));
+  border: none; border-radius: var(--r);
+  color: white; font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(42,106,30,.25);
+  transition: all .22s; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(42,106,30,.3); }
+.btn-submit:disabled { background: #ccc; box-shadow: none; transform: none; cursor: not-allowed; }
+
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+.auth-divider span { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.auth-divider::before, .auth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.auth-msg {
+  padding: 11px 14px; border-radius: 10px; font-size: 13px;
+  margin-bottom: 16px; display: none; line-height: 1.5;
+}
+.auth-msg.show { display: block; }
+.auth-msg.error { background: #fde8e8; color: #c03222; border: 1px solid #f0b8b8; }
+.auth-msg.success { background: #dcf5d0; color: #2d6a1e; border: 1px solid #a8d5a2; }
+.auth-msg.info { background: #fef3cd; color: #8a6400; border: 1px solid #f0d9a8; }
+
+/* ── PROFILE PAGE ── */
+#profile-page { display: none; min-height: 100vh; background: var(--cream); }
+.profile-header {
+  background: linear-gradient(135deg, var(--forest), var(--canopy));
+  padding: 40px; display: flex; align-items: center; gap: 24px;
+}
+.ph-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--leaf), var(--lime));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 700; color: white; flex-shrink: 0;
+  border: 3px solid rgba(255,255,255,.2);
+}
+.ph-info h2 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: white; margin-bottom: 4px; }
+.ph-email { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 8px; }
+.ph-role {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.ph-role.member { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+.ph-role.co-admin { background: rgba(200,146,42,.25); color: var(--gold-light); }
+.ph-role.admin { background: rgba(142,207,94,.2); color: var(--lime); }
+
+.profile-body { padding: 32px 40px; max-width: 800px; margin: 0 auto; }
+
+.profile-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+.pc { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+.pc-val { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 700; color: var(--sage); line-height: 1; }
+.pc-label { font-size: 11px; color: var(--text3); margin-top: 4px; font-weight: 500; }
+
+.profile-section { background: white; border: 1px solid var(--border); border-radius: var(--r); padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+.ps-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+.invite-form-wrap { display: flex; gap: 10px; }
+.invite-input {
+  flex: 1; padding: 10px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: 14px;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 600;
+  color: var(--text); background: var(--cream); outline: none;
+}
+.invite-input:focus { border-color: var(--leaf); background: white; }
+.invite-submit {
+  padding: 10px 20px; background: var(--canopy); border: none;
+  border-radius: 10px; color: white; font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: all .2s;
+}
+.invite-submit:hover { background: var(--sage); }
+
+.tree-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 10px; }
+.tree-mini {
+  background: var(--cream); border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border); transition: transform .2s;
+}
+.tree-mini:hover { transform: translateY(-2px); }
+.tm-photo { width: 100%; height: 90px; object-fit: cover; display: none; }
+.tm-photo.show { display: block; }
+.tm-emoji { width: 100%; height: 90px; display: flex; align-items: center; justify-content: center; font-size: 36px; background: var(--parchment); }
+.tm-body { padding: 8px 10px; }
+.tm-name { font-size: 11px; font-weight: 600; color: var(--text); }
+.tm-date { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+.btn-signout {
+  padding: 10px 20px; background: transparent; border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--text3); font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s;
+}
+.btn-signout:hover { border-color: #e74c3c; color: #c03222; background: #fde8e8; }
+
+/* NAV */
+.profile-nav {
+  background: rgba(248,244,237,.96); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 60px; position: sticky; top: 0; z-index: 100;
+}
+.pn-logo { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--canopy); text-decoration: none; }
+.pn-logo span { color: var(--gold); }
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .auth-wrap { grid-template-columns: 1fr; }
+  .auth-left { display: none; }
+  .auth-right { min-height: 100vh; }
+  .profile-cards { grid-template-columns: 1fr 1fr; }
+  .profile-header { padding: 24px 20px; }
+  .profile-body { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── AUTH PAGE ── -->
+<div id="auth-page">
+  <div class="auth-wrap">
+
+    <!-- LEFT -->
+    <div class="auth-left">
+      <div class="al-logo">
+        <a href="index.html" class="al-logo-main">
+          <div class="al-logo-row">
+            <span class="al-logo-icon">🌳</span>
+            <span class="al-logo-name">Jor Bagh <span>Tree Tracker</span></span>
+          </div>
+          <span class="al-logo-tag">New Delhi Urban Forest Map</span>
+        </a>
+      </div>
+
+      <div class="al-content">
+        <h1 class="al-title">Join Delhi's<br><em>Tree Mapping</em><br>Community</h1>
+        <p class="al-desc">Help us build the most complete urban forest record Delhi has ever had. Every tree you log is a permanent contribution to your city.</p>
+        <div class="al-features">
+          <div class="al-feat">
+            <div class="al-feat-icon">🗺️</div>
+            <div class="al-feat-text"><strong>Log Trees on the Map</strong>Add any tree in Delhi with GPS precision</div>
+          </div>
+          <div class="al-feat">
+            <div class="al-feat-icon">📷</div>
+            <div class="al-feat-text"><strong>Upload Photos</strong>Permanently stored and shown on the map</div>
+          </div>
+          <div class="al-feat">
+            <div class="al-feat-icon">🔬</div>
+            <div class="al-feat-text"><strong>AI Identification</strong>Identify any tree species instantly</div>
+          </div>
+          <div class="al-feat">
+            <div class="al-feat-icon">⭐</div>
+            <div class="al-feat-text"><strong>Co-Admin Access</strong>Have an invite code? Get special access</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="al-bottom">© 2026 thetreemappers.com · New Delhi</div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="auth-right">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('register')">Create Account</button>
+        <button class="auth-tab" onclick="switchTab('login')">Sign In</button>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form active" id="form-register">
+        <div class="form-title">Create your account</div>
+        <div class="form-sub">Join the community of Delhi tree mappers 🌿</div>
+
+        <div class="auth-msg" id="reg-msg"></div>
+
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="Your name">
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="reg-email" placeholder="you@email.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="At least 8 characters">
+        </div>
+        <div class="field">
+          <label>Co-Admin Invite Code <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+          <div class="invite-wrap">
+            <input type="text" id="reg-invite" placeholder="ENTER CODE" oninput="checkInviteCode(this.value)" style="letter-spacing:2px;text-transform:uppercase;font-weight:600">
+            <span class="invite-badge" id="invite-badge"></span>
+          </div>
+          <div class="field-hint">If you have an invite code, enter it here to get co-admin access. Leave blank to join as a community member.</div>
+        </div>
+
+        <button class="btn-submit" onclick="register()" id="reg-btn">
+          🌱 Create Account
+        </button>
+
+        <div class="auth-divider"><span>or</span></div>
+        <div style="text-align:center;font-size:13px;color:var(--text3)">
+          Already have an account? <a href="#" onclick="switchTab('login')" style="color:var(--sage);font-weight:600">Sign in →</a>
+        </div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form" id="form-login">
+        <div class="form-title">Welcome back</div>
+        <div class="form-sub">Sign in to your Tree Mappers account 🌳</div>
+
+        <div class="auth-msg" id="login-msg"></div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="you@email.com">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password">
+        </div>
+
+        <button class="btn-submit" onclick="login()" id="login-btn">
+          🌿 Sign In
+        </button>
+
+        <div class="auth-divider"><span>or</span></div>
+        <div style="text-align:center;font-size:13px;color:var(--text3)">
+          Don't have an account? <a href="#" onclick="switchTab('register')" style="color:var(--sage);font-weight:600">Create one →</a>
+        </div>
+        <div style="text-align:center;margin-top:12px">
+          <a href="#" onclick="forgotPassword()" style="font-size:12px;color:var(--text3)">Forgot password?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFILE PAGE ── -->
+<div id="profile-page">
+  <nav class="profile-nav">
+    <a href="index.html" class="pn-logo">🌳 Jor Bagh <span>Tree Tracker</span></a>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="index.html" style="font-size:13px;font-weight:500;color:var(--text2);text-decoration:none">🗺️ Map</a>
+      <a href="community.html" style="font-size:13px;font-weight:500;color:var(--text2);text-decoration:none">👥 Community</a>
+      <a href="submit.html" style="font-size:13px;font-weight:600;color:white;background:var(--canopy);padding:7px 14px;border-radius:8px;text-decoration:none">➕ Add a Tree</a>
+      <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="profile-header">
+    <div class="ph-avatar" id="ph-avatar">?</div>
+    <div class="ph-info">
+      <h2 id="ph-name">Loading...</h2>
+      <div class="ph-email" id="ph-email"></div>
+      <span class="ph-role" id="ph-role">Member</span>
+    </div>
+  </div>
+
+  <div class="profile-body">
+
+    <!-- STATS -->
+    <div class="profile-cards">
+      <div class="pc"><div class="pc-val" id="pc-trees">0</div><div class="pc-label">Trees Logged</div></div>
+      <div class="pc"><div class="pc-val" id="pc-photos">0</div><div class="pc-label">Photos Uploaded</div></div>
+      <div class="pc"><div class="pc-val" id="pc-species">0</div><div class="pc-label">Species Found</div></div>
+    </div>
+
+    <!-- UPGRADE TO CO-ADMIN -->
+    <div class="profile-section" id="invite-section">
+      <div class="ps-title">⭐ Upgrade to Co-Admin</div>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px;line-height:1.6">Have an invite code? Enter it below to get co-admin access and help manage the Delhi tree map.</p>
+      <div class="invite-form-wrap">
+        <input type="text" class="invite-input" id="profile-invite" placeholder="ENTER INVITE CODE" oninput="this.value=this.value.toUpperCase()">
+        <button class="invite-submit" onclick="applyInviteCode()">Apply Code</button>
+      </div>
+      <div class="auth-msg" id="invite-msg" style="margin-top:12px;margin-bottom:0"></div>
+    </div>
+
+    <!-- MY TREES -->
+    <div class="profile-section">
+      <div class="ps-title">🌳 My Trees</div>
+      <div class="tree-grid" id="my-trees">
+        <div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text3);font-size:13px">Loading your trees...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const SP = {'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳','Kadamba':'💐'};
+function ge(n){ return SP[n]||'🌳'; }
+function timeAgo(d){ const diff=(Date.now()-new Date(d))/1000; if(diff<86400) return 'Today'; if(diff<604800) return Math.floor(diff/86400)+'d ago'; return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'}); }
+
+// ── TAB SWITCH ────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='register'?0:1)));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('form-'+tab).classList.add('active');
+}
+
+// ── CHECK INVITE CODE ─────────────────────────────────────────
+let inviteValid = false;
+async function checkInviteCode(code){
+  const badge = document.getElementById('invite-badge');
+  if(!code || code.length < 4){ badge.className='invite-badge'; inviteValid=false; return; }
+  badge.className='invite-badge show'; badge.textContent='Checking...';
+  try {
+    const {data} = await sb.from('invite_codes').select('*').eq('code',code.toUpperCase()).is('used_by',null).single();
+    if(data){ badge.className='invite-badge show valid'; badge.textContent='✓ Valid — Co-Admin'; inviteValid=true; }
+    else { badge.className='invite-badge show invalid'; badge.textContent='✗ Invalid'; inviteValid=false; }
+  } catch(e){ badge.className='invite-badge show invalid'; badge.textContent='✗ Not found'; inviteValid=false; }
+}
+
+// ── REGISTER ──────────────────────────────────────────────────
+async function register(){
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const invite = document.getElementById('reg-invite').value.trim().toUpperCase();
+  const msg = document.getElementById('reg-msg');
+  const btn = document.getElementById('reg-btn');
+
+  if(!name||!email||!password){ showMsg(msg,'error','Please fill in all required fields'); return; }
+  if(password.length < 8){ showMsg(msg,'error','Password must be at least 8 characters'); return; }
+
+  btn.disabled=true; btn.textContent='Creating account...';
+
+  try {
+    const {data,error} = await sb.auth.signUp({
+      email, password,
+      options:{ data:{ full_name:name } }
+    });
+    if(error) throw error;
+
+    // If valid invite code, apply co-admin role after signup
+    if(invite && inviteValid){
+      await sb.from('invite_codes').update({used_by:data.user.id,used_at:new Date().toISOString()}).eq('code',invite);
+      await sb.from('profiles').update({role:'co-admin'}).eq('id',data.user.id);
+      showMsg(msg,'success','🌳 Account created! You are now a Co-Admin. Check your email to verify your account.');
+    } else {
+      showMsg(msg,'success','🌱 Account created! Please check your email to verify your account, then sign in.');
+    }
+    btn.textContent='✅ Account Created!';
+    setTimeout(()=>switchTab('login'),3000);
+  } catch(e){
+    showMsg(msg,'error',e.message||'Registration failed. Please try again.');
+    btn.disabled=false; btn.textContent='🌱 Create Account';
+  }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────
+async function login(){
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const msg = document.getElementById('login-msg');
+  const btn = document.getElementById('login-btn');
+
+  if(!email||!password){ showMsg(msg,'error','Please enter your email and password'); return; }
+
+  btn.disabled=true; btn.textContent='Signing in...';
+
+  try {
+    const {data,error} = await sb.auth.signInWithPassword({email,password});
+    if(error) throw error;
+    showMsg(msg,'success','✅ Signed in! Loading your profile...');
+    setTimeout(()=>showProfile(data.user),800);
+  } catch(e){
+    showMsg(msg,'error',e.message||'Sign in failed. Check your email and password.');
+    btn.disabled=false; btn.textContent='🌿 Sign In';
+  }
+}
+
+// ── FORGOT PASSWORD ───────────────────────────────────────────
+async function forgotPassword(){
+  const email = document.getElementById('login-email').value.trim();
+  const msg = document.getElementById('login-msg');
+  if(!email){ showMsg(msg,'error','Please enter your email address first'); return; }
+  const {error} = await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+  if(error) showMsg(msg,'error',error.message);
+  else showMsg(msg,'success','📧 Password reset email sent! Check your inbox.');
+}
+
+// ── SHOW PROFILE ──────────────────────────────────────────────
+async function showProfile(user){
+  document.getElementById('auth-page').style.display='none';
+  document.getElementById('profile-page').style.display='block';
+
+  // Get profile
+  const {data:profile} = await sb.from('profiles').select('*').eq('id',user.id).single();
+  const name = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
+  const role = profile?.role || 'member';
+
+  document.getElementById('ph-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('ph-name').textContent = name;
+  document.getElementById('ph-email').textContent = user.email;
+
+  const roleEl = document.getElementById('ph-role');
+  roleEl.className = 'ph-role '+role;
+  roleEl.textContent = role==='admin'?'⭐ Admin':role==='co-admin'?'⭐ Co-Admin':'🌿 Member';
+
+  // Hide invite section if already co-admin or admin
+  if(role==='co-admin'||role==='admin'){
+    document.getElementById('invite-section').style.display='none';
+  }
+
+  // Get my trees
+  const {data:trees} = await sb.from('trees').select('*').eq('submitted_by',name).order('created_at',{ascending:false});
+  const myTrees = trees||[];
+
+  document.getElementById('pc-trees').textContent = myTrees.length;
+  document.getElementById('pc-photos').textContent = myTrees.filter(t=>t.photo_url).length;
+  document.getElementById('pc-species').textContent = new Set(myTrees.map(t=>t.common_name)).size;
+
+  // My trees grid
+  document.getElementById('my-trees').innerHTML = myTrees.length
+    ? myTrees.map(t=>`
+      <div class="tree-mini">
+        ${t.photo_url
+          ?`<img class="tm-photo show" src="${t.photo_url}" onerror="this.classList.remove('show');this.nextElementSibling.style.display='flex'">`
+          :''}
+        <div class="tm-emoji" ${t.photo_url?'style="display:none"':''}>${ge(t.common_name)}</div>
+        <div class="tm-body">
+          <div class="tm-name">${t.common_name}</div>
+          <div class="tm-date">${timeAgo(t.created_at)}</div>
+        </div>
+      </div>`).join('')
+    : '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text3);font-size:13px">No trees logged yet.<br><a href="submit.html" style="color:var(--sage);font-weight:600">Add your first tree →</a></div>';
+}
+
+// ── APPLY INVITE CODE (from profile) ─────────────────────────
+async function applyInviteCode(){
+  const code = document.getElementById('profile-invite').value.trim().toUpperCase();
+  const msg = document.getElementById('invite-msg');
+  if(!code){ showMsg(msg,'error','Please enter an invite code'); return; }
+
+  try {
+    const {data:session} = await sb.auth.getSession();
+    const user = session?.session?.user;
+    if(!user) throw new Error('Not signed in');
+
+    const {data:inviteData} = await sb.from('invite_codes').select('*').eq('code',code).is('used_by',null).single();
+    if(!inviteData) throw new Error('Invalid or already used invite code');
+
+    await sb.from('invite_codes').update({used_by:user.id,used_at:new Date().toISOString()}).eq('code',code);
+    await sb.from('profiles').update({role:'co-admin'}).eq('id',user.id);
+
+    showMsg(msg,'success','🌟 You are now a Co-Admin! Refresh to see your updated role.');
+    document.getElementById('invite-section').style.display='none';
+    document.getElementById('ph-role').className='ph-role co-admin';
+    document.getElementById('ph-role').textContent='⭐ Co-Admin';
+  } catch(e){
+    showMsg(msg,'error',e.message||'Could not apply invite code');
+  }
+}
+
+// ── SIGN OUT ──────────────────────────────────────────────────
+async function signOut(){
+  await sb.auth.signOut();
+  document.getElementById('profile-page').style.display='none';
+  document.getElementById('auth-page').style.display='block';
+}
+
+// ── HELPER ────────────────────────────────────────────────────
+function showMsg(el,type,text){
+  el.className='auth-msg show '+type;
+  el.textContent=text;
+}
+
+// ── AUTO LOGIN CHECK ──────────────────────────────────────────
+(async()=>{
+  const {data:{session}} = await sb.auth.getSession();
+  if(session?.user) showProfile(session.user);
+})();
+</script>
+</body>
+</html>
