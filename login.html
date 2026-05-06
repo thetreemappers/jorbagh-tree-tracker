@@ -247,6 +247,116 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--cream);co
   .profile-header { padding: 24px 20px; }
   .profile-body { padding: 20px; }
 }
+
+/* ── MOBILE FIXES ── */
+@media(max-width:600px){
+  /* Auth page */
+  .auth-wrap { grid-template-columns: 1fr; min-height: 100vh; }
+  .auth-left { display: none; }
+  .auth-right {
+    padding: 32px 20px 40px;
+    min-height: 100vh;
+    justify-content: flex-start;
+    padding-top: 48px;
+  }
+
+  /* Logo at top on mobile */
+  .auth-right::before {
+    content: '🌳 Jor Bagh Tree Tracker';
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--canopy);
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Tabs */
+  .auth-tabs { margin-bottom: 24px; }
+  .auth-tab { padding: 10px 8px; font-size: 14px; }
+
+  /* Form */
+  .form-title { font-size: 24px; }
+  .form-sub { font-size: 13px; margin-bottom: 20px; }
+  .field input { padding: 13px 14px; font-size: 15px; border-radius: 12px; }
+  .field label { font-size: 12px; margin-bottom: 6px; }
+  .field { margin-bottom: 14px; }
+  .btn-submit { padding: 15px; font-size: 16px; border-radius: 14px; margin-top: 6px; }
+
+  /* Profile nav */
+  .profile-nav {
+    padding: 0 16px;
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+  .pn-logo { font-size: 16px; padding: 12px 0; }
+  .profile-nav > div {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 0; width: 100%;
+    border-top: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .profile-nav > div::-webkit-scrollbar { display: none; }
+  .profile-nav a {
+    font-size: 12px !important;
+    white-space: nowrap;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+  }
+  .btn-signout { padding: 6px 12px; font-size: 12px; white-space: nowrap; }
+
+  /* Profile header */
+  .profile-header {
+    padding: 28px 20px 24px;
+    flex-direction: column;
+    text-align: center;
+    gap: 14px;
+  }
+  .ph-avatar { width: 64px; height: 64px; font-size: 28px; }
+  .ph-info h2 { font-size: 22px; }
+  .ph-email { font-size: 13px; }
+
+  /* Profile body */
+  .profile-body { padding: 16px 16px 40px; }
+
+  /* Stats cards */
+  .profile-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .pc { padding: 16px 12px; border-radius: 12px; }
+  .pc-val { font-size: 36px; }
+  .pc-label { font-size: 10px; }
+
+  /* Profile sections */
+  .profile-section { padding: 18px 16px; border-radius: 14px; margin-bottom: 14px; }
+  .ps-title { font-size: 16px; margin-bottom: 12px; padding-bottom: 10px; }
+
+  /* Invite form */
+  .invite-form-wrap { flex-direction: column; gap: 8px; }
+  .invite-input { padding: 12px 14px; font-size: 15px; border-radius: 12px; text-align: center; }
+  .invite-submit { padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; }
+
+  /* Tree grid */
+  .tree-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tm-photo, .tm-emoji { height: 70px; }
+  .tm-emoji { font-size: 28px; }
+  .tm-body { padding: 6px 8px; }
+  .tm-name { font-size: 10px; }
+  .tm-date { font-size: 9px; }
+}
+
+@media(max-width:380px){
+  .tree-grid { grid-template-columns: repeat(2, 1fr); }
+  .profile-cards { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -479,7 +589,7 @@ async function register(){
       await sb.from('profiles').update({role:'co-admin'}).eq('id',data.user.id);
       showMsg(msg,'success','🌳 Account created! You are now a Co-Admin. Check your email to verify your account.');
     } else {
-      showMsg(msg,'success','🌱 Account created! Please check your email to verify your account, then sign in.');
+      showMsg(msg,'success','🌱 Account created! Check your email and click the verification link. Then come back here and sign in.');
     }
     btn.textContent='✅ Account Created!';
     setTimeout(()=>switchTab('login'),3000);
@@ -607,10 +717,36 @@ function showMsg(el,type,text){
   el.textContent=text;
 }
 
+// ── HANDLE EMAIL CONFIRMATION ────────────────────────────────
+// When user clicks verification link, Supabase redirects back with tokens in URL hash
+async function handleEmailConfirmation() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    // Exchange the hash tokens for a session
+    const { data, error } = await sb.auth.getSession();
+    if (data?.session?.user) {
+      showMsg(document.getElementById('login-msg'), 'success', '✅ Email verified! Loading your profile...');
+      switchTab('login');
+      setTimeout(() => showProfile(data.session.user), 800);
+      return true;
+    }
+  }
+  // Also check for error in hash
+  if (hash && hash.includes('error=access_denied')) {
+    switchTab('login');
+    showMsg(document.getElementById('login-msg'), 'error', '❌ Verification link expired. Please register again or request a new link.');
+    return true;
+  }
+  return false;
+}
+
 // ── AUTO LOGIN CHECK ──────────────────────────────────────────
 (async()=>{
-  const {data:{session}} = await sb.auth.getSession();
-  if(session?.user) showProfile(session.user);
+  const handled = await handleEmailConfirmation();
+  if (!handled) {
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user) showProfile(session.user);
+  }
 })();
 </script>
 </body>
