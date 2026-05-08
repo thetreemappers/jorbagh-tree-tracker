@@ -285,20 +285,58 @@ async function register(){
   const pw=document.getElementById('reg-password').value;
   const code=document.getElementById('reg-invite').value.trim().toUpperCase();
   const btn=document.getElementById('reg-btn');
-  if(!name||!email||!pw){msg('reg-msg','error','Please fill in all fields');return;}
-  if(pw.length<8){msg('reg-msg','error','Password must be at least 8 characters');return;}
-  btn.disabled=true;btn.textContent='Creating account...';
+
+  if(!name){msg('reg-msg','error','Please enter your full name');return;}
+  if(!email||!email.includes('@')){msg('reg-msg','error','Please enter a valid email address');return;}
+  if(!pw||pw.length<8){msg('reg-msg','error','Password must be at least 8 characters');return;}
+
+  btn.disabled=true;
+  btn.textContent='⏳ Creating account...';
+
   try{
-    const{data,error}=await sb.auth.signUp({email,password:pw,options:{data:{full_name:name}}});
-    if(error)throw error;
-    if(code&&codeValid&&data.user){
-      await sb.from('invite_codes').update({used_by:data.user.id,used_at:new Date().toISOString()}).eq('code',code);
-      await sb.from('profiles').update({role:'co-admin'}).eq('id',data.user.id);
-      msg('reg-msg','success','🌳 Account created! You are now a Co-Admin. Check your email to verify, then sign in.');
-    }else{msg('reg-msg','success','🌱 Account created! Check your email to verify, then sign in. Your account needs admin approval before you can access the map — usually within 24 hours.');}
-    btn.textContent='✅ Check your email!';
-    setTimeout(()=>switchTab('login'),3000);
-  }catch(e){msg('reg-msg','error',e.message||'Registration failed');btn.disabled=false;btn.textContent='🌱 Create Account';}
+    const{data,error}=await sb.auth.signUp({
+      email,password:pw,
+      options:{
+        data:{full_name:name},
+        emailRedirectTo:window.location.origin+'/login.html'
+      }
+    });
+
+    if(error){
+      if(error.message.includes('already')){
+        msg('reg-msg','error','This email is already registered. Click "Sign In" instead.');
+      } else {
+        msg('reg-msg','error',error.message||'Registration failed. Please try again.');
+      }
+      btn.disabled=false;btn.textContent='🌱 Create Account';
+      return;
+    }
+
+    // Apply invite code
+    const user=data.user||data.session?.user;
+    if(code&&codeValid&&user?.id){
+      try{
+        await sb.from('invite_codes').update({used_by:user.id,used_at:new Date().toISOString()}).eq('code',code);
+        await sb.from('profiles').update({role:'co-admin'}).eq('id',user.id);
+      }catch(e){console.warn('Invite error:',e);}
+    }
+
+    // If session exists — logged in directly (email confirm OFF)
+    if(data.session){
+      msg('reg-msg','success','🌳 Account created! Loading your profile...');
+      btn.textContent='✅ Done!';
+      setTimeout(()=>loadProfile(data.session.user),800);
+    } else {
+      // Email confirmation required
+      msg('reg-msg','success','🌱 Account created! Check your email for a verification link. Once verified, sign in and wait for admin approval to access the map.');
+      btn.textContent='📧 Check your email!';
+      setTimeout(()=>switchTab('login'),4000);
+    }
+
+  }catch(e){
+    msg('reg-msg','error',e.message||'Something went wrong. Please try again.');
+    btn.disabled=false;btn.textContent='🌱 Create Account';
+  }
 }
 
 async function login(){
@@ -309,10 +347,24 @@ async function login(){
   btn.disabled=true;btn.textContent='Signing in...';
   try{
     const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
-    if(error)throw error;
+    if(error){
+      // Give helpful error messages
+      if(error.message.includes('Email not confirmed')){
+        msg('login-msg','error','📧 Please verify your email first — check your inbox for a verification link from Supabase.');
+      } else if(error.message.includes('Invalid login')||error.message.includes('Invalid credentials')){
+        msg('login-msg','error','❌ Wrong email or password. Please try again.');
+      } else {
+        msg('login-msg','error',error.message);
+      }
+      btn.disabled=false;btn.textContent='🌿 Sign In';
+      return;
+    }
     msg('login-msg','success','✅ Signed in! Loading profile...');
     setTimeout(()=>loadProfile(data.user),600);
-  }catch(e){msg('login-msg','error',e.message||'Sign in failed');btn.disabled=false;btn.textContent='🌿 Sign In';}
+  }catch(e){
+    msg('login-msg','error',e.message||'Sign in failed. Please try again.');
+    btn.disabled=false;btn.textContent='🌿 Sign In';
+  }
 }
 
 async function forgotPassword(){
