@@ -193,8 +193,76 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(245,240,228
 </style>
 </head>
 <body>
-<!-- ── AUTH GATE ── -->
+<!-- ── SUBMIT AUTH GATE ── -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function submitGate(){
+  const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+  const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+  const sb=supabase.createClient(SURL,SKEY);
+
+  // Show loading overlay
+  const overlay=document.createElement('div');
+  overlay.id='submit-gate';
+  overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;padding:24px;';
+  document.body.prepend(overlay);
+
+  function showGate(icon, title, msg, btnText, btnHref, showRegister=false){
+    overlay.innerHTML=`
+      <div style="text-align:center;max-width:380px;background:white;border-radius:20px;padding:36px 28px;box-shadow:0 12px 48px rgba(15,31,12,0.16);border:1px solid rgba(42,107,30,0.12)">
+        <div style="font-size:56px;margin-bottom:16px">${icon}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#1a2118;margin-bottom:8px">${title}</div>
+        <div style="font-size:13px;color:#7a9e68;line-height:1.7;margin-bottom:24px">${msg}</div>
+        <a href="${btnHref}" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700;margin-bottom:${showRegister?'10px':'0'}">${btnText}</a>
+        ${showRegister?`<a href="login.html" style="display:block;padding:13px 24px;background:white;color:#1a3a0f;border-radius:12px;text-decoration:none;font-size:14px;font-weight:600;border:1.5px solid rgba(42,107,30,0.2)">📝 Create Account</a>`:''}
+        <div style="margin-top:16px"><a href="index.html" style="font-size:12px;color:#7a9e68;text-decoration:none">← Back to Map</a></div>
+      </div>`;
+  }
+
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+
+    // Not logged in
+    if(!session?.user){
+      showGate(
+        '🌳',
+        'Sign in to Add a Tree',
+        'Adding trees to the Delhi forest map requires an account. Sign in or register — it's free!',
+        '🌿 Sign In',
+        'login.html',
+        true
+      );
+      return;
+    }
+
+    // Logged in — check approval
+    const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
+
+    if(!profile || profile.status==='pending' || !profile.status){
+      showGate(
+        '⏳',
+        'Awaiting Approval',
+        'Your account is pending admin approval. You'll be able to add trees once approved — usually within 24 hours.',
+        '← Back to Map',
+        'index.html',
+        false
+      );
+      return;
+    }
+
+    // Approved — remove gate and show form
+    overlay.style.transition='opacity .3s';
+    overlay.style.opacity='0';
+    setTimeout(()=>overlay.remove(), 300);
+
+  } catch(e){
+    // On error, just let them through
+    overlay.remove();
+  }
+})();
+</script>
+
+
 <script>
 (async function authGate(){
   const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';

@@ -600,39 +600,131 @@ footer {
 }
 
 
-/* Website.html — fullscreen map layout */
-body { overflow: hidden; }
+/* ── WEBSITE.HTML — FULLSCREEN MAP ── */
+#hero, #trust-bar, #stats-section,
+#how-section, #species-section,
+#cta-section, footer {
+  display: none !important;
+}
+body { overflow: hidden !important; }
+html, body { height: 100% !important; }
+
 #map-section {
-  height: 100vh !important;
-  min-height: 100vh !important;
+  position: fixed !important;
+  top: 64px !important;
+  left: 0 !important; right: 0 !important; bottom: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  padding-top: 64px;
+  min-height: 0 !important;
 }
 .map-top {
-  flex-shrink: 0;
+  flex-shrink: 0 !important;
+  background: #0d1208 !important;
 }
 .map-body {
   flex: 1 !important;
   min-height: 0 !important;
+  overflow: hidden !important;
 }
 #main-map {
   height: 100% !important;
+  width: 100% !important;
 }
-/* Hide all sections except map */
-#hero, #trust-bar, #stats-section, #how-section,
-#species-section, #cta-section, footer {
-  display: none !important;
+
+/* Bigger popup on desktop */
+.tree-popup-card {
+  width: 360px !important;
+  bottom: 32px !important;
+  left: 32px !important;
 }
-/* Wider popup for desktop */
-.tree-popup-card { width: 340px !important; }
-.tpc-photo { height: 220px !important; }
+.tpc-photo { height: 240px !important; }
+
 /* Wider sidebar */
-.map-sidebar { width: 340px !important; }
+.map-sidebar {
+  width: 360px !important;
+  display: flex !important;
+}
+
+/* Responsive — hide sidebar on mobile */
+@media(max-width:768px){
+  .map-sidebar { display: none !important; }
+  .tree-popup-card {
+    width: calc(100% - 24px) !important;
+    left: 12px !important; right: 12px !important;
+    bottom: 16px !important;
+  }
+}
 
 </style>
 </head>
 <body>
+
+<script>
+(async function authGate(){
+  const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+  const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+  const sb=supabase.createClient(SURL,SKEY);
+
+  // Show loading overlay while checking
+  const overlay=document.createElement('div');
+  overlay.id='auth-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
+  overlay.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:360px">
+      <div style="font-size:56px;margin-bottom:16px">🌳</div>
+      <div id="ag-msg" style="font-size:15px;font-weight:500;color:#1a2118;margin-bottom:8px">Checking access...</div>
+      <div id="ag-sub" style="font-size:13px;color:#7a9e68;margin-bottom:24px"></div>
+      <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+      <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  document.body.prepend(overlay);
+
+  function showBlock(msg, sub, showBtn=true){
+    document.getElementById('ag-msg').textContent=msg;
+    document.getElementById('ag-sub').textContent=sub;
+    document.getElementById('ag-spinner').style.display='none';
+    if(showBtn) document.getElementById('ag-btn').style.display='inline-block';
+  }
+
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+
+    // Not logged in → redirect to login
+    if(!session?.user){
+      showBlock('This map is members only','Please sign in or register to continue');
+      return;
+    }
+
+    // Logged in — check approval status
+    const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
+
+    if(!profile){
+      showBlock('Account not found','Please register again to continue');
+      return;
+    }
+
+    if(profile.status==='pending' || !profile.status){
+      showBlock(
+        '⏳ Awaiting Approval',
+        'Your account is pending admin approval. You will get access once approved. Please check back soon!',
+        true
+      );
+      document.getElementById('ag-btn').textContent='← Back to Login';
+      return;
+    }
+
+    // Approved! Remove overlay and let them in
+    overlay.style.opacity='0';
+    overlay.style.transition='opacity .3s';
+    setTimeout(()=>overlay.remove(),300);
+
+  } catch(e){
+    showBlock('Something went wrong','Please try refreshing the page');
+  }
+})();
+</script>
+
 
 <!-- NAV -->
 <nav id="nav">
@@ -650,7 +742,7 @@ body { overflow: hidden; }
     <a href="#stats-section">Stats</a>
     <a href="#how-section">How It Works</a>
     <a href="identify.html">🔬 Identify</a>
-    <a href="index.html" class="nav-cta" style="background:var(--gold);color:var(--ink)!important">🏠 Home</a>
+    <a href="submit.html" class="nav-cta">➕ Add a Tree</a>
   </div>
   <button class="nav-ham" onclick="toggleNav()" id="nav-ham">
     <span></span><span></span><span></span>
