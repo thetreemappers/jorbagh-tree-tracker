@@ -392,7 +392,7 @@ async function loadTrees(){
 
   document.getElementById('trees-list').innerHTML=allTrees.length
     ?allTrees.map(t=>`
-      <div class="tree-item">
+      <div class="tree-item" id="tree-${t.id}">
         ${t.photo_url
           ?`<img class="ti-photo show" src="${t.photo_url}" onerror="this.classList.remove('show');this.nextElementSibling.style.display='flex'">`
           :''}
@@ -409,26 +409,46 @@ async function loadTrees(){
 }
 
 async function deleteTree(id,name){
-  if(!confirm(`Delete this ${name} tree? This cannot be undone.`)) return;
-  const {error} = await sb.from('trees').delete().eq('id',id);
-  if(error){
-    toast('❌ Could not delete — try again');
+  // Highlight the row red first
+  const el = document.getElementById('tree-'+id);
+  if(el) el.style.background='#fde8e8';
+
+  if(!confirm(`Delete this ${name} tree? This cannot be undone.`)){
+    if(el) el.style.background='';
     return;
   }
-  // Remove from DOM instantly
-  const el = document.getElementById('tree-'+id);
-  if(el){
-    el.style.transition='opacity .3s,max-height .3s';
-    el.style.opacity='0';
-    el.style.maxHeight='0';
-    el.style.overflow='hidden';
-    setTimeout(()=>el.remove(),300);
+
+  // Delete from Supabase
+  const {error} = await sb.from('trees').delete().eq('id',id);
+
+  if(error){
+    console.error('Delete error:', error);
+    if(el) el.style.background='';
+    toast('❌ Delete failed: ' + (error.message||'unknown error'));
+    return;
   }
-  // Update count
+
+  // Remove from DOM with animation
+  if(el){
+    el.style.transition='all .4s ease';
+    el.style.opacity='0';
+    el.style.transform='translateX(20px)';
+    el.style.maxHeight=el.offsetHeight+'px';
+    setTimeout(()=>{
+      el.style.maxHeight='0';
+      el.style.padding='0';
+      el.style.margin='0';
+      el.style.border='none';
+    },200);
+    setTimeout(()=>el.remove(),500);
+  }
+
+  // Update local data + counts
   allTrees = allTrees.filter(t=>String(t.id)!==String(id));
   document.getElementById('cnt-trees').textContent = allTrees.length;
   document.getElementById('st-trees').textContent = allTrees.length;
-  toast(`🗑️ ${name} tree deleted`);
+  document.getElementById('st-photos').textContent = allTrees.filter(t=>t.photo_url).length;
+  toast(`✅ ${name} tree deleted successfully`);
 }
 
 // ── INVITE CODES ──────────────────────────────────────────────
