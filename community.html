@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community · The Tree Mappers</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --forest: #0f1f0c;
+  --canopy: #1a3a0f;
+  --sage: #2d6a1e;
+  --leaf: #4a9e32;
+  --lime: #8ecf5e;
+  --pale: #c8f0b8;
+  --cream: #f8f4ed;
+  --parchment: #efe9da;
+  --gold: #c8922a;
+  --gold-light: #e8b84b;
+  --bark: #6b4423;
+  --text: #1a2118;
+  --text2: #3d5c30;
+  --text3: #7a9e68;
+  --border: rgba(42,107,30,0.12);
+  --card-bg: #ffffff;
+  --shadow: 0 2px 16px rgba(15,31,12,0.08);
+  --shadow-lg: 0 8px 40px rgba(15,31,12,0.14);
+  --r: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(248,244,237,0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 60px;
+}
+.nav-logo {
+  display: flex; flex-direction: column;
+  font-family: 'Cormorant Garamond', serif; text-decoration: none;
+}
+.nav-logo .nl-main { font-size: 18px; font-weight: 600; color: var(--canopy); line-height: 1; }
+.nav-logo .nl-main span { color: var(--gold); }
+.nav-logo .nl-sub { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-top: 1px; }
+.nav-links { display: flex; gap: 24px; align-items: center; }
+.nav-links a { font-size: 13px; font-weight: 500; color: var(--text2); text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-links a.active { color: var(--sage); font-weight: 600; }
+.nav-cta { background: var(--canopy) !important; color: white !important; padding: 7px 16px; border-radius: 8px; }
+
+/* ── HERO HEADER ── */
+.dash-header {
+  background: linear-gradient(135deg, var(--forest) 0%, var(--canopy) 60%, var(--sage) 100%);
+  padding: 48px 40px 40px;
+  position: relative; overflow: hidden;
+}
+.dash-header::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(142,207,94,.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.dash-header::after {
+  content: '🌳';
+  position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+  font-size: 120px; opacity: .06; line-height: 1;
+}
+.dh-eyebrow {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--lime); margin-bottom: 10px; display: block;
+}
+.dh-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4vw, 48px); font-weight: 700;
+  color: white; line-height: 1.08; margin-bottom: 6px; letter-spacing: -.5px;
+}
+.dh-title em { color: var(--gold-light); font-style: italic; }
+.dh-sub { font-size: 14px; color: rgba(255,255,255,.5); font-weight: 300; }
+
+/* ── GRID LAYOUT ── */
+.dash-body { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+
+.top-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+.stat-pill {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px 20px;
+  box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px;
+  transition: transform .2s;
+}
+.stat-pill:hover { transform: translateY(-2px); }
+.sp-icon { font-size: 32px; flex-shrink: 0; }
+.sp-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 34px; font-weight: 700; color: var(--sage); line-height: 1;
+}
+.sp-label { font-size: 11px; color: var(--text3); margin-top: 2px; font-weight: 500; letter-spacing: .3px; }
+
+.main-grid { display: grid; grid-template-columns: 340px 1fr 300px; gap: 20px; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden;
+}
+.card-head {
+  padding: 16px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-head h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px; font-weight: 600; color: var(--text);
+}
+.card-head .ch-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.card-badge {
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--sage);
+  background: rgba(42,106,30,.08); padding: 3px 8px; border-radius: 6px;
+}
+
+/* ── LEADERBOARD ── */
+.leader-list { padding: 8px 0; }
+.leader-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px; transition: background .15s; cursor: default;
+  border-bottom: 1px solid rgba(0,0,0,.04);
+}
+.leader-item:last-child { border: none; }
+.leader-item:hover { background: rgba(42,106,30,.03); }
+.li-rank {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 700;
+  width: 28px; text-align: center; flex-shrink: 0;
+  color: var(--text3);
+}
+.li-rank.gold { color: #c8922a; }
+.li-rank.silver { color: #888; }
+.li-rank.bronze { color: #b87333; }
+.li-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0; font-weight: 700;
+  color: white; flex-shrink: 0;
+}
+.li-body { flex: 1; min-width: 0; }
+.li-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.li-meta { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.li-count {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 700; color: var(--sage); flex-shrink: 0;
+}
+.li-bar-wrap { height: 3px; background: rgba(0,0,0,.06); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.li-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--leaf), var(--lime)); }
+
+/* ── MAP ── */
+#community-map { height: 420px; }
+.map-legend {
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  display: flex; gap: 16px; font-size: 11px; color: var(--text3);
+}
+.ml-item { display: flex; align-items: center; gap: 5px; }
+.ml-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── FEED ── */
+.feed-list { max-height: 460px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.feed-item {
+  padding: 12px 18px; border-bottom: 1px solid rgba(0,0,0,.05);
+  display: flex; gap: 10px; transition: background .15s;
+}
+.feed-item:hover { background: rgba(42,106,30,.02); }
+.feed-item:last-child { border: none; }
+.fi-photo {
+  width: 52px; height: 52px; border-radius: 10px;
+  object-fit: cover; flex-shrink: 0; display: none;
+  background: var(--parchment);
+}
+.fi-photo.show { display: block; }
+.fi-emoji {
+  width: 52px; height: 52px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; flex-shrink: 0; background: var(--parchment);
+}
+.fi-body { flex: 1; min-width: 0; }
+.fi-top { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+.fi-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.fi-time { font-size: 10px; color: var(--text3); }
+.fi-tree { font-size: 13px; color: var(--text2); line-height: 1.4; }
+.fi-tree strong { color: var(--sage); }
+.fi-loc { font-size: 10px; color: var(--text3); margin-top: 3px; display: flex; align-items: center; gap: 3px; }
+.fi-tags { display: flex; gap: 5px; margin-top: 5px; }
+.fi-tag { font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 5px; background: var(--parchment); color: var(--text3); }
+.fi-tag.good { background: #dcf5d0; color: #2d6a1e; }
+
+/* ── AREA STATS ── */
+.area-list { padding: 8px 0; }
+.area-item {
+  padding: 10px 18px; border-bottom: 1px solid rgba(0,0,0,.05);
+  display: flex; align-items: center; gap: 10px;
+}
+.area-item:last-child { border: none; }
+.ai-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.ai-bar-wrap { width: 80px; height: 5px; background: rgba(0,0,0,.07); border-radius: 3px; overflow: hidden; }
+.ai-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg,var(--leaf),var(--lime)); }
+.ai-count { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; color: var(--sage); width: 28px; text-align: right; flex-shrink: 0; }
+
+/* ── SPECIES BREAKDOWN ── */
+.species-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 18px; }
+.sp-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px;
+  background: var(--parchment); border: 1px solid var(--border);
+  font-size: 12px; font-weight: 500; color: var(--text2);
+  transition: all .2s;
+}
+.sp-chip:hover { background: var(--pale); border-color: var(--leaf); }
+.sp-chip .sc-count { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 700; color: var(--sage); }
+
+/* ── ACTIVITY CHART ── */
+.activity-grid {
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.ag-day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(0,0,0,.05);
+  transition: background .2s;
+  cursor: default;
+  position: relative;
+}
+.ag-day:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%; transform: translateX(-50%);
+  background: var(--forest);
+  color: white;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+.ag-labels {
+  padding: 0 18px 14px;
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text3);
+}
+
+/* ── LOADING ── */
+.loading-state { text-align: center; padding: 32px 20px; color: var(--text3); font-size: 13px; }
+.loading-spinner {
+  width: 28px; height: 28px; border: 2px solid rgba(42,106,30,.15);
+  border-top-color: var(--sage); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 0 auto 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; padding: 32px 20px; }
+.empty-state .ei { font-size: 36px; margin-bottom: 8px; }
+.empty-state p { font-size: 13px; color: var(--text3); line-height: 1.5; }
+
+/* LEAFLET */
+.leaflet-popup-content-wrapper { border-radius: 12px !important; }
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .main-grid { grid-template-columns: 1fr 1fr; }
+  .main-grid > div:nth-child(2) { grid-column: 1 / -1; order: -1; }
+}
+@media(max-width:700px){
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .dash-header { padding: 32px 16px 28px; }
+  .dash-body { padding: 20px 16px; }
+  .top-stats { grid-template-columns: 1fr 1fr; }
+  .main-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<!-- ── AUTH GATE ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function authGate(){
+  const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+  const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+  const sb=supabase.createClient(SURL,SKEY);
+
+  // Show loading overlay while checking
+  const overlay=document.createElement('div');
+  overlay.id='auth-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
+  overlay.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:360px">
+      <div style="font-size:56px;margin-bottom:16px">🌳</div>
+      <div id="ag-msg" style="font-size:15px;font-weight:500;color:#1a2118;margin-bottom:8px">Checking access...</div>
+      <div id="ag-sub" style="font-size:13px;color:#7a9e68;margin-bottom:24px"></div>
+      <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+      <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  document.body.prepend(overlay);
+
+  function showBlock(msg, sub, showBtn=true){
+    document.getElementById('ag-msg').textContent=msg;
+    document.getElementById('ag-sub').textContent=sub;
+    document.getElementById('ag-spinner').style.display='none';
+    if(showBtn) document.getElementById('ag-btn').style.display='inline-block';
+  }
+
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+
+    // Not logged in → redirect to login
+    if(!session?.user){
+      showBlock('This map is members only','Please sign in or register to continue');
+      return;
+    }
+
+    // Logged in — check approval status
+    const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
+
+    if(!profile){
+      showBlock('Account not found','Please register again to continue');
+      return;
+    }
+
+    if(profile.status==='pending' || !profile.status){
+      showBlock(
+        '⏳ Awaiting Approval',
+        'Your account is pending admin approval. You will get access once approved. Please check back soon!',
+        true
+      );
+      document.getElementById('ag-btn').textContent='← Back to Login';
+      return;
+    }
+
+    // Approved! Remove overlay and let them in
+    overlay.style.opacity='0';
+    overlay.style.transition='opacity .3s';
+    setTimeout(()=>overlay.remove(),300);
+
+  } catch(e){
+    showBlock('Something went wrong','Please try refreshing the page');
+  }
+})();
+</script>
+
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="nl-main">🌳 Jor Bagh <span>Tree Tracker</span></span>
+    <span class="nl-sub">New Delhi Urban Forest Map</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">🗺️ Map</a>
+    <a href="community.html" class="active">👥 Community</a>
+    <a href="identify.html">🔬 Identify</a>
+    <a href="submit.html" class="nav-cta">➕ Add a Tree</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<div class="dash-header">
+  <span class="dh-eyebrow">🌿 Community Dashboard</span>
+  <h1 class="dh-title">Delhi's <em>Tree Mappers</em></h1>
+  <p class="dh-sub">Every contributor building our city's urban forest record</p>
+</div>
+
+<!-- BODY -->
+<div class="dash-body">
+
+  <!-- TOP STATS -->
+  <div class="top-stats">
+    <div class="stat-pill">
+      <span class="sp-icon">🌳</span>
+      <div><div class="sp-val" id="s-trees">—</div><div class="sp-label">Trees Logged</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="sp-icon">👥</span>
+      <div><div class="sp-val" id="s-contrib">—</div><div class="sp-label">Contributors</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="sp-icon">🔬</span>
+      <div><div class="sp-val" id="s-species">—</div><div class="sp-label">Species Found</div></div>
+    </div>
+    <div class="stat-pill">
+      <span class="sp-icon">📷</span>
+      <div><div class="sp-val" id="s-photos">—</div><div class="sp-label">Photos Uploaded</div></div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEADERBOARD -->
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h3>🏆 Top Contributors</h3>
+            <div class="ch-sub">Most trees logged</div>
+          </div>
+          <span class="card-badge">All Time</span>
+        </div>
+        <div class="leader-list" id="leaderboard">
+          <div class="loading-state"><div class="loading-spinner"></div>Loading...</div>
+        </div>
+      </div>
+
+      <!-- SPECIES BREAKDOWN -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>🌿 Species Found</h3>
+            <div class="ch-sub">Community discoveries</div>
+          </div>
+        </div>
+        <div class="species-chips" id="species-chips">
+          <div class="loading-state" style="width:100%"><div class="loading-spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>🗺️ Community Tree Map</h3>
+            <div class="ch-sub">Every tree · coloured by contributor</div>
+          </div>
+          <span class="card-badge" id="map-count">Loading...</span>
+        </div>
+        <div id="community-map"></div>
+        <div class="map-legend" id="map-legend"></div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-head">
+          <div>
+            <h3>📅 Activity — Last 4 Weeks</h3>
+            <div class="ch-sub">Trees added per day</div>
+          </div>
+        </div>
+        <div class="activity-grid" id="activity-grid"></div>
+        <div class="ag-labels" id="activity-labels"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- RECENT FEED -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div>
+            <h3>🌱 Recent Submissions</h3>
+            <div class="ch-sub">Latest trees added</div>
+          </div>
+          <span class="card-badge" id="feed-live">● Live</span>
+        </div>
+        <div class="feed-list" id="feed-list">
+          <div class="loading-state"><div class="loading-spinner"></div>Loading...</div>
+        </div>
+      </div>
+
+      <!-- AREA STATS -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h3>📍 Trees by Area</h3>
+            <div class="ch-sub">Neighbourhood breakdown</div>
+          </div>
+        </div>
+        <div class="area-list" id="area-list">
+          <div class="loading-state"><div class="loading-spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+
+const SP = {
+  'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐',
+  'Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃',
+  'Bargad':'🌳','Kadamba':'💐','Imli':'🟤','Mango':'🥭',
+  'Moringa':'🥬','Silk Cotton':'🌺','Flame of Forest':'🔥',
+};
+const COLORS = ['#2d6a1e','#c8922a','#5a2d82','#c94e2a','#3a7a6e','#8c6a3f','#2d5a82','#7a5c2e','#3a8c6e','#8c2d5a'];
+
+function ge(n){ return SP[n]||'🌳'; }
+function timeAgo(dateStr){
+  const diff = (Date.now() - new Date(dateStr))/1000;
+  if(diff < 60) return 'just now';
+  if(diff < 3600) return Math.floor(diff/60)+'m ago';
+  if(diff < 86400) return Math.floor(diff/3600)+'h ago';
+  if(diff < 604800) return Math.floor(diff/86400)+'d ago';
+  return new Date(dateStr).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+}
+
+function getLocation(lat, lng){
+  // Rough Delhi neighbourhood detection
+  if(lat > 28.58 && lat < 28.61 && lng > 77.20 && lng < 77.23) return 'Jor Bagh';
+  if(lat > 28.61 && lat < 28.65 && lng > 77.20 && lng < 77.23) return 'Lodhi Colony';
+  if(lat > 28.62 && lat < 28.68 && lng > 77.18 && lng < 77.22) return 'Central Delhi';
+  if(lat > 28.55 && lat < 28.60 && lng > 77.14 && lng < 77.20) return 'South Delhi';
+  if(lat > 28.65 && lat < 28.75 && lng > 77.10 && lng < 77.20) return 'North Delhi';
+  if(lat > 28.60 && lat < 28.70 && lng > 77.23 && lng < 77.35) return 'East Delhi';
+  if(lat > 28.55 && lat < 28.65 && lng > 77.05 && lng < 77.15) return 'West Delhi';
+  if(lat > 28.45 && lat < 28.56 && lng > 77.10 && lng < 77.25) return 'South Delhi';
+  return 'Delhi';
+}
+
+let allTrees = [], cMap;
+
+// ── FETCH ─────────────────────────────────────────────────────
+async function fetchTrees(){
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/trees?select=*&order=created_at.desc`, {
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok) throw new Error();
+    return await r.json();
+  } catch(e) { return []; }
+}
+
+// ── TOP STATS ─────────────────────────────────────────────────
+function buildStats(trees){
+  document.getElementById('s-trees').textContent = trees.length;
+  document.getElementById('s-contrib').textContent = new Set(trees.map(t=>t.submitted_by||'Anonymous')).size;
+  document.getElementById('s-species').textContent = new Set(trees.map(t=>t.common_name)).size;
+  document.getElementById('s-photos').textContent = trees.filter(t=>t.photo_url).length;
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────
+function buildLeaderboard(trees){
+  const counts = {};
+  trees.forEach(t => {
+    const name = t.submitted_by || 'Anonymous';
+    if(!counts[name]) counts[name] = {count:0, species:new Set(), latest:t.created_at};
+    counts[name].count++;
+    counts[name].species.add(t.common_name);
+    if(new Date(t.created_at) > new Date(counts[name].latest)) counts[name].latest = t.created_at;
+  });
+
+  const sorted = Object.entries(counts).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
+  const max = sorted[0]?.[1].count || 1;
+
+  const rankClasses = ['gold','silver','bronze'];
+  const rankEmojis = ['🥇','🥈','🥉'];
+
+  document.getElementById('leaderboard').innerHTML = sorted.length ? sorted.map(([name,data],i) => `
+    <div class="leader-item">
+      <div class="li-rank ${rankClasses[i]||''}">${i<3?rankEmojis[i]:i+1}</div>
+      <div class="li-avatar" style="background:${COLORS[i%COLORS.length]}">${name.charAt(0).toUpperCase()}</div>
+      <div class="li-body">
+        <div class="li-name">${name}</div>
+        <div class="li-meta">${data.species.size} species · ${timeAgo(data.latest)}</div>
+        <div class="li-bar-wrap"><div class="li-bar" style="width:${(data.count/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <div class="li-count">${data.count}</div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="ei">🌱</div><p>No contributors yet.<br>Be the first!</p></div>';
+}
+
+// ── MAP ───────────────────────────────────────────────────────
+function buildMap(trees){
+  cMap = L.map('community-map',{center:[28.6139,77.2090],zoom:11,zoomControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(cMap);
+
+  // Assign colour per contributor
+  const contributors = [...new Set(trees.map(t=>t.submitted_by||'Anonymous'))];
+  const contribColors = {};
+  contributors.forEach((c,i) => contribColors[c] = COLORS[i%COLORS.length]);
+
+  trees.forEach(t => {
+    const name = t.submitted_by||'Anonymous';
+    const color = contribColors[name];
+    const m = L.circleMarker([t.latitude,t.longitude],{
+      radius:7, fillColor:color, fillOpacity:.88, color:'white', weight:2
+    });
+    m.bindPopup(`
+      <div style="font-family:Outfit,sans-serif;min-width:160px">
+        <div style="font-size:14px;font-weight:600;color:#1a2118;margin-bottom:4px">${ge(t.common_name)} ${t.common_name}</div>
+        <div style="font-size:11px;font-style:italic;color:#7a9e68;margin-bottom:8px">${t.scientific_name||''}</div>
+        ${t.photo_url?`<img src="${t.photo_url}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px">`:''}
+        <div style="font-size:11px;color:#3d5c30">🌱 Added by <b>${name}</b></div>
+        <div style="font-size:10px;color:#7a9e68;margin-top:2px">📍 ${getLocation(t.latitude,t.longitude)}</div>
+      </div>
+    `,{maxWidth:200});
+    m.addTo(cMap);
+  });
+
+  // Fit to trees
+  if(trees.length > 0){
+    const bounds = L.latLngBounds(trees.map(t=>[t.latitude,t.longitude]));
+    cMap.fitBounds(bounds,{padding:[30,30]});
+  }
+
+  // Legend
+  document.getElementById('map-count').textContent = trees.length + ' trees';
+  const topContribs = contributors.slice(0,5);
+  document.getElementById('map-legend').innerHTML = topContribs.map(c=>`
+    <div class="ml-item">
+      <div class="ml-dot" style="background:${contribColors[c]}"></div>
+      <span>${c}</span>
+    </div>
+  `).join('');
+}
+
+// ── FEED ──────────────────────────────────────────────────────
+function buildFeed(trees){
+  const recent = trees.slice(0,20);
+  document.getElementById('feed-list').innerHTML = recent.length ? recent.map(t => {
+    const name = t.submitted_by||'Anonymous';
+    const loc = getLocation(t.latitude, t.longitude);
+    return `
+    <div class="feed-item">
+      ${t.photo_url
+        ? `<img class="fi-photo show" src="${t.photo_url}" onerror="this.classList.remove('show');this.nextElementSibling.style.display='flex'" alt="">`
+        : ''}
+      <div class="fi-emoji" ${t.photo_url?'style="display:none"':''}>${ge(t.common_name)}</div>
+      <div class="fi-body">
+        <div class="fi-top">
+          <span class="fi-name">${name}</span>
+          <span class="fi-time">${timeAgo(t.created_at)}</span>
+        </div>
+        <div class="fi-tree">added a <strong>${t.common_name}</strong></div>
+        <div class="fi-loc">📍 ${loc}</div>
+        <div class="fi-tags">
+          <span class="fi-tag ${(t.condition||'good').toLowerCase()}">${t.condition||'Good'}</span>
+          <span class="fi-tag">${t.trunk_diameter||'?'}cm</span>
+          ${t.photo_url?'<span class="fi-tag">📷 Photo</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state"><div class="ei">🌱</div><p>No trees logged yet.<br>Be the first!</p></div>';
+}
+
+// ── AREA STATS ────────────────────────────────────────────────
+function buildAreaStats(trees){
+  const areas = {};
+  trees.forEach(t => {
+    const area = getLocation(t.latitude, t.longitude);
+    areas[area] = (areas[area]||0) + 1;
+  });
+  const sorted = Object.entries(areas).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1]||1;
+
+  document.getElementById('area-list').innerHTML = sorted.length ? sorted.map(([area,count])=>`
+    <div class="area-item">
+      <div class="ai-name">📍 ${area}</div>
+      <div class="ai-bar-wrap"><div class="ai-bar" style="width:${(count/max*100).toFixed(0)}%"></div></div>
+      <div class="ai-count">${count}</div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="ei">📍</div><p>No location data yet</p></div>';
+}
+
+// ── SPECIES CHIPS ─────────────────────────────────────────────
+function buildSpeciesChips(trees){
+  const counts = {};
+  trees.forEach(t => { counts[t.common_name] = (counts[t.common_name]||0)+1; });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('species-chips').innerHTML = sorted.length ? sorted.map(([name,cnt])=>`
+    <div class="sp-chip">
+      <span>${ge(name)}</span>
+      <span>${name}</span>
+      <span class="sc-count">${cnt}</span>
+    </div>
+  `).join('') : '<div class="empty-state" style="width:100%"><p>No species logged yet</p></div>';
+}
+
+// ── ACTIVITY GRID ─────────────────────────────────────────────
+function buildActivity(trees){
+  const days = 28;
+  const counts = {};
+  trees.forEach(t => {
+    const d = new Date(t.created_at).toDateString();
+    counts[d] = (counts[d]||0)+1;
+  });
+
+  const max = Math.max(...Object.values(counts),1);
+  const grid = document.getElementById('activity-grid');
+  const labels = document.getElementById('activity-labels');
+  let cells = '';
+  let labelArr = [];
+
+  for(let i=days-1; i>=0; i--){
+    const d = new Date();
+    d.setDate(d.getDate()-i);
+    const key = d.toDateString();
+    const count = counts[key]||0;
+    const pct = count/max;
+    const bg = count===0
+      ? 'rgba(0,0,0,.05)'
+      : `rgba(42,158,50,${0.15+pct*0.85})`;
+    const label = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    cells += `<div class="ag-day" style="background:${bg}" data-tip="${count} tree${count!==1?'s':''} on ${label}"></div>`;
+    if(i===days-1||i===0||(days-1-i)%7===0) labelArr.push(label);
+  }
+
+  grid.innerHTML = cells;
+  labels.innerHTML = `<span>${labelArr[0]}</span><span>Today</span>`;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+(async()=>{
+  const trees = await fetchTrees();
+  allTrees = trees;
+
+  buildStats(trees);
+  buildLeaderboard(trees);
+  buildMap(trees);
+  buildFeed(trees);
+  buildAreaStats(trees);
+  buildSpeciesChips(trees);
+  buildActivity(trees);
+
+  // Auto refresh every 30s
+  setInterval(async()=>{
+    const fresh = await fetchTrees();
+    allTrees = fresh;
+    buildStats(fresh);
+    buildLeaderboard(fresh);
+    buildFeed(fresh);
+    buildAreaStats(fresh);
+    buildSpeciesChips(fresh);
+    buildActivity(fresh);
+    document.getElementById('map-count').textContent = fresh.length + ' trees';
+  }, 30000);
+})();
+</script>
+</body>
+</html>

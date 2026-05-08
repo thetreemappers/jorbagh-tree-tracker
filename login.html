@@ -295,7 +295,7 @@ async function register(){
       await sb.from('invite_codes').update({used_by:data.user.id,used_at:new Date().toISOString()}).eq('code',code);
       await sb.from('profiles').update({role:'co-admin'}).eq('id',data.user.id);
       msg('reg-msg','success','🌳 Account created! You are now a Co-Admin. Check your email to verify, then sign in.');
-    }else{msg('reg-msg','success','🌱 Account created! Check your email for a verification link, then sign in.');}
+    }else{msg('reg-msg','success','🌱 Account created! Check your email to verify, then sign in. Your account needs admin approval before you can access the map — usually within 24 hours.');}
     btn.textContent='✅ Check your email!';
     setTimeout(()=>switchTab('login'),3000);
   }catch(e){msg('reg-msg','error',e.message||'Registration failed');btn.disabled=false;btn.textContent='🌱 Create Account';}
@@ -330,13 +330,33 @@ async function loadProfile(user){
   const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
   const name=profile?.full_name||user.user_metadata?.full_name||user.email.split('@')[0];
   const role=profile?.role||'member';
+  const status=profile?.status||'pending';
+
   document.getElementById('prof-avatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('prof-name').textContent=name;
   document.getElementById('prof-email').textContent=user.email;
+
   const roleEl=document.getElementById('prof-role');
   roleEl.className='prof-role '+role;
   roleEl.textContent=role==='admin'?'⭐ Admin':role==='co-admin'?'⭐ Co-Admin':'🌿 Member';
-  if(role==='co-admin'||role==='admin')document.getElementById('upgrade-section').style.display='none';
+  if(role==='co-admin'||role==='admin') document.getElementById('upgrade-section').style.display='none';
+
+  // Show pending notice if not yet approved
+  if(status==='pending'){
+    const pending=document.createElement('div');
+    pending.style.cssText='background:#fef3cd;border:1px solid #f0d9a8;border-radius:12px;padding:16px;margin-bottom:14px;font-size:13px;color:#8a6400;line-height:1.6;';
+    pending.innerHTML='<strong>⏳ Account Pending Approval</strong><br>The admin needs to approve your account before you can access the tree map. This usually takes less than 24 hours. You'll be able to log in and see the map once approved.';
+    document.querySelector('.prof-body').prepend(pending);
+  }
+
+  // Show access map button if approved
+  if(status==='approved'){
+    const accessBtn=document.createElement('a');
+    accessBtn.href='index.html';
+    accessBtn.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(135deg,#2d6a1e,#4a9e32);color:white;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:14px;';
+    accessBtn.textContent='🗺️ Go to the Tree Map →';
+    document.querySelector('.prof-body').prepend(accessBtn);
+  }
   const{data:trees}=await sb.from('trees').select('*').eq('submitted_by',name).order('created_at',{ascending:false});
   const t=trees||[];
   document.getElementById('ps-trees').textContent=t.length;

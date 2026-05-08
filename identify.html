@@ -201,6 +201,74 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
 </style>
 </head>
 <body>
+<!-- ── AUTH GATE ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function authGate(){
+  const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+  const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+  const sb=supabase.createClient(SURL,SKEY);
+
+  // Show loading overlay while checking
+  const overlay=document.createElement('div');
+  overlay.id='auth-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
+  overlay.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:360px">
+      <div style="font-size:56px;margin-bottom:16px">🌳</div>
+      <div id="ag-msg" style="font-size:15px;font-weight:500;color:#1a2118;margin-bottom:8px">Checking access...</div>
+      <div id="ag-sub" style="font-size:13px;color:#7a9e68;margin-bottom:24px"></div>
+      <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+      <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  document.body.prepend(overlay);
+
+  function showBlock(msg, sub, showBtn=true){
+    document.getElementById('ag-msg').textContent=msg;
+    document.getElementById('ag-sub').textContent=sub;
+    document.getElementById('ag-spinner').style.display='none';
+    if(showBtn) document.getElementById('ag-btn').style.display='inline-block';
+  }
+
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+
+    // Not logged in → redirect to login
+    if(!session?.user){
+      showBlock('This map is members only','Please sign in or register to continue');
+      return;
+    }
+
+    // Logged in — check approval status
+    const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
+
+    if(!profile){
+      showBlock('Account not found','Please register again to continue');
+      return;
+    }
+
+    if(profile.status==='pending' || !profile.status){
+      showBlock(
+        '⏳ Awaiting Approval',
+        'Your account is pending admin approval. You will get access once approved. Please check back soon!',
+        true
+      );
+      document.getElementById('ag-btn').textContent='← Back to Login';
+      return;
+    }
+
+    // Approved! Remove overlay and let them in
+    overlay.style.opacity='0';
+    overlay.style.transition='opacity .3s';
+    setTimeout(()=>overlay.remove(),300);
+
+  } catch(e){
+    showBlock('Something went wrong','Please try refreshing the page');
+  }
+})();
+</script>
+
 
 <div class="header">
   <div class="header-top">
@@ -508,88 +576,97 @@ async function tryPlantNet() {
 }
 
 async function tryClaudeVision() {
-  // Use Gemini via proxy
   try {
     setStep('🤖 Google Gemini AI is examining your photo...');
-    const resp = await fetch('/api/identify', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        service:'gemini',
-        imageBase64:selectedPhotoBase64,
-        imageType:selectedPhotoType||'image/jpeg',
-        organ:selectedOrgan||'leaf'
-      })
-    });
-    if(!resp.ok) throw new Error('Proxy ' + resp.status);
-    const json = await resp.json();
-    if(!json.success||!json.data) throw new Error(json.error||'No result');
-    const p = json.data;
-    if(!p.common_name) return null;
-    const kb = TREE_KB[p.scientific_name]||{};
-    setStep('✅ Gemini identified the tree!');
-    return {
-      source:'GOOGLE GEMINI AI',
-      common:p.common_name, sci:p.scientific_name,
-      confidence:p.confidence||70,
-      family:p.family||kb.family||'—',
-      inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
-      hindi:p.hindi_name||kb.hindi||'—',
-      note:p.identification_notes||null,
-      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
-      alternatives:(p.alternatives||[]).map(a=>({
-        name:a.common,sci:a.sci,conf:a.confidence,
-        emoji:TREE_KB[a.sci]?.emoji||'🌿'
-      }))
-    };
-  } catch(e) {
-    console.warn('Gemini proxy failed:', e.message);
-    // Last resort — use Gemini directly 
-    return await tryGeminiDirect();
-  }
-}
 
-async function tryGeminiDirect() {
-  try {
-    setStep('🤖 Trying Gemini directly...');
     const GEMINI_KEY = 'AIzaSyDttmwgCRGUGMU43HjZIX8cjxObhxTdSfM';
+
+    // First try via proxy
+    try {
+      const proxyResp = await fetch('/api/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service: 'gemini',
+          imageBase64: selectedPhotoBase64,
+          imageType: selectedPhotoType || 'image/jpeg',
+          organ: selectedOrgan || 'leaf'
+        })
+      });
+      if (proxyResp.ok) {
+        const json = await proxyResp.json();
+        if (json.success && json.data?.common_name) {
+          const p = json.data;
+          const kb = TREE_KB[p.scientific_name] || {};
+          setStep('✅ Gemini identified the tree!');
+          return {
+            source: 'GOOGLE GEMINI AI',
+            common: p.common_name, sci: p.scientific_name,
+            confidence: p.confidence || 70,
+            family: p.family || kb.family || '—',
+            inJorBagh: p.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common',
+            hindi: p.hindi_name || kb.hindi || '—',
+            note: p.identification_notes || null,
+            organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+            alternatives: (p.alternatives||[]).map(a=>({name:a.common,sci:a.sci,conf:a.confidence,emoji:TREE_KB[a.sci]?.emoji||'🌿'}))
+          };
+        }
+      }
+    } catch(proxyErr) {
+      console.warn('Proxy failed, trying direct:', proxyErr.message);
+    }
+
+    // Direct Gemini call as fallback
+    setStep('🤖 Trying Gemini directly...');
+    const prompt = `You are an expert botanist for Indian trees in Delhi. Identify this tree from the photo. Respond ONLY with JSON: {"common_name":"name","hindi_name":"Hindi","scientific_name":"Genus species","family":"Family","confidence":80,"in_delhi":true,"identification_notes":"what features helped identify it","alternatives":[{"common":"alt","sci":"sci name","confidence":20}]}`;
+
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[
-            {inline_data:{mime_type:selectedPhotoType||'image/jpeg',data:selectedPhotoBase64}},
-            {text:`You are an expert botanist specialising in Indian trees found in Delhi. Look at this photo and identify the tree. Respond ONLY with valid JSON no markdown: {"common_name":"English name","hindi_name":"Hindi in Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_delhi":true,"identification_notes":"2-3 sentences on key visual features","alternatives":[{"common":"Alt 1","sci":"Sci name","confidence":30}]}`}
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { inline_data: { mime_type: selectedPhotoType || 'image/jpeg', data: selectedPhotoBase64 } },
+            { text: prompt }
           ]}],
-          generationConfig:{temperature:0.2,maxOutputTokens:800}
+          generationConfig: { temperature: 0.1, maxOutputTokens: 600 }
         })
       }
     );
-    if(!resp.ok) throw new Error('Gemini direct ' + resp.status);
+
+    console.log('Gemini direct response status:', resp.status);
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('Gemini error:', errText);
+      throw new Error(`Gemini ${resp.status}: ${errText}`);
+    }
+
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    const p = JSON.parse(text.replace(/```json|```/g,'').trim());
-    if(!p.common_name) return null;
+    console.log('Gemini response:', data);
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const p = JSON.parse(clean);
+
+    if (!p.common_name) return null;
     const kb = TREE_KB[p.scientific_name]||{};
     setStep('✅ Gemini identified the tree!');
     return {
-      source:'GOOGLE GEMINI AI',
-      common:p.common_name, sci:p.scientific_name,
-      confidence:p.confidence||70,
-      family:p.family||kb.family||'—',
-      inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
-      hindi:p.hindi_name||kb.hindi||'—',
-      note:p.identification_notes||null,
-      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
-      alternatives:(p.alternatives||[]).map(a=>({
-        name:a.common,sci:a.sci,conf:a.confidence,
-        emoji:TREE_KB[a.sci]?.emoji||'🌿'
-      }))
+      source: 'GOOGLE GEMINI AI',
+      common: p.common_name, sci: p.scientific_name,
+      confidence: p.confidence || 70,
+      family: p.family || kb.family || '—',
+      inJorBagh: p.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common',
+      hindi: p.hindi_name || kb.hindi || '—',
+      note: p.identification_notes || null,
+      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+      alternatives: (p.alternatives||[]).map(a=>({name:a.common,sci:a.sci,conf:a.confidence,emoji:TREE_KB[a.sci]?.emoji||'🌿'}))
     };
+
   } catch(e) {
-    console.warn('Gemini direct failed:', e.message);
+    console.error('Gemini completely failed:', e.message);
     return null;
   }
 }

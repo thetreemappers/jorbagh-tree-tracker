@@ -860,6 +860,74 @@ html, body {
 </style>
 </head>
 <body>
+<!-- ── AUTH GATE ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async function authGate(){
+  const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+  const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+  const sb=supabase.createClient(SURL,SKEY);
+
+  // Show loading overlay while checking
+  const overlay=document.createElement('div');
+  overlay.id='auth-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
+  overlay.innerHTML=`
+    <div style="text-align:center;padding:40px 24px;max-width:360px">
+      <div style="font-size:56px;margin-bottom:16px">🌳</div>
+      <div id="ag-msg" style="font-size:15px;font-weight:500;color:#1a2118;margin-bottom:8px">Checking access...</div>
+      <div id="ag-sub" style="font-size:13px;color:#7a9e68;margin-bottom:24px"></div>
+      <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
+      <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  document.body.prepend(overlay);
+
+  function showBlock(msg, sub, showBtn=true){
+    document.getElementById('ag-msg').textContent=msg;
+    document.getElementById('ag-sub').textContent=sub;
+    document.getElementById('ag-spinner').style.display='none';
+    if(showBtn) document.getElementById('ag-btn').style.display='inline-block';
+  }
+
+  try {
+    const {data:{session}}=await sb.auth.getSession();
+
+    // Not logged in → redirect to login
+    if(!session?.user){
+      showBlock('This map is members only','Please sign in or register to continue');
+      return;
+    }
+
+    // Logged in — check approval status
+    const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
+
+    if(!profile){
+      showBlock('Account not found','Please register again to continue');
+      return;
+    }
+
+    if(profile.status==='pending' || !profile.status){
+      showBlock(
+        '⏳ Awaiting Approval',
+        'Your account is pending admin approval. You will get access once approved. Please check back soon!',
+        true
+      );
+      document.getElementById('ag-btn').textContent='← Back to Login';
+      return;
+    }
+
+    // Approved! Remove overlay and let them in
+    overlay.style.opacity='0';
+    overlay.style.transition='opacity .3s';
+    setTimeout(()=>overlay.remove(),300);
+
+  } catch(e){
+    showBlock('Something went wrong','Please try refreshing the page');
+  }
+})();
+</script>
+
 
 <!-- NAV -->
 <nav id="nav">
