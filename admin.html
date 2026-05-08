@@ -410,9 +410,25 @@ async function loadTrees(){
 
 async function deleteTree(id,name){
   if(!confirm(`Delete this ${name} tree? This cannot be undone.`)) return;
-  await sb.from('trees').delete().eq('id',id);
+  const {error} = await sb.from('trees').delete().eq('id',id);
+  if(error){
+    toast('❌ Could not delete — try again');
+    return;
+  }
+  // Remove from DOM instantly
+  const el = document.getElementById('tree-'+id);
+  if(el){
+    el.style.transition='opacity .3s,max-height .3s';
+    el.style.opacity='0';
+    el.style.maxHeight='0';
+    el.style.overflow='hidden';
+    setTimeout(()=>el.remove(),300);
+  }
+  // Update count
+  allTrees = allTrees.filter(t=>String(t.id)!==String(id));
+  document.getElementById('cnt-trees').textContent = allTrees.length;
+  document.getElementById('st-trees').textContent = allTrees.length;
   toast(`🗑️ ${name} tree deleted`);
-  await loadTrees();
 }
 
 // ── INVITE CODES ──────────────────────────────────────────────
