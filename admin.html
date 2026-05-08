@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Admin · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --forest:#0f1f0c;--canopy:#1a3a0f;--sage:#2d6a1e;--leaf:#4a9e32;
+  --lime:#8ecf5e;--cream:#f8f4ed;--parchment:#efe9da;--gold:#c8922a;
+  --text:#1a2118;--text2:#3d5c30;--text3:#7a9e68;
+  --border:rgba(42,107,30,0.14);--red:#c03222;--red-bg:#fde8e8;
+  --safe-top:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+
+/* NAV */
+.admin-nav{
+  background:var(--forest);padding:calc(var(--safe-top)+12px) 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.an-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:white;text-decoration:none;}
+.an-logo span{color:var(--gold);}
+.an-badge{background:rgba(200,146,42,.25);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:6px;}
+.an-right{display:flex;align-items:center;gap:12px;}
+.an-signout{font-size:12px;font-weight:600;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;}
+
+/* TAB NAV */
+.tab-nav{background:white;border-bottom:2px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:99;}
+.tab-nav::-webkit-scrollbar{display:none;}
+.tab-btn{flex-shrink:0;padding:14px 20px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;border:none;background:none;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--sage);border-bottom-color:var(--sage);}
+.tab-btn .tb-count{background:var(--parchment);color:var(--text3);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;}
+.tab-btn.active .tb-count{background:rgba(45,106,30,.12);color:var(--sage);}
+.tb-count.red{background:#fde8e8;color:var(--red);}
+
+/* BODY */
+.admin-body{padding:20px;max-width:900px;margin:0 auto;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.sr-card{background:white;border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.sr-val{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;color:var(--sage);line-height:1;}
+.sr-label{font-size:10px;color:var(--text3);margin-top:3px;font-weight:500;letter-spacing:.3px;}
+.sr-card.pending .sr-val{color:var(--red);}
+
+/* CARD */
+.section-card{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:16px;}
+.sc-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sc-head h3{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--text);}
+.sc-head p{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* MEMBER ITEM */
+.member-item{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;transition:background .15s;}
+.member-item:last-child{border:none;}
+.member-item:hover{background:rgba(42,106,30,.02);}
+.mi-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
+.mi-body{flex:1;min-width:0;}
+.mi-name{font-size:13px;font-weight:700;color:var(--text);}
+.mi-email{font-size:11px;color:var(--text3);margin-top:1px;}
+.mi-meta{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;}
+.mi-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;}
+.mi-tag.pending{background:#fef3cd;color:#8a6400;}
+.mi-tag.approved{background:#dcf5d0;color:#2d6a1e;}
+.mi-tag.member{background:var(--parchment);color:var(--text3);}
+.mi-tag.co-admin{background:rgba(200,146,42,.15);color:var(--gold);}
+.mi-tag.admin{background:rgba(74,158,50,.15);color:var(--sage);}
+.mi-tag.trees{background:rgba(42,106,30,.08);color:var(--sage);}
+.mi-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-approve{padding:7px 14px;background:var(--sage);border:none;border-radius:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-approve:hover{background:var(--leaf);}
+.btn-reject{padding:7px 14px;background:transparent;border:1px solid #ddd;border-radius:8px;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-reject:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+.btn-make-admin{padding:7px 14px;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);border-radius:8px;color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;}
+
+/* INVITE CODES */
+.invite-item{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;}
+.invite-item:last-child{border:none;}
+.ii-code{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;color:var(--forest);background:var(--parchment);padding:6px 12px;border-radius:8px;flex-shrink:0;}
+.ii-body{flex:1;min-width:0;}
+.ii-label{font-size:13px;font-weight:600;color:var(--text);}
+.ii-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.ii-copy{padding:6px 12px;background:var(--canopy);border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;}
+.ii-copy.copied{background:var(--sage);}
+
+/* CREATE INVITE */
+.create-invite-form{padding:16px;background:var(--parchment);border-radius:12px;margin:12px 16px 16px;}
+.cif-row{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;}
+.cif-field label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;display:block;}
+.cif-field input,.cif-field select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:13px;background:white;outline:none;}
+.cif-field input:focus,.cif-field select:focus{border-color:var(--leaf);}
+.btn-create{padding:10px 18px;background:var(--canopy);border:none;border-radius:10px;color:white;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+/* TREES LIST */
+.tree-item{padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;}
+.tree-item:last-child{border:none;}
+.ti-photo{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;display:none;}
+.ti-photo.show{display:block;}
+.ti-emoji{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--parchment);flex-shrink:0;}
+.ti-body{flex:1;min-width:0;}
+.ti-name{font-size:13px;font-weight:700;color:var(--text);}
+.ti-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.ti-by{font-size:11px;color:var(--sage);font-weight:600;margin-top:2px;}
+.btn-delete{padding:5px 10px;background:transparent;border:1px solid #ddd;border-radius:7px;color:var(--text3);font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;}
+.btn-delete:hover{border-color:var(--red);color:var(--red);background:var(--red-bg);}
+
+/* EMPTY + LOADING */
+.empty{text-align:center;padding:32px;color:var(--text3);font-size:13px;}
+.empty-icon{font-size:36px;margin-bottom:8px;}
+.loading{text-align:center;padding:24px;color:var(--text3);font-size:13px;}
+.spinner{width:24px;height:24px;border:2px solid rgba(42,106,30,.15);border-top-color:var(--sage);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--forest);color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s;box-shadow:0 8px 32px rgba(0,0,0,.3);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ACCESS DENIED */
+#access-denied{display:none;text-align:center;padding:80px 20px;}
+#access-denied .ad-icon{font-size:64px;margin-bottom:16px;}
+#access-denied h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:8px;}
+#access-denied p{font-size:14px;color:var(--text3);margin-bottom:24px;}
+#access-denied a{display:inline-block;padding:12px 24px;background:var(--canopy);color:white;border-radius:10px;text-decoration:none;font-weight:600;}
+
+/* LOGIN GATE */
+#login-gate{display:none;max-width:400px;margin:60px auto;padding:0 20px;}
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:1fr 1fr;gap:10px;}
+  .cif-row{grid-template-columns:1fr;gap:8px;}
+  .mi-actions{flex-direction:column;gap:6px;}
+  .admin-body{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ACCESS DENIED -->
+<div id="access-denied">
+  <div class="ad-icon">🔒</div>
+  <h2>Admin Access Only</h2>
+  <p>You need admin or co-admin privileges to access this page.</p>
+  <a href="login.html">Sign In →</a>
+</div>
+
+<!-- MAIN ADMIN -->
+<div id="admin-main" style="display:none">
+  <!-- NAV -->
+  <div class="admin-nav">
+    <a href="index.html" class="an-logo">🌳 Jor Bagh <span>Tracker</span></a>
+    <div class="an-right">
+      <span class="an-badge">⭐ Admin Panel</span>
+      <button class="an-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- TAB NAV -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('pending')" id="tab-pending">
+      ⏳ Pending <span class="tb-count red" id="cnt-pending">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('members')" id="tab-members">
+      👥 Members <span class="tb-count" id="cnt-members">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('trees')" id="tab-trees">
+      🌳 All Trees <span class="tb-count" id="cnt-trees">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('invites')" id="tab-invites">
+      🔑 Invite Codes
+    </button>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="sr-card pending"><div class="sr-val" id="st-pending">0</div><div class="sr-label">Pending Approval</div></div>
+      <div class="sr-card"><div class="sr-val" id="st-members">0</div><div class="sr-label">Total Members</div></div>
+      <div class="sr-card"><div class="sr-val" id="st-trees">0</div><div class="sr-label">Trees Logged</div></div>
+      <div class="sr-card"><div class="sr-val" id="st-photos">0</div><div class="sr-label">Photos Uploaded</div></div>
+    </div>
+
+    <!-- PENDING TAB -->
+    <div class="tab-panel active" id="panel-pending">
+      <div class="section-card">
+        <div class="sc-head">
+          <div><h3>⏳ Pending Approvals</h3><p>New registrations waiting for your approval</p></div>
+        </div>
+        <div id="pending-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- MEMBERS TAB -->
+    <div class="tab-panel" id="panel-members">
+      <div class="section-card">
+        <div class="sc-head">
+          <div><h3>👥 All Members</h3><p>Everyone who has registered</p></div>
+        </div>
+        <div id="members-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- TREES TAB -->
+    <div class="tab-panel" id="panel-trees">
+      <div class="section-card">
+        <div class="sc-head">
+          <div><h3>🌳 All Trees</h3><p>Every tree logged on the map</p></div>
+        </div>
+        <div id="trees-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- INVITES TAB -->
+    <div class="tab-panel" id="panel-invites">
+      <!-- Create invite -->
+      <div class="section-card">
+        <div class="sc-head"><div><h3>➕ Create Invite Code</h3><p>Generate codes to share with people</p></div></div>
+        <div class="create-invite-form">
+          <div class="cif-row">
+            <div class="cif-field">
+              <label>Code (or leave blank to auto-generate)</label>
+              <input type="text" id="new-code" placeholder="e.g. DELHI2024" style="text-transform:uppercase;letter-spacing:1px;font-weight:600">
+            </div>
+            <div class="cif-field">
+              <label>Access Level</label>
+              <select id="new-role">
+                <option value="member">Member (view + submit)</option>
+                <option value="co-admin">Co-Admin (manage)</option>
+              </select>
+            </div>
+            <button class="btn-create" onclick="createInvite()">Create Code</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Existing codes -->
+      <div class="section-card">
+        <div class="sc-head"><div><h3>🔑 All Invite Codes</h3><p>Share these links with people you want to invite</p></div></div>
+        <div id="invites-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+const {createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+const COLORS=['#2d6a1e','#c8922a','#5a2d82','#c94e2a','#3a7a6e','#8c6a3f','#2d5a82','#7a5c2e'];
+const SP={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳','Kadamba':'💐'};
+const ge=n=>SP[n]||'🌳';
+const ago=d=>{const s=(Date.now()-new Date(d))/1000;if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';if(s<604800)return Math.floor(s/86400)+'d ago';return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});};
+
+let currentUser=null, allMembers=[], allTrees=[];
+
+// ── TOAST ─────────────────────────────────────────────────────
+function toast(msg,dur=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.user){ window.location.href='login.html'; return; }
+  currentUser=session.user;
+
+  // Check role
+  const {data:profile}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+  if(!profile||!['admin','co-admin'].includes(profile.role)){
+    document.getElementById('access-denied').style.display='block';
+    return;
+  }
+  document.getElementById('admin-main').style.display='block';
+  await loadAll();
+}
+
+async function loadAll(){
+  await Promise.all([loadMembers(), loadTrees(), loadInvites()]);
+}
+
+// ── MEMBERS ───────────────────────────────────────────────────
+async function loadMembers(){
+  const {data}=await sb.from('profiles').select('*').order('joined_at',{ascending:false});
+  allMembers=data||[];
+
+  const pending=allMembers.filter(m=>!m.status||m.status==='pending');
+  const approved=allMembers.filter(m=>m.status==='approved');
+
+  // Update counts
+  document.getElementById('cnt-pending').textContent=pending.length;
+  document.getElementById('cnt-members').textContent=allMembers.length;
+  document.getElementById('st-pending').textContent=pending.length;
+  document.getElementById('st-members').textContent=allMembers.length;
+
+  // Tree counts per member
+  const treeCounts={};
+  allTrees.forEach(t=>{treeCounts[t.submitted_by]=(treeCounts[t.submitted_by]||0)+1;});
+
+  // Render pending
+  document.getElementById('pending-list').innerHTML=pending.length
+    ?pending.map((m,i)=>memberRow(m,i,treeCounts,'pending')).join('')
+    :'<div class="empty"><div class="empty-icon">✅</div>No pending approvals!</div>';
+
+  // Render all members
+  document.getElementById('members-list').innerHTML=allMembers.length
+    ?allMembers.map((m,i)=>memberRow(m,i,treeCounts,'full')).join('')
+    :'<div class="empty"><div class="empty-icon">👥</div>No members yet</div>';
+}
+
+function memberRow(m,i,treeCounts,mode){
+  const name=m.full_name||'Unknown';
+  const trees=treeCounts[name]||0;
+  const isPending=!m.status||m.status==='pending';
+  const roleTag=`<span class="mi-tag ${m.role||'member'}">${m.role||'member'}</span>`;
+  const statusTag=isPending?'<span class="mi-tag pending">⏳ Pending</span>':'<span class="mi-tag approved">✅ Approved</span>';
+
+  const actions = isPending
+    ? `<button class="btn-approve" onclick="approveUser('${m.id}','${name}')">✅ Approve</button>
+       <button class="btn-reject" onclick="rejectUser('${m.id}','${name}')">❌ Reject</button>`
+    : m.role==='member'
+      ? `<button class="btn-make-admin" onclick="makeCoAdmin('${m.id}','${name}')">⭐ Make Co-Admin</button>`
+      : `<span style="font-size:11px;color:var(--text3)">${m.role}</span>`;
+
+  return `<div class="member-item">
+    <div class="mi-avatar" style="background:${COLORS[i%COLORS.length]}">${name.charAt(0).toUpperCase()}</div>
+    <div class="mi-body">
+      <div class="mi-name">${name}</div>
+      <div class="mi-email">${m.email||''}</div>
+      <div class="mi-meta">
+        ${statusTag}${roleTag}
+        <span class="mi-tag trees">🌳 ${trees} trees</span>
+        <span class="mi-tag member">Joined ${ago(m.joined_at)}</span>
+      </div>
+    </div>
+    <div class="mi-actions">${actions}</div>
+  </div>`;
+}
+
+async function approveUser(id,name){
+  await sb.from('profiles').update({
+    status:'approved',
+    approved_at:new Date().toISOString(),
+    approved_by:currentUser.email
+  }).eq('id',id);
+  toast(`✅ ${name} approved!`);
+  await loadMembers();
+}
+
+async function rejectUser(id,name){
+  if(!confirm(`Remove ${name}'s registration?`)) return;
+  await sb.from('profiles').delete().eq('id',id);
+  toast(`🗑️ ${name} removed`);
+  await loadMembers();
+}
+
+async function makeCoAdmin(id,name){
+  if(!confirm(`Make ${name} a Co-Admin?`)) return;
+  await sb.from('profiles').update({role:'co-admin'}).eq('id',id);
+  toast(`⭐ ${name} is now Co-Admin!`);
+  await loadMembers();
+}
+
+// ── TREES ─────────────────────────────────────────────────────
+async function loadTrees(){
+  const {data}=await sb.from('trees').select('*').order('created_at',{ascending:false});
+  allTrees=data||[];
+  document.getElementById('cnt-trees').textContent=allTrees.length;
+  document.getElementById('st-trees').textContent=allTrees.length;
+  document.getElementById('st-photos').textContent=allTrees.filter(t=>t.photo_url).length;
+
+  document.getElementById('trees-list').innerHTML=allTrees.length
+    ?allTrees.map(t=>`
+      <div class="tree-item">
+        ${t.photo_url
+          ?`<img class="ti-photo show" src="${t.photo_url}" onerror="this.classList.remove('show');this.nextElementSibling.style.display='flex'">`
+          :''}
+        <div class="ti-emoji" ${t.photo_url?'style="display:none"':''}>${ge(t.common_name)}</div>
+        <div class="ti-body">
+          <div class="ti-name">${t.common_name} ${t.scientific_name?`<span style="font-style:italic;font-weight:400;font-size:11px;color:var(--text3)">${t.scientific_name}</span>`:''}
+          </div>
+          <div class="ti-meta">📍 ${t.latitude?.toFixed(4)}, ${t.longitude?.toFixed(4)} · ${t.trunk_diameter||'?'}cm · ${t.condition||'Good'}</div>
+          <div class="ti-by">🌱 ${t.submitted_by||'Anonymous'} · ${ago(t.created_at)}</div>
+        </div>
+        <button class="btn-delete" onclick="deleteTree('${t.id}','${t.common_name}')">🗑️ Delete</button>
+      </div>`).join('')
+    :'<div class="empty"><div class="empty-icon">🌱</div>No trees yet</div>';
+}
+
+async function deleteTree(id,name){
+  if(!confirm(`Delete this ${name} tree? This cannot be undone.`)) return;
+  await sb.from('trees').delete().eq('id',id);
+  toast(`🗑️ ${name} tree deleted`);
+  await loadTrees();
+}
+
+// ── INVITE CODES ──────────────────────────────────────────────
+async function loadInvites(){
+  const {data}=await sb.from('invite_codes').select('*').order('created_at',{ascending:false});
+  const codes=data||[];
+  const baseUrl=window.location.origin;
+
+  document.getElementById('invites-list').innerHTML=codes.length
+    ?codes.map(c=>`
+      <div class="invite-item">
+        <div class="ii-code">${c.code}</div>
+        <div class="ii-body">
+          <div class="ii-label">${c.label||c.role} ${c.used_by?'<span style="color:var(--red);font-size:10px">● Used</span>':'<span style="color:var(--sage);font-size:10px">● Available</span>'}</div>
+          <div class="ii-meta">Role: ${c.role} · Created ${ago(c.created_at)} ${c.used_at?'· Used '+ago(c.used_at):''}</div>
+          <div class="ii-meta" style="margin-top:3px;font-size:10px;color:var(--text3);word-break:break-all">
+            🔗 ${baseUrl}/login.html?invite=${c.code}
+          </div>
+        </div>
+        <button class="ii-copy" id="copy-${c.code}" onclick="copyInviteLink('${c.code}','${baseUrl}')">📋 Copy Link</button>
+      </div>`).join('')
+    :'<div class="empty"><div class="empty-icon">🔑</div>No invite codes yet</div>';
+}
+
+async function createInvite(){
+  let code=document.getElementById('new-code').value.trim().toUpperCase();
+  const role=document.getElementById('new-role').value;
+
+  if(!code){
+    // Auto generate
+    code='TM'+Math.random().toString(36).slice(2,7).toUpperCase();
+  }
+
+  const {error}=await sb.from('invite_codes').insert({code,role,label:role==='co-admin'?'Co-Admin invite':'Member invite'});
+  if(error){ toast('❌ Code already exists — try a different one'); return; }
+
+  document.getElementById('new-code').value='';
+  toast(`✅ Code ${code} created!`);
+  await loadInvites();
+}
+
+function copyInviteLink(code,baseUrl){
+  const link=`${baseUrl}/login.html?invite=${code}`;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=document.getElementById('copy-'+code);
+    btn.textContent='✅ Copied!'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='📋 Copy Link';btn.classList.remove('copied');},2000);
+  });
+}
+
+async function signOut(){
+  await sb.auth.signOut();
+  window.location.href='login.html';
+}
+
+// ── AUTO-FILL INVITE FROM URL ─────────────────────────────────
+const urlParams=new URLSearchParams(window.location.search);
+if(urlParams.get('invite')){
+  // Store invite code to use after login
+  sessionStorage.setItem('pendingInvite',urlParams.get('invite'));
+}
+
+init();
+</script>
+</body>
+</html>
