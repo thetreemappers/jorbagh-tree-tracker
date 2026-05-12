@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Join · The Tree Mappers</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
   --forest:#0f1f0c; --canopy:#1a3a0f; --sage:#2d6a1e; --leaf:#4a9e32;
@@ -174,14 +174,7 @@ html,body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--te
         <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your name" autocomplete="name"></div>
         <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@email.com" autocomplete="email"></div>
         <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password"></div>
-        <div class="field">
-          <label>Co-Admin Invite Code <span style="color:var(--text3);font-weight:400">(optional)</span></label>
-          <div class="invite-wrap">
-            <input type="text" id="reg-invite" placeholder="ENTER CODE" oninput="checkCode(this.value)" autocomplete="off">
-            <span class="invite-badge" id="invite-badge"></span>
-          </div>
-          <div class="field-hint">Have an invite code? Enter it to get Co-Admin access.</div>
-        </div>
+
         <button class="btn-main" id="reg-btn" onclick="register()">🌱 Create Account</button>
         <div class="auth-divider"><span>already a member?</span></div>
         <div class="switch-link"><a href="#" onclick="switchTab('login')">Sign in to your account →</a></div>
@@ -445,20 +438,30 @@ async function signOut(){
 }
 
 async function init(){
-  const hash=window.location.hash;
-  if(hash&&hash.includes('error=access_denied')){
-    switchTab('login');
-    msg('login-msg','error','Verification link expired. Please register again or request a new link.');
-    return;
-  }
-  if(hash&&hash.includes('access_token')){
+  try{
+    const hash=window.location.hash;
+    if(hash&&hash.includes('error=access_denied')){
+      switchTab('login');
+      msg('login-msg','error','Verification link expired. Please register again.');
+      return;
+    }
+    if(hash&&hash.includes('access_token')){
+      const{data:{session}}=await sb.auth.getSession();
+      if(session?.user){loadProfile(session.user);return;}
+    }
     const{data:{session}}=await sb.auth.getSession();
-    if(session?.user){loadProfile(session.user);return;}
+    if(session?.user)loadProfile(session.user);
+  }catch(e){
+    console.error('Init error:',e);
   }
-  const{data:{session}}=await sb.auth.getSession();
-  if(session?.user)loadProfile(session.user);
 }
-init();
+
+// Make sure Supabase loaded before init
+if(typeof supabase !== 'undefined'){
+  init();
+} else {
+  window.addEventListener('load', init);
+}
 </script>
 </body>
 </html>
