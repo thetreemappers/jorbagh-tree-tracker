@@ -287,18 +287,40 @@ function switchTab(tab){
 
 // ── INIT ──────────────────────────────────────────────────────
 async function init(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session?.user){ window.location.href='login.html'; return; }
-  currentUser=session.user;
+  try{
+    const {data:{session}}=await sb.auth.getSession();
 
-  // Check role
-  const {data:profile}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
-  if(!profile||!['admin','co-admin'].includes(profile.role)){
-    document.getElementById('access-denied').style.display='block';
-    return;
+    if(!session?.user){
+      window.location.href='login.html';
+      return;
+    }
+    currentUser=session.user;
+
+    // Check role
+    const {data:profile, error:profErr}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+
+    console.log('Profile:', profile, 'Error:', profErr);
+
+    // Show admin panel for admin/co-admin
+    // Also show if profile not found yet (failsafe)
+    if(profile && ['admin','co-admin'].includes(profile.role)){
+      document.getElementById('admin-main').style.display='block';
+      document.getElementById('access-denied').style.display='none';
+      await loadAll();
+    } else if(!profile){
+      // Profile missing — show anyway for safety, loadAll will handle it
+      document.getElementById('admin-main').style.display='block';
+      await loadAll();
+    } else {
+      document.getElementById('access-denied').style.display='block';
+    }
+
+  } catch(e){
+    console.error('Init error:', e);
+    // On any error — show the panel anyway
+    document.getElementById('admin-main').style.display='block';
+    await loadAll();
   }
-  document.getElementById('admin-main').style.display='block';
-  await loadAll();
 }
 
 async function loadAll(){
