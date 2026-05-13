@@ -50,6 +50,26 @@ function getAreaName(lat, lng){
   return 'Delhi';
 }
 
+
+// ── UPDATE NAV BASED ON AUTH ─────────────────────────
+(async()=>{
+  try{
+    if(typeof supabase === 'undefined') return;
+    const {createClient} = supabase;
+    const sb2 = createClient('https://dcciktuwyjrvkynmxdjn.supabase.co','sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW');
+    const {data:{session}} = await sb2.auth.getSession();
+    const signinBtn = document.getElementById('nav-signin');
+    if(signinBtn){
+      if(session?.user){
+        signinBtn.textContent = '👤 My Profile';
+        signinBtn.href = 'login.html';
+        signinBtn.style.color = 'var(--sage)';
+        signinBtn.style.fontWeight = '600';
+      }
+    }
+  }catch(e){}
+})();
+
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -944,6 +964,7 @@ html, body {
     <a href="#stats-section">Stats</a>
     <a href="#how-section">How It Works</a>
     <a href="identify.html">🔬 Identify</a>
+    <a href="login.html" style="font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s" id="nav-signin">Sign In</a>
     <a href="submit.html" class="nav-cta">➕ Add a Tree</a>
   </div>
   <button class="nav-ham" onclick="toggleNav()" id="nav-ham">
@@ -967,7 +988,7 @@ html, body {
   <div class="hero-left">
     <div class="hero-tag fade-up">🌿 Delhi's Urban Forest Map</div>
     <h1 class="hero-title fade-up fade-up-1">
-      Every Tree.<br>Every <em>Street.</em><br>All of <span class="gold">Delhi.</span>
+      Every Tree.<br>Every <em>Street.</em><br>Every Park.<br>All of <span class="gold">Delhi.</span>
     </h1>
     <p class="hero-desc fade-up fade-up-2">
       A community-powered map logging every tree across Delhi — one neighbourhood at a time. Join thousands of residents mapping, protecting and celebrating our urban forest.
