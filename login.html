@@ -2,466 +2,283 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Join · The Tree Mappers</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root {
-  --forest:#0f1f0c; --canopy:#1a3a0f; --sage:#2d6a1e; --leaf:#4a9e32;
-  --lime:#8ecf5e; --pale:#c8f0b8; --cream:#f8f4ed; --parchment:#efe9da;
-  --gold:#c8922a; --gold-light:#e8b84b;
-  --text:#1a2118; --text2:#3d5c30; --text3:#7a9e68;
-  --border:rgba(42,107,30,0.14);
-  --safe-top:env(safe-area-inset-top,0px);
-  --safe-bottom:env(safe-area-inset-bottom,0px);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);}
-
-/* AUTH PAGE */
-#auth-page{display:flex;flex-direction:column;min-height:100vh;}
-.auth-brand{
-  background:linear-gradient(135deg,var(--forest),var(--canopy));
-  padding:calc(var(--safe-top) + 28px) 24px 28px;
-  text-align:center;
-}
-.ab-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:white;display:flex;align-items:center;justify-content:center;gap:10px;}
-.ab-logo span{color:var(--gold-light);}
-.ab-tag{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:5px;}
-.ab-features{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:16px;}
-.ab-feat{font-size:11px;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.08);padding:5px 10px;border-radius:20px;}
-
-.auth-tabs{display:flex;background:white;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:10;}
-.auth-tab{flex:1;padding:15px 8px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;border:none;background:none;color:var(--text3);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;}
-.auth-tab.active{color:var(--sage);border-bottom-color:var(--sage);}
-
-.auth-body{flex:1;padding:28px 20px 60px;max-width:500px;margin:0 auto;width:100%;}
-.auth-form{display:none;}
-.auth-form.active{display:block;}
-
-.form-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;}
-.form-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.5;}
-
-.auth-msg{padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;line-height:1.6;display:none;}
-.auth-msg.show{display:block;}
-.auth-msg.error{background:#fde8e8;color:#c03222;border:1px solid #f0b8b8;}
-.auth-msg.success{background:#dcf5d0;color:#2d6a1e;border:1px solid #a8d5a2;}
-
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:#f8f4ed;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.card{background:white;border-radius:20px;padding:40px 36px;width:100%;max-width:440px;box-shadow:0 12px 48px rgba(15,31,12,0.14);}
+.logo{text-align:center;margin-bottom:28px;}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#1a3a0f;}
+.logo-text span{color:#c8922a;}
+.logo-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7a9e68;margin-top:3px;}
+.tabs{display:flex;background:#f8f4ed;border-radius:10px;padding:4px;margin-bottom:28px;}
+.tab{flex:1;padding:10px;border:none;background:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:#7a9e68;border-radius:8px;cursor:pointer;transition:all .2s;}
+.tab.active{background:white;color:#1a2118;box-shadow:0 1px 6px rgba(0,0,0,.1);}
+.panel{display:none;}
+.panel.active{display:block;}
+h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#1a2118;margin-bottom:4px;}
+.sub{font-size:13px;color:#7a9e68;margin-bottom:22px;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;letter-spacing:.3px;}
-.field input{width:100%;padding:14px 16px;border:1.5px solid #ddd5c8;border-radius:12px;font-family:'Outfit',sans-serif;font-size:15px;color:var(--text);background:white;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
-.field input:focus{border-color:var(--leaf);box-shadow:0 0 0 3px rgba(74,158,50,.08);}
-.field input::placeholder{color:#b8ad9e;}
-.field-hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5;}
+.field label{display:block;font-size:12px;font-weight:600;color:#3d5c30;margin-bottom:5px;}
+.field input{width:100%;padding:13px 14px;border:1.5px solid #ddd5c8;border-radius:11px;font-family:'Outfit',sans-serif;font-size:15px;color:#1a2118;background:#f8f4ed;outline:none;transition:border .2s;}
+.field input:focus{border-color:#4a9e32;background:white;box-shadow:0 0 0 3px rgba(74,158,50,.08);}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#2d6a1e,#4a9e32);border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(42,106,30,.3);}
+.btn:disabled{background:#ccc;transform:none;box-shadow:none;cursor:not-allowed;}
+.msg{padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:14px;line-height:1.5;display:none;}
+.msg.show{display:block;}
+.msg.error{background:#fde8e8;color:#c03222;border:1px solid #f0b8b8;}
+.msg.success{background:#dcf5d0;color:#2d6a1e;border:1px solid #a8d5a2;}
+.msg.info{background:#fef3cd;color:#8a6400;border:1px solid #f0d9a8;}
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:#7a9e68;font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e8e0d5;}
+.link-row{text-align:center;font-size:13px;color:#7a9e68;}
+.link-row a{color:#2d6a1e;font-weight:600;text-decoration:none;cursor:pointer;}
 
-.invite-wrap{position:relative;}
-.invite-wrap input{padding-right:110px;letter-spacing:2px;text-transform:uppercase;font-weight:600;}
-.invite-badge{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;display:none;white-space:nowrap;}
-.invite-badge.show{display:block;}
-.invite-badge.valid{background:#dcf5d0;color:#2d6a1e;}
-.invite-badge.invalid{background:#fde8e8;color:#c03222;}
-.invite-badge.checking{background:#fef3cd;color:#8a6400;}
-
-.btn-main{width:100%;padding:16px;background:linear-gradient(135deg,var(--sage),var(--leaf));border:none;border-radius:14px;color:white;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(42,106,30,.25);transition:all .2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-main:active{transform:scale(.98);}
-.btn-main:disabled{background:#ccc;box-shadow:none;}
-
-.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
-.auth-divider span{font-size:11px;color:var(--text3);}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-.switch-link{text-align:center;font-size:13px;color:var(--text3);}
-.switch-link a{color:var(--sage);font-weight:600;text-decoration:none;}
-.forgot-link{text-align:center;margin-top:14px;}
-.forgot-link a{font-size:12px;color:var(--text3);text-decoration:none;}
-
-/* PROFILE PAGE */
-#profile-page{display:none;min-height:100vh;background:var(--cream);}
-
-.prof-nav{background:white;border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 10px) 14px 10px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:100;flex-wrap:wrap;}
-.prof-nav-logo{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;color:var(--canopy);text-decoration:none;flex-shrink:0;}
-.prof-nav-logo span{color:var(--gold);}
-.prof-nav-links{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;justify-content:flex-end;align-items:center;}
-.prof-nav-links::-webkit-scrollbar{display:none;}
-.prof-nav-links a{font-size:11px;font-weight:600;color:var(--text2);text-decoration:none;padding:6px 10px;border-radius:8px;white-space:nowrap;border:1px solid var(--border);transition:all .2s;flex-shrink:0;}
-.prof-nav-links .nav-add{background:var(--canopy)!important;color:white!important;border-color:var(--canopy);}
-.btn-signout{font-size:11px;font-weight:600;color:var(--text3);background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:'Outfit',sans-serif;}
-.btn-signout:active{background:#fde8e8;color:#c03222;}
-
-.prof-header{background:linear-gradient(135deg,var(--forest),var(--canopy));padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;}
-.prof-avatar{width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--leaf),var(--lime));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:white;border:3px solid rgba(255,255,255,.2);}
-.prof-name{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:white;line-height:1.1;}
+/* PROFILE */
+#profile-page{display:none;width:100%;max-width:500px;}
+.prof-card{background:white;border-radius:20px;overflow:hidden;box-shadow:0 12px 48px rgba(15,31,12,0.14);}
+.prof-head{background:linear-gradient(135deg,#0f1f0c,#1a3a0f);padding:28px 24px;text-align:center;}
+.prof-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#4a9e32,#8ecf5e);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:white;margin:0 auto 12px;border:3px solid rgba(255,255,255,.2);}
+.prof-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:white;margin-bottom:4px;}
 .prof-email{font-size:12px;color:rgba(255,255,255,.5);}
-.prof-role{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:2px;}
+.prof-role{display:inline-block;margin-top:8px;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
 .prof-role.member{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);}
-.prof-role.co-admin{background:rgba(200,146,42,.3);color:var(--gold-light);}
-.prof-role.admin{background:rgba(142,207,94,.2);color:var(--lime);}
-
-.prof-body{padding:14px;max-width:600px;margin:0 auto;}
-
-.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
-.ps-card{background:white;border:1px solid var(--border);border-radius:14px;padding:16px 10px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-.ps-val{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--sage);line-height:1;}
-.ps-label{font-size:10px;color:var(--text3);margin-top:3px;font-weight:500;}
-
-.prof-section{background:white;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-.prof-sec-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
-
-.upgrade-form{display:flex;flex-direction:column;gap:8px;}
-.upgrade-input{padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-align:center;outline:none;transition:border-color .2s;width:100%;-webkit-appearance:none;}
-.upgrade-input:focus{border-color:var(--leaf);}
-.upgrade-btn{padding:13px;background:var(--canopy);border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;}
-.upgrade-btn:active{background:var(--sage);transform:scale(.98);}
-.upgrade-msg{padding:10px 12px;border-radius:8px;font-size:12px;display:none;line-height:1.5;margin-top:8px;}
-.upgrade-msg.show{display:block;}
-.upgrade-msg.success{background:#dcf5d0;color:#2d6a1e;}
-.upgrade-msg.error{background:#fde8e8;color:#c03222;}
-
-.trees-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.tree-card{background:var(--parchment);border-radius:10px;overflow:hidden;border:1px solid var(--border);}
-.tc-img{width:100%;height:70px;object-fit:cover;display:none;}
-.tc-img.show{display:block;}
-.tc-emoji{width:100%;height:70px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--parchment);}
-.tc-info{padding:7px 8px;}
-.tc-name{font-size:10px;font-weight:700;color:var(--text);line-height:1.3;}
-.tc-date{font-size:9px;color:var(--text3);margin-top:2px;}
-.empty-trees{grid-column:1/-1;text-align:center;padding:24px 12px;font-size:13px;color:var(--text3);line-height:1.7;}
-.empty-trees a{color:var(--sage);font-weight:600;text-decoration:none;}
-
-/* DESKTOP */
-@media(min-width:768px){
-  #auth-page{flex-direction:row;}
-  .auth-brand{width:380px;flex-shrink:0;min-height:100vh;flex-direction:column;display:flex;justify-content:center;position:sticky;top:0;height:100vh;}
-  .ab-features{flex-direction:column;align-items:flex-start;gap:16px;margin-top:32px;}
-  .ab-feat{background:rgba(255,255,255,.1);padding:10px 16px;border-radius:12px;font-size:13px;}
-  .auth-tabs{top:0;}
-  .auth-body{padding:40px 44px 60px;}
-  .prof-header{flex-direction:row;text-align:left;padding:36px 40px;}
-  .prof-body{padding:24px 40px;}
-  .prof-stats{gap:16px;}
-  .trees-grid{grid-template-columns:repeat(5,1fr);}
-}
+.prof-role.co-admin,.prof-role.admin{background:rgba(200,146,42,.3);color:#e8b84b;}
+.prof-body{padding:20px 24px;}
+.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.ps{background:#f8f4ed;border-radius:12px;padding:14px 10px;text-align:center;}
+.ps-v{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:#2d6a1e;line-height:1;}
+.ps-l{font-size:10px;color:#7a9e68;margin-top:3px;font-weight:500;}
+.pending-notice{background:#fef3cd;border:1px solid #f0d9a8;border-radius:12px;padding:14px;font-size:13px;color:#8a6400;line-height:1.6;margin-bottom:14px;}
+.go-map{display:block;padding:14px;background:linear-gradient(135deg,#2d6a1e,#4a9e32);color:white;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:10px;}
+.go-admin{display:none;padding:14px;background:#c8922a;color:white;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:10px;}
+.signout-btn{width:100%;padding:12px;background:white;border:1.5px solid #e8e0d5;border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:#7a9e68;cursor:pointer;transition:all .2s;}
+.signout-btn:hover{border-color:#c03222;color:#c03222;background:#fde8e8;}
 </style>
 </head>
 <body>
 
-<!-- AUTH PAGE -->
-<div id="auth-page">
-  <div class="auth-brand">
-    <div class="ab-logo">🌳 Jor Bagh <span>Tree Tracker</span></div>
-    <div class="ab-tag">New Delhi Urban Forest Map</div>
-    <div class="ab-features">
-      <span class="ab-feat">🗺️ Log trees on the map</span>
-      <span class="ab-feat">📷 Upload tree photos</span>
-      <span class="ab-feat">🔬 AI species ID</span>
-      <span class="ab-feat">⭐ Co-admin access</span>
-    </div>
+<!-- AUTH CARD -->
+<div class="card" id="auth-card">
+  <div class="logo">
+    <div class="logo-text">🌳 Jor Bagh <span>Tree Tracker</span></div>
+    <div class="logo-sub">New Delhi Urban Forest Map</div>
   </div>
 
-  <div style="flex:1;display:flex;flex-direction:column;">
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('register')">Create Account</button>
-      <button class="auth-tab" onclick="switchTab('login')">Sign In</button>
-    </div>
-    <div class="auth-body">
+  <div class="tabs">
+    <button class="tab active" id="tab-register" onclick="showTab('register')">Create Account</button>
+    <button class="tab" id="tab-login" onclick="showTab('login')">Sign In</button>
+  </div>
 
-      <!-- REGISTER -->
-      <div class="auth-form active" id="form-register">
-        <div class="form-title">Join the community 🌿</div>
-        <div class="form-sub">Create your Tree Mappers account for free</div>
-        <div class="auth-msg" id="reg-msg"></div>
-        <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your name" autocomplete="name"></div>
-        <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@email.com" autocomplete="email"></div>
-        <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password"></div>
+  <!-- REGISTER -->
+  <div class="panel active" id="panel-register">
+    <h2>Join the community 🌿</h2>
+    <p class="sub">Create your free Tree Mappers account</p>
+    <div class="msg" id="reg-msg"></div>
+    <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your name"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@email.com"></div>
+    <div class="field"><label>Password (min 8 characters)</label><input type="password" id="reg-pw" placeholder="••••••••"></div>
+    <button class="btn" id="reg-btn" onclick="doRegister()">🌱 Create Account</button>
+    <div class="divider">already a member?</div>
+    <div class="link-row"><a onclick="showTab('login')">Sign in to your account →</a></div>
+  </div>
 
-        <button class="btn-main" id="reg-btn" onclick="register()">🌱 Create Account</button>
-        <div class="auth-divider"><span>already a member?</span></div>
-        <div class="switch-link"><a href="#" onclick="switchTab('login')">Sign in to your account →</a></div>
-      </div>
-
-      <!-- LOGIN -->
-      <div class="auth-form" id="form-login">
-        <div class="form-title">Welcome back 🌳</div>
-        <div class="form-sub">Sign in to your Tree Mappers account</div>
-        <div class="auth-msg" id="login-msg"></div>
-        <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="you@email.com" autocomplete="email"></div>
-        <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="Your password" autocomplete="current-password"></div>
-        <button class="btn-main" id="login-btn" onclick="login()">🌿 Sign In</button>
-        <div class="forgot-link"><a href="#" onclick="forgotPassword()">Forgot password?</a></div>
-        <div class="auth-divider"><span>new here?</span></div>
-        <div class="switch-link"><a href="#" onclick="switchTab('register')">Create a free account →</a></div>
-      </div>
-
-    </div>
+  <!-- LOGIN -->
+  <div class="panel" id="panel-login">
+    <h2>Welcome back 🌳</h2>
+    <p class="sub">Sign in to your Tree Mappers account</p>
+    <div class="msg" id="login-msg"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-pw" placeholder="••••••••"></div>
+    <button class="btn" id="login-btn" onclick="doLogin()">🌿 Sign In</button>
+    <div class="divider">new here?</div>
+    <div class="link-row"><a onclick="showTab('register')">Create a free account →</a></div>
+    <div style="text-align:center;margin-top:12px"><a onclick="doForgot()" style="font-size:12px;color:#7a9e68;cursor:pointer">Forgot password?</a></div>
   </div>
 </div>
 
-<!-- PROFILE PAGE -->
+<!-- PROFILE CARD -->
 <div id="profile-page">
-  <div class="prof-nav">
-    <a href="index.html" class="prof-nav-logo">🌳 Jor Bagh <span>Tracker</span></a>
-    <div class="prof-nav-links">
-      <a href="index.html">🗺️ Map</a>
-      <a href="community.html">👥 Community</a>
-      <a href="submit.html" class="nav-add">➕ Add Tree</a>
+  <div class="prof-card">
+    <div class="prof-head">
+      <div class="prof-av" id="pav">?</div>
+      <div class="prof-name" id="pname">Loading...</div>
+      <div class="prof-email" id="pemail"></div>
+      <span class="prof-role member" id="prole">🌿 Member</span>
     </div>
-    <button class="btn-signout" onclick="signOut()">Sign Out</button>
-  </div>
-
-  <div class="prof-header">
-    <div class="prof-avatar" id="prof-avatar">?</div>
-    <div>
-      <div class="prof-name" id="prof-name">Loading...</div>
-      <div class="prof-email" id="prof-email"></div>
-      <span class="prof-role member" id="prof-role">🌿 Member</span>
-    </div>
-  </div>
-
-  <div class="prof-body">
-    <div class="prof-stats">
-      <div class="ps-card"><div class="ps-val" id="ps-trees">0</div><div class="ps-label">Trees</div></div>
-      <div class="ps-card"><div class="ps-val" id="ps-photos">0</div><div class="ps-label">Photos</div></div>
-      <div class="ps-card"><div class="ps-val" id="ps-species">0</div><div class="ps-label">Species</div></div>
-    </div>
-
-    <div class="prof-section" id="upgrade-section">
-      <div class="prof-sec-title">⭐ Upgrade to Co-Admin</div>
-      <p style="font-size:13px;color:var(--text3);margin-bottom:12px;line-height:1.6">Have an invite code? Enter it to get co-admin access.</p>
-      <div class="upgrade-form">
-        <input type="text" class="upgrade-input" id="upgrade-code" placeholder="INVITE CODE" oninput="this.value=this.value.toUpperCase()" autocomplete="off">
-        <button class="upgrade-btn" onclick="applyCode()">Apply Code</button>
+    <div class="prof-body">
+      <div class="prof-stats">
+        <div class="ps"><div class="ps-v" id="ptrees">0</div><div class="ps-l">Trees</div></div>
+        <div class="ps"><div class="ps-v" id="pphotos">0</div><div class="ps-l">Photos</div></div>
+        <div class="ps"><div class="ps-v" id="pspecies">0</div><div class="ps-l">Species</div></div>
       </div>
-      <div class="upgrade-msg" id="upgrade-msg"></div>
-    </div>
-
-    <div class="prof-section">
-      <div class="prof-sec-title">🌳 My Trees</div>
-      <div class="trees-grid" id="my-trees">
-        <div class="empty-trees">Loading...</div>
+      <div class="pending-notice" id="pending-notice" style="display:none">
+        ⏳ <strong>Account pending approval.</strong> The admin will approve your account soon. Once approved you can access the map.
       </div>
+      <a href="index.html" class="go-map" id="go-map" style="display:none">🗺️ Go to the Tree Map →</a>
+      <a href="admin.html" class="go-admin" id="go-admin">⚙️ Admin Panel →</a>
+      <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
     </div>
   </div>
 </div>
 
 <script>
-const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
-const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
-const {createClient}=supabase;
-const sb=createClient(SURL,SKEY);
-const SP={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳','Kadamba':'💐'};
+const SB = supabase.createClient(
+  'https://dcciktuwyjrvkynmxdjn.supabase.co',
+  'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW'
+);
+const SP={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Bargad':'🌳'};
 const ge=n=>SP[n]||'🌳';
-const ago=d=>{const s=(Date.now()-new Date(d))/1000;if(s<86400)return 'Today';if(s<604800)return Math.floor(s/86400)+'d ago';return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});};
-const msg=(id,type,text)=>{const el=document.getElementById(id);el.className='auth-msg show '+type;el.textContent=text;};
 
-function switchTab(tab){
-  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='register'?0:1)));
-  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
-  document.getElementById('form-'+tab).classList.add('active');
+// ── TABS ──────────────────────────────────────────────
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
 }
 
-let codeValid=false;
-async function checkCode(val){
-  const badge=document.getElementById('invite-badge');
-  const code=val.toUpperCase().trim();
-  if(!code||code.length<4){badge.className='invite-badge';codeValid=false;return;}
-  badge.className='invite-badge show checking';badge.textContent='Checking...';
-  try{const{data}=await sb.from('invite_codes').select('*').eq('code',code).is('used_by',null).single();
-    if(data){badge.className='invite-badge show valid';badge.textContent='✓ Co-Admin';codeValid=true;}
-    else{badge.className='invite-badge show invalid';badge.textContent='✗ Invalid';codeValid=false;}}
-  catch{badge.className='invite-badge show invalid';badge.textContent='✗ Not found';codeValid=false;}
+function showMsg(id,type,text){
+  const el=document.getElementById(id);
+  el.className='msg show '+type;
+  el.textContent=text;
 }
 
-async function register(){
+// ── REGISTER ──────────────────────────────────────────
+async function doRegister(){
   const name=document.getElementById('reg-name').value.trim();
   const email=document.getElementById('reg-email').value.trim();
-  const pw=document.getElementById('reg-password').value;
-  const code=document.getElementById('reg-invite').value.trim().toUpperCase();
+  const pw=document.getElementById('reg-pw').value;
   const btn=document.getElementById('reg-btn');
 
-  if(!name){msg('reg-msg','error','Please enter your full name');return;}
-  if(!email||!email.includes('@')){msg('reg-msg','error','Please enter a valid email address');return;}
-  if(!pw||pw.length<8){msg('reg-msg','error','Password must be at least 8 characters');return;}
+  if(!name){showMsg('reg-msg','error','Please enter your name');return;}
+  if(!email||!email.includes('@')){showMsg('reg-msg','error','Please enter a valid email');return;}
+  if(!pw||pw.length<8){showMsg('reg-msg','error','Password must be at least 8 characters');return;}
 
-  btn.disabled=true;
-  btn.textContent='⏳ Creating account...';
+  btn.disabled=true; btn.textContent='Creating account...';
+  showMsg('reg-msg','info','Creating your account...');
 
   try{
-    const{data,error}=await sb.auth.signUp({
+    const {data,error}=await SB.auth.signUp({
       email,password:pw,
-      options:{
-        data:{full_name:name},
-        emailRedirectTo:window.location.origin+'/login.html'
-      }
+      options:{data:{full_name:name},emailRedirectTo:window.location.origin+'/login.html'}
     });
+    if(error) throw error;
 
-    if(error){
-      if(error.message.includes('already')){
-        msg('reg-msg','error','This email is already registered. Click "Sign In" instead.');
-      } else {
-        msg('reg-msg','error',error.message||'Registration failed. Please try again.');
-      }
-      btn.disabled=false;btn.textContent='🌱 Create Account';
-      return;
-    }
-
-    // Apply invite code
-    const user=data.user||data.session?.user;
-    if(code&&codeValid&&user?.id){
-      try{
-        await sb.from('invite_codes').update({used_by:user.id,used_at:new Date().toISOString()}).eq('code',code);
-        await sb.from('profiles').update({role:'co-admin'}).eq('id',user.id);
-      }catch(e){console.warn('Invite error:',e);}
-    }
-
-    // If session exists — logged in directly (email confirm OFF)
     if(data.session){
-      msg('reg-msg','success','🌳 Account created! Loading your profile...');
+      showMsg('reg-msg','success','🌳 Account created! Loading profile...');
       btn.textContent='✅ Done!';
-      setTimeout(()=>loadProfile(data.session.user),800);
+      setTimeout(()=>showProfile(data.session.user),800);
     } else {
-      // Email confirmation required
-      msg('reg-msg','success','🌱 Account created! Check your email for a verification link. Once verified, sign in and wait for admin approval to access the map.');
+      showMsg('reg-msg','success','🌱 Account created! Check your email to verify, then sign in here.');
       btn.textContent='📧 Check your email!';
-      setTimeout(()=>switchTab('login'),4000);
+      setTimeout(()=>showTab('login'),3000);
     }
-
   }catch(e){
-    msg('reg-msg','error',e.message||'Something went wrong. Please try again.');
-    btn.disabled=false;btn.textContent='🌱 Create Account';
+    const m=e.message||'';
+    if(m.includes('already')) showMsg('reg-msg','error','Email already registered — click Sign In instead');
+    else showMsg('reg-msg','error',m||'Registration failed. Please try again.');
+    btn.disabled=false; btn.textContent='🌱 Create Account';
   }
 }
 
-async function login(){
+// ── LOGIN ─────────────────────────────────────────────
+async function doLogin(){
   const email=document.getElementById('login-email').value.trim();
-  const pw=document.getElementById('login-password').value;
+  const pw=document.getElementById('login-pw').value;
   const btn=document.getElementById('login-btn');
-  if(!email||!pw){msg('login-msg','error','Please enter email and password');return;}
-  btn.disabled=true;btn.textContent='Signing in...';
+
+  if(!email||!pw){showMsg('login-msg','error','Please enter email and password');return;}
+
+  btn.disabled=true; btn.textContent='Signing in...';
+
   try{
-    const{data,error}=await sb.auth.signInWithPassword({email,password:pw});
-    if(error){
-      // Give helpful error messages
-      if(error.message.includes('Email not confirmed')){
-        msg('login-msg','error','📧 Please verify your email first — check your inbox for a verification link from Supabase.');
-      } else if(error.message.includes('Invalid login')||error.message.includes('Invalid credentials')){
-        msg('login-msg','error','❌ Wrong email or password. Please try again.');
-      } else {
-        msg('login-msg','error',error.message);
-      }
-      btn.disabled=false;btn.textContent='🌿 Sign In';
-      return;
-    }
-    msg('login-msg','success','✅ Signed in! Loading profile...');
-    setTimeout(()=>loadProfile(data.user),600);
+    const {data,error}=await SB.auth.signInWithPassword({email,password:pw});
+    if(error) throw error;
+    showMsg('login-msg','success','✅ Signed in! Loading profile...');
+    setTimeout(()=>showProfile(data.user),600);
   }catch(e){
-    msg('login-msg','error',e.message||'Sign in failed. Please try again.');
-    btn.disabled=false;btn.textContent='🌿 Sign In';
+    const m=e.message||'';
+    if(m.includes('confirmed')) showMsg('login-msg','error','Please verify your email first — check your inbox');
+    else if(m.includes('Invalid')) showMsg('login-msg','error','Wrong email or password');
+    else showMsg('login-msg','error',m||'Sign in failed');
+    btn.disabled=false; btn.textContent='🌿 Sign In';
   }
 }
 
-async function forgotPassword(){
+// ── FORGOT ────────────────────────────────────────────
+async function doForgot(){
   const email=document.getElementById('login-email').value.trim();
-  if(!email){msg('login-msg','error','Enter your email address first');return;}
-  const{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
-  if(error)msg('login-msg','error',error.message);
-  else msg('login-msg','success','📧 Reset link sent! Check your inbox.');
+  if(!email){showMsg('login-msg','error','Enter your email address above first');return;}
+  await SB.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/login.html'});
+  showMsg('login-msg','success','📧 Password reset email sent!');
 }
 
-async function loadProfile(user){
-  document.getElementById('auth-page').style.display='none';
+// ── PROFILE ───────────────────────────────────────────
+async function showProfile(user){
+  document.getElementById('auth-card').style.display='none';
   document.getElementById('profile-page').style.display='block';
-  window.scrollTo(0,0);
-  const{data:profile}=await sb.from('profiles').select('*').eq('id',user.id).single();
+
+  const {data:profile}=await SB.from('profiles').select('*').eq('id',user.id).single();
   const name=profile?.full_name||user.user_metadata?.full_name||user.email.split('@')[0];
   const role=profile?.role||'member';
   const status=profile?.status||'pending';
 
-  document.getElementById('prof-avatar').textContent=name.charAt(0).toUpperCase();
-  document.getElementById('prof-name').textContent=name;
-  document.getElementById('prof-email').textContent=user.email;
+  document.getElementById('pav').textContent=name.charAt(0).toUpperCase();
+  document.getElementById('pname').textContent=name;
+  document.getElementById('pemail').textContent=user.email;
 
-  const roleEl=document.getElementById('prof-role');
-  roleEl.className='prof-role '+role;
+  const roleEl=document.getElementById('prole');
+  roleEl.className='prof-role '+(role==='admin'||role==='co-admin'?'co-admin':'member');
   roleEl.textContent=role==='admin'?'⭐ Admin':role==='co-admin'?'⭐ Co-Admin':'🌿 Member';
-  if(role==='co-admin'||role==='admin') document.getElementById('upgrade-section').style.display='none';
 
-  // Show pending notice if not yet approved
-  if(status==='pending'){
-    const pending=document.createElement('div');
-    pending.style.cssText='background:#fef3cd;border:1px solid #f0d9a8;border-radius:12px;padding:16px;margin-bottom:14px;font-size:13px;color:#8a6400;line-height:1.6;';
-    pending.innerHTML='<strong>⏳ Account Pending Approval</strong><br>The admin needs to approve your account before you can access the tree map. This usually takes less than 24 hours. You'll be able to log in and see the map once approved.';
-    document.querySelector('.prof-body').prepend(pending);
-  }
-
-  // Show access map button if approved
   if(status==='approved'){
-    const accessBtn=document.createElement('a');
-    accessBtn.href='index.html';
-    accessBtn.style.cssText='display:block;width:100%;padding:14px;background:linear-gradient(135deg,#2d6a1e,#4a9e32);color:white;border-radius:12px;text-align:center;text-decoration:none;font-weight:700;font-size:15px;margin-bottom:14px;';
-    accessBtn.textContent='🗺️ Go to the Tree Map →';
-    document.querySelector('.prof-body').prepend(accessBtn);
+    document.getElementById('go-map').style.display='block';
+    document.getElementById('pending-notice').style.display='none';
+  } else {
+    document.getElementById('pending-notice').style.display='block';
+    document.getElementById('go-map').style.display='none';
   }
-  const{data:trees}=await sb.from('trees').select('*').eq('submitted_by',name).order('created_at',{ascending:false});
+
+  if(role==='admin'||role==='co-admin'){
+    document.getElementById('go-admin').style.display='block';
+  }
+
+  const {data:trees}=await SB.from('trees').select('*').eq('submitted_by',name);
   const t=trees||[];
-  document.getElementById('ps-trees').textContent=t.length;
-  document.getElementById('ps-photos').textContent=t.filter(x=>x.photo_url).length;
-  document.getElementById('ps-species').textContent=new Set(t.map(x=>x.common_name)).size;
-  document.getElementById('my-trees').innerHTML=t.length
-    ?t.map(x=>`<div class="tree-card">${x.photo_url?`<img class="tc-img show" src="${x.photo_url}" onerror="this.classList.remove('show');this.nextElementSibling.style.display='flex'">`:''}<div class="tc-emoji" ${x.photo_url?'style="display:none"':''}>${ge(x.common_name)}</div><div class="tc-info"><div class="tc-name">${x.common_name}</div><div class="tc-date">${ago(x.created_at)}</div></div></div>`).join('')
-    :'<div class="empty-trees">No trees yet 🌱<br><a href="submit.html">Add your first tree →</a></div>';
+  document.getElementById('ptrees').textContent=t.length;
+  document.getElementById('pphotos').textContent=t.filter(x=>x.photo_url).length;
+  document.getElementById('pspecies').textContent=new Set(t.map(x=>x.common_name)).size;
 }
 
-async function applyCode(){
-  const code=document.getElementById('upgrade-code').value.trim().toUpperCase();
-  const msgEl=document.getElementById('upgrade-msg');
-  if(!code){msgEl.className='upgrade-msg show error';msgEl.textContent='Please enter a code';return;}
-  try{
-    const{data:{session}}=await sb.auth.getSession();
-    const user=session?.user;
-    if(!user)throw new Error('Not signed in');
-    const{data:inv}=await sb.from('invite_codes').select('*').eq('code',code).is('used_by',null).single();
-    if(!inv)throw new Error('Invalid or already used code');
-    await sb.from('invite_codes').update({used_by:user.id,used_at:new Date().toISOString()}).eq('code',code);
-    await sb.from('profiles').update({role:'co-admin'}).eq('id',user.id);
-    msgEl.className='upgrade-msg show success';msgEl.textContent='🌟 You are now a Co-Admin!';
-    document.getElementById('upgrade-section').style.display='none';
-    document.getElementById('prof-role').className='prof-role co-admin';
-    document.getElementById('prof-role').textContent='⭐ Co-Admin';
-  }catch(e){msgEl.className='upgrade-msg show error';msgEl.textContent=e.message;}
-}
-
-async function signOut(){
-  await sb.auth.signOut();
+// ── SIGN OUT ──────────────────────────────────────────
+async function doSignOut(){
+  await SB.auth.signOut();
   document.getElementById('profile-page').style.display='none';
-  document.getElementById('auth-page').style.display='flex';
+  document.getElementById('auth-card').style.display='block';
+  showTab('login');
 }
 
-async function init(){
+// ── AUTO LOGIN ────────────────────────────────────────
+(async()=>{
   try{
     const hash=window.location.hash;
-    if(hash&&hash.includes('error=access_denied')){
-      switchTab('login');
-      msg('login-msg','error','Verification link expired. Please register again.');
+    if(hash.includes('error=access_denied')){
+      showTab('login');
+      showMsg('login-msg','error','Link expired. Please sign in.');
       return;
     }
-    if(hash&&hash.includes('access_token')){
-      const{data:{session}}=await sb.auth.getSession();
-      if(session?.user){loadProfile(session.user);return;}
-    }
-    const{data:{session}}=await sb.auth.getSession();
-    if(session?.user)loadProfile(session.user);
-  }catch(e){
-    console.error('Init error:',e);
-  }
-}
-
-// Make sure Supabase loaded before init
-if(typeof supabase !== 'undefined'){
-  init();
-} else {
-  window.addEventListener('load', init);
-}
+    const {data:{session}}=await SB.auth.getSession();
+    if(session?.user) showProfile(session.user);
+    // Check URL for invite param
+    const inv=new URLSearchParams(window.location.search).get('invite');
+    if(inv) document.getElementById('reg-invite-code')?.setAttribute('value',inv);
+  }catch(e){console.error(e);}
+})();
 </script>
 </body>
 </html>
