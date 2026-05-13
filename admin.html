@@ -377,7 +377,12 @@ async function rejectUser(id,name){
 
 async function makeCoAdmin(id,name){
   if(!confirm(`Make ${name} a Co-Admin?`)) return;
-  await sb.from('profiles').update({role:'co-admin'}).eq('id',id);
+  const {error} = await sb.from('profiles').update({role:'co-admin'}).eq('id',id);
+  if(error){
+    toast('❌ Failed: ' + error.message);
+    console.error('makeCoAdmin error:', error);
+    return;
+  }
   toast(`⭐ ${name} is now Co-Admin!`);
   await loadMembers();
 }
