@@ -436,7 +436,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(245,240,228
           <div class="fsec-title">📏 Tree Details</div>
           <div class="field-row" style="margin-bottom:12px">
             <div class="field">
-  <label>Trunk Diameter (cm) <span style="color:var(--text3);font-weight:400;cursor:pointer" onclick="toggleDiamGuide()">ℹ️ How to measure</span></label>
+  <label style="display:flex;align-items:center;gap:6px;white-space:nowrap;flex-wrap:nowrap">
+    Trunk Diameter (cm)
+    <span style="color:var(--sage);font-weight:500;cursor:pointer;font-size:11px;white-space:nowrap;background:var(--mist);padding:2px 8px;border-radius:6px;flex-shrink:0" onclick="toggleDiamGuide()">ℹ️ How to measure</span>
+  </label>
   <input type="number" id="f-diam" placeholder="Leave blank if unsure" min="1">
   <div id="diam-guide" style="display:none;margin-top:10px;background:var(--mist);border-radius:10px;padding:12px;font-size:12px;line-height:1.6;color:var(--text2)">
     <strong>📏 How to measure trunk diameter:</strong><br>
