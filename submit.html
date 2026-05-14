@@ -690,19 +690,6 @@ function startGPS(){
 
       document.getElementById('f-lat').value = avgLat.toFixed(7);
       document.getElementById('f-lng').value = avgLng.toFixed(7);
-
-      // Check for duplicate trees within 10m
-      const dupTree = await checkForNearbyTrees(avgLat, avgLng);
-      if(dupTree){
-        const dupWarn = document.getElementById('dup-warning');
-        if(dupWarn){
-          dupWarn.innerHTML = `⚠️ A <strong>${dupTree.common_name}</strong> tree was already logged ${Math.round(getDistanceMetres(avgLat,avgLng,dupTree.latitude,dupTree.longitude))}m from here by <strong>${dupTree.submitted_by||'someone'}</strong>. Are you sure this is a different tree?`;
-          dupWarn.style.display='block';
-        }
-      } else {
-        const dupWarn = document.getElementById('dup-warning');
-        if(dupWarn) dupWarn.style.display='none';
-      }
       document.getElementById('gr-lat').textContent = avgLat.toFixed(5);
       document.getElementById('gr-lng').textContent = avgLng.toFixed(5);
       document.getElementById('gr-acc').textContent = `±${Math.round(avgAcc)}m`;
@@ -711,10 +698,23 @@ function startGPS(){
       btn.textContent = '✅ Location Locked';
       status.textContent = `📍 Precision locked · ±${Math.round(avgAcc)}m · ${best.length} readings averaged`;
       document.getElementById('gps-acc-fill').style.background = '#3d9e2a';
+
+      // Check for duplicates AFTER locking (non-blocking)
+      checkForNearbyTrees(avgLat, avgLng).then(dupTree => {
+        const dupWarn = document.getElementById('dup-warning');
+        if(!dupWarn) return;
+        if(dupTree){
+          dupWarn.innerHTML = `⚠️ A <strong>${dupTree.common_name}</strong> tree was already logged ${dupTree.dist}m from here by <strong>${dupTree.submitted_by||'someone'}</strong>. Are you sure this is a different tree?`;
+          dupWarn.style.display = 'block';
+        } else {
+          dupWarn.style.display = 'none';
+        }
+      });
     }
   }, err => {
+    console.error('GPS error:', err.code, err.message);
     btn.textContent = '📡 Start Precision GPS'; btn.disabled = false;
-    status.textContent = '❌ Could not get location — enable location access in browser';
+    status.textContent = '❌ Could not get location — please allow location access';
     status.style.color = '#c0392b';
   }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
 }
