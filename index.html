@@ -70,6 +70,67 @@ function getAreaName(lat, lng){
   }catch(e){}
 })();
 
+
+// ── PHOTO GALLERY ────────────────────────────────────────
+function buildPhotoGallery(t) {
+  const photos = [
+    { url: t.photo_url, label: '🌳 Main Photo' },
+    { url: t.photo_spring, label: '🌸 Spring' },
+    { url: t.photo_summer, label: '☀️ Summer' },
+    { url: t.photo_winter, label: '❄️ Winter' },
+  ].filter(p => p.url);
+
+  // Find or create gallery container
+  let gallery = document.getElementById('tpc-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'tpc-gallery';
+    gallery.className = 'photo-gallery';
+    const popup = document.getElementById('tree-popup');
+    popup.insertBefore(gallery, popup.firstChild);
+  }
+
+  if (photos.length === 0) {
+    gallery.style.display = 'none';
+    return;
+  }
+
+  gallery.style.display = 'block';
+  let current = 0;
+
+  gallery.innerHTML = `
+    <div class="gallery-slides" id="gallery-slides">
+      ${photos.map((p, i) => `
+        <div class="gallery-slide">
+          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'">
+          <div class="season-badge">${p.label}</div>
+        </div>`).join('')}
+    </div>
+    ${photos.length > 1 ? `
+    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <div class="gallery-dots">
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+    </div>` : ''}
+  `;
+
+  window._galleryCount = photos.length;
+  window._galleryCurrent = 0;
+}
+
+function galleryNav(dir) {
+  const count = window._galleryCount || 1;
+  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
+  galleryGo(window._galleryCurrent);
+}
+
+function galleryGo(idx) {
+  window._galleryCurrent = idx;
+  const slides = document.getElementById('gallery-slides');
+  if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -877,6 +938,38 @@ html, body {
   .footer-bottom { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
 }
 
+
+/* ── SEASONAL PHOTO GALLERY ── */
+.photo-gallery { position: relative; width: 100%; background: #111; }
+.gallery-slides { display: flex; overflow: hidden; }
+.gallery-slide { min-width: 100%; position: relative; }
+.gallery-slide img { width: 100%; height: 200px; object-fit: cover; display: block; }
+.gallery-slide .season-badge {
+  position: absolute; bottom: 8px; left: 8px;
+  background: rgba(0,0,0,.6); color: white;
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 6px; letter-spacing: .5px;
+}
+.gallery-dots {
+  position: absolute; bottom: 8px; right: 8px;
+  display: flex; gap: 4px;
+}
+.gallery-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,.5); cursor: pointer; transition: all .2s;
+}
+.gallery-dot.active { background: white; transform: scale(1.3); }
+.gallery-prev, .gallery-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,.4); border: none; color: white;
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  z-index: 10; transition: background .2s;
+}
+.gallery-prev { left: 6px; }
+.gallery-next { right: 6px; }
+.gallery-prev:hover, .gallery-next:hover { background: rgba(0,0,0,.7); }
+
 </style>
 </head>
 <body>
@@ -899,7 +992,39 @@ html, body {
       <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
       <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
     </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+    <style>@keyframes spin{to{transform:rotate(360deg)}}
+/* ── SEASONAL PHOTO GALLERY ── */
+.photo-gallery { position: relative; width: 100%; background: #111; }
+.gallery-slides { display: flex; overflow: hidden; }
+.gallery-slide { min-width: 100%; position: relative; }
+.gallery-slide img { width: 100%; height: 200px; object-fit: cover; display: block; }
+.gallery-slide .season-badge {
+  position: absolute; bottom: 8px; left: 8px;
+  background: rgba(0,0,0,.6); color: white;
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 6px; letter-spacing: .5px;
+}
+.gallery-dots {
+  position: absolute; bottom: 8px; right: 8px;
+  display: flex; gap: 4px;
+}
+.gallery-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,.5); cursor: pointer; transition: all .2s;
+}
+.gallery-dot.active { background: white; transform: scale(1.3); }
+.gallery-prev, .gallery-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,.4); border: none; color: white;
+  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  z-index: 10; transition: background .2s;
+}
+.gallery-prev { left: 6px; }
+.gallery-next { right: 6px; }
+.gallery-prev:hover, .gallery-next:hover { background: rgba(0,0,0,.7); }
+
+</style>`;
   document.body.prepend(overlay);
 
   function showBlock(msg, sub, showBtn=true){
@@ -945,6 +1070,67 @@ html, body {
     showBlock('Something went wrong','Please try refreshing the page');
   }
 })();
+
+// ── PHOTO GALLERY ────────────────────────────────────────
+function buildPhotoGallery(t) {
+  const photos = [
+    { url: t.photo_url, label: '🌳 Main Photo' },
+    { url: t.photo_spring, label: '🌸 Spring' },
+    { url: t.photo_summer, label: '☀️ Summer' },
+    { url: t.photo_winter, label: '❄️ Winter' },
+  ].filter(p => p.url);
+
+  // Find or create gallery container
+  let gallery = document.getElementById('tpc-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'tpc-gallery';
+    gallery.className = 'photo-gallery';
+    const popup = document.getElementById('tree-popup');
+    popup.insertBefore(gallery, popup.firstChild);
+  }
+
+  if (photos.length === 0) {
+    gallery.style.display = 'none';
+    return;
+  }
+
+  gallery.style.display = 'block';
+  let current = 0;
+
+  gallery.innerHTML = `
+    <div class="gallery-slides" id="gallery-slides">
+      ${photos.map((p, i) => `
+        <div class="gallery-slide">
+          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'">
+          <div class="season-badge">${p.label}</div>
+        </div>`).join('')}
+    </div>
+    ${photos.length > 1 ? `
+    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <div class="gallery-dots">
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+    </div>` : ''}
+  `;
+
+  window._galleryCount = photos.length;
+  window._galleryCurrent = 0;
+}
+
+function galleryNav(dir) {
+  const count = window._galleryCount || 1;
+  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
+  galleryGo(window._galleryCurrent);
+}
+
+function galleryGo(idx) {
+  window._galleryCurrent = idx;
+  const slides = document.getElementById('gallery-slides');
+  if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
 </script>
 
 
@@ -1074,16 +1260,7 @@ html, body {
         <!-- Close button (always visible) -->
         <button class="tpc-close" onclick="closePopup()" style="position:absolute;top:10px;right:10px;z-index:20">✕</button>
 
-        <!-- Photo hero (shown when photo exists) -->
-        <div class="tpc-photo-wrap" id="tpc-photo-wrap">
-          <img class="tpc-photo" id="tpc-photo" alt="Tree photo">
-          <div class="tpc-photo-gradient"></div>
-          <div class="tpc-photo-info">
-            <div class="tpc-photo-tag" id="tpc-tag-photo">🌳 Tree</div>
-            <div class="tpc-photo-name" id="tpc-name-photo">—</div>
-            <div class="tpc-photo-sci" id="tpc-sci-photo"></div>
-          </div>
-        </div>
+        <!-- Photo gallery (built dynamically) -->
 
         <!-- Text header (shown when no photo) -->
         <div class="tpc-head" id="tpc-head">
@@ -1322,44 +1499,24 @@ function renderMarkers(trees) {
 
 // ── POPUP ─────────────────────────────────────────────
 function showPopup(t) {
-  const hasPhoto = !!t.photo_url;
-  const photoWrap = document.getElementById('tpc-photo-wrap');
+  // Build photo gallery
+  buildPhotoGallery(t);
+
+  // Text header — always show
   const textHead = document.getElementById('tpc-head');
+  if (textHead) textHead.classList.add('show');
 
-  if (hasPhoto) {
-    // Show photo hero
-    const ph = document.getElementById('tpc-photo');
-    ph.src = t.photo_url;
-    ph.onerror = () => {
-      photoWrap.classList.remove('show');
-      textHead.classList.add('show');
-    };
-    photoWrap.classList.add('show');
-    textHead.classList.remove('show');
-    // Name on photo
-    document.getElementById('tpc-tag-photo').textContent = ge(t.common_name) + ' ' + t.common_name;
-    document.getElementById('tpc-name-photo').textContent = t.common_name;
-    document.getElementById('tpc-sci-photo').textContent = t.scientific_name || '';
-  } else {
-    // No photo — show text header
-    photoWrap.classList.remove('show');
-    textHead.classList.add('show');
-    document.getElementById('tpc-tag').textContent = ge(t.common_name) + ' ' + t.common_name;
-    document.getElementById('tpc-name').textContent = t.common_name;
-    document.getElementById('tpc-sci').textContent = t.scientific_name || '';
-  }
-
-  // Details
+  document.getElementById('tpc-tag').textContent = ge(t.common_name) + ' ' + t.common_name;
+  document.getElementById('tpc-name').textContent = t.common_name;
+  document.getElementById('tpc-sci').textContent = t.scientific_name || '';
   document.getElementById('tpc-diam').textContent = (t.trunk_diameter||'?') + ' cm';
   document.getElementById('tpc-height').textContent = t.height || 'Medium';
   document.getElementById('tpc-cond').textContent = t.condition || 'Good';
 
-  // Notes
   const ne = document.getElementById('tpc-note');
   if (t.notes) { ne.textContent = t.notes; ne.style.display = 'block'; }
   else ne.style.display = 'none';
 
-  // Who added it
   const byWrap = document.getElementById('tpc-by-wrap');
   if (t.submitted_by) {
     document.getElementById('tpc-by').textContent = t.submitted_by;
@@ -1369,11 +1526,12 @@ function showPopup(t) {
   document.getElementById('tree-popup').classList.add('open');
   mainMap.panTo([t.latitude, t.longitude]);
 
-  // Highlight sidebar
+  // Sidebar highlight
   document.querySelectorAll('.msb-item').forEach(el => el.classList.remove('active'));
   const si = document.getElementById('si-' + t.id);
   if (si) { si.classList.add('active'); si.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
+
 function closePopup() {
   document.getElementById('tree-popup').classList.remove('open');
 }
@@ -1548,6 +1706,67 @@ function getAreaName(lat, lng){
   if(lat>28.60&&lat<28.70&&lng>77.25&&lng<77.40) return 'East Delhi';
   if(lat>28.55&&lat<28.70&&lng>77.00&&lng<77.15) return 'West Delhi';
   return 'Delhi';
+}
+
+
+// ── PHOTO GALLERY ────────────────────────────────────────
+function buildPhotoGallery(t) {
+  const photos = [
+    { url: t.photo_url, label: '🌳 Main Photo' },
+    { url: t.photo_spring, label: '🌸 Spring' },
+    { url: t.photo_summer, label: '☀️ Summer' },
+    { url: t.photo_winter, label: '❄️ Winter' },
+  ].filter(p => p.url);
+
+  // Find or create gallery container
+  let gallery = document.getElementById('tpc-gallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'tpc-gallery';
+    gallery.className = 'photo-gallery';
+    const popup = document.getElementById('tree-popup');
+    popup.insertBefore(gallery, popup.firstChild);
+  }
+
+  if (photos.length === 0) {
+    gallery.style.display = 'none';
+    return;
+  }
+
+  gallery.style.display = 'block';
+  let current = 0;
+
+  gallery.innerHTML = `
+    <div class="gallery-slides" id="gallery-slides">
+      ${photos.map((p, i) => `
+        <div class="gallery-slide">
+          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'">
+          <div class="season-badge">${p.label}</div>
+        </div>`).join('')}
+    </div>
+    ${photos.length > 1 ? `
+    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <div class="gallery-dots">
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+    </div>` : ''}
+  `;
+
+  window._galleryCount = photos.length;
+  window._galleryCurrent = 0;
+}
+
+function galleryNav(dir) {
+  const count = window._galleryCount || 1;
+  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
+  galleryGo(window._galleryCurrent);
+}
+
+function galleryGo(idx) {
+  window._galleryCurrent = idx;
+  const slides = document.getElementById('gallery-slides');
+  if (slides) slides.style.transform = `translateX(-${idx * 100}%)`;
+  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
 }
 
 </script>
