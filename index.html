@@ -1446,7 +1446,7 @@ function initHeroMap(trees) {
     zoomControl: false, attributionControl: false,
     scrollWheelZoom: false, dragging: false, touchZoom: false
   });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(heroMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }).addTo(heroMap);
   trees.forEach(t => {
     L.circleMarker([t.latitude, t.longitude], {
       radius: gr(t.trunk_diameter||30) + 2,
@@ -1465,8 +1465,8 @@ function initMainMap(trees) {
   mainMap = L.map('main-map', {
     center: [28.6139, 77.2090], zoom: 11, zoomControl: true
   });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '© OpenStreetMap'
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap © CARTO'
   }).addTo(mainMap);
   renderMarkers(trees);
   mainMap.on('click', e => {
