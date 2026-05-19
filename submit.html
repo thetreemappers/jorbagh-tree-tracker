@@ -817,7 +817,13 @@ async function submitTree(){
   const lng = parseFloat(document.getElementById('f-lng').value);
 
   if(!name){ alert('Please enter the tree name'); document.getElementById('f-common').focus(); return; }
-  if(isNaN(lat) || isNaN(lng)){ alert('Please capture the GPS location first — click "Start Precision GPS"'); return; }
+  if(isNaN(lat) || isNaN(lng)){
+    const skip = confirm('No GPS location captured yet.\n\nClick OK to submit without location (not recommended)\nClick Cancel to go back and capture GPS first');
+    if(!skip) return;
+    // Use 0,0 as placeholder — admin can fix later
+    document.getElementById('f-lat').value = '0';
+    document.getElementById('f-lng').value = '0';
+  }
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
@@ -912,6 +918,21 @@ if(urlP.get('identify') === '1'){
   if(urlP.get('common')) document.getElementById('f-common').value = urlP.get('common');
   if(urlP.get('sci')) document.getElementById('f-sci').value = urlP.get('sci');
 }
+
+// Auto-fill name from logged in user
+(async()=>{
+  try{
+    const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+    const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+    const sb = supabase.createClient(SURL, SKEY);
+    const {data:{session}} = await sb.auth.getSession();
+    if(session?.user){
+      const name = session.user.user_metadata?.full_name || session.user.email.split('@')[0];
+      const nameField = document.getElementById('f-name');
+      if(nameField && !nameField.value) nameField.value = name;
+    }
+  }catch(e){}
+})();
 
 // ── TASK 2: DUPLICATE DETECTION ────────────────────────────
 async function checkForNearbyTrees(lat, lng){
