@@ -312,6 +312,48 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
     showBlock('Something went wrong','Please try refreshing the page');
   }
 })();
+
+// ── GOOGLE LENS ──────────────────────────────────────────
+function openGoogleLens() {
+  if (!selectedPhotoBase64) return;
+
+  // Convert base64 to blob and create object URL
+  const byteChars = atob(selectedPhotoBase64);
+  const byteArr = new Uint8Array(byteChars.length);
+  for(let i=0;i<byteChars.length;i++) byteArr[i]=byteChars.charCodeAt(i);
+  const blob = new Blob([byteArr], {type: selectedPhotoType||'image/jpeg'});
+
+  // Create a form and submit it to Google Lens
+  // Google Lens accepts image upload via lens.google.com
+  const url = URL.createObjectURL(blob);
+
+  // Option 1: Open Google Lens upload page
+  const lensUrl = 'https://lens.google.com/upload';
+
+  // Create invisible form to POST image to Google Lens
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = lensUrl;
+  form.target = '_blank';
+  form.enctype = 'multipart/form-data';
+  document.body.appendChild(form);
+
+  // Convert blob back to File for form
+  const file = new File([blob], 'tree.jpg', {type: selectedPhotoType||'image/jpeg'});
+  const dt = new DataTransfer();
+  dt.items.add(file);
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.name = 'encoded_image';
+  fileInput.files = dt.files;
+  form.appendChild(fileInput);
+
+  form.submit();
+  document.body.removeChild(form);
+  URL.revokeObjectURL(url);
+}
+
 </script>
 
 
@@ -357,10 +399,26 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
     <div class="photo-overlay" id="photo-overlay">✅ Photo ready</div>
   </div>
 
-  <!-- IDENTIFY BUTTON -->
+  <!-- IDENTIFY BUTTONS -->
   <button class="id-btn" id="id-btn" onclick="identifyTree()" disabled>
-    🔬 Identify This Tree
+    🔬 Identify with AI
   </button>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+    <div style="flex:1;height:1px;background:rgba(0,0,0,.1)"></div>
+    <span style="font-size:11px;color:#999">or use</span>
+    <div style="flex:1;height:1px;background:rgba(0,0,0,.1)"></div>
+  </div>
+
+  <button id="lens-btn" onclick="openGoogleLens()" disabled
+    style="width:100%;margin-top:10px;padding:14px;background:white;border:2px solid #4285f4;border-radius:14px;font-size:14px;font-weight:700;color:#4285f4;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;font-family:inherit">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#4285f4"/>
+      <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z" fill="white"/>
+    </svg>
+    Search with Google Lens
+  </button>
+  <div style="text-align:center;font-size:10px;color:#999;margin-top:5px">Opens Google Lens in a new tab — most accurate!</div>
 
 
 
@@ -522,6 +580,7 @@ function onPhotoSelected(input) {
     document.getElementById('photo-overlay').textContent = '✅ Photo ready';
     document.getElementById('camera-zone').classList.add('has-photo');
     document.getElementById('id-btn').disabled = false;
+  const _lb=document.getElementById('lens-btn'); if(_lb) _lb.disabled=false;
     URL.revokeObjectURL(objectUrl);
   };
   img.onerror = () => {
