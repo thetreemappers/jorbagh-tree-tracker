@@ -198,6 +198,29 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
   margin-top: 1px;
 }
 
+
+/* ── iNATURALIST BUTTON ── */
+.inat-section {
+  background: linear-gradient(135deg, #74ac00, #5a8a00);
+  border-radius: 14px; padding: 18px;
+  margin-top: 16px; text-align: center;
+}
+.inat-logo { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 8px; }
+.inat-title { font-size: 15px; font-weight: 700; color: white; margin-bottom: 4px; }
+.inat-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-bottom: 14px; line-height: 1.5; }
+.inat-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: white; color: #5a8a00;
+  padding: 11px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .2s; width: 100%; justify-content: center;
+}
+.inat-btn:hover { background: #f0f8e0; transform: translateY(-1px); }
+.inat-btn:active { transform: scale(.98); }
+.inat-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 10px; font-size: 10px; color: rgba(255,255,255,.8); margin-bottom: 12px; font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -220,7 +243,30 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
       <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
       <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
     </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+    <style>@keyframes spin{to{transform:rotate(360deg)}}
+/* ── iNATURALIST BUTTON ── */
+.inat-section {
+  background: linear-gradient(135deg, #74ac00, #5a8a00);
+  border-radius: 14px; padding: 18px;
+  margin-top: 16px; text-align: center;
+}
+.inat-logo { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.7); margin-bottom: 8px; }
+.inat-title { font-size: 15px; font-weight: 700; color: white; margin-bottom: 4px; }
+.inat-sub { font-size: 12px; color: rgba(255,255,255,.7); margin-bottom: 14px; line-height: 1.5; }
+.inat-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: white; color: #5a8a00;
+  padding: 11px 20px; border-radius: 10px;
+  font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all .2s; width: 100%; justify-content: center;
+}
+.inat-btn:hover { background: #f0f8e0; transform: translateY(-1px); }
+.inat-btn:active { transform: scale(.98); }
+.inat-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.15); border-radius: 20px; padding: 4px 10px; font-size: 10px; color: rgba(255,255,255,.8); margin-bottom: 12px; font-weight: 600; }
+
+</style>`;
   document.body.prepend(overlay);
 
   function showBlock(msg, sub, showBtn=true){
@@ -316,6 +362,16 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
     🔬 Identify This Tree
   </button>
 
+  <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+    <div style="flex:1;height:1px;background:#e0d8cc"></div>
+    <span style="font-size:11px;color:#8aaa7a">or</span>
+    <div style="flex:1;height:1px;background:#e0d8cc"></div>
+  </div>
+  <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener"
+    style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px;background:#f0f8e0;border:1.5px solid #74ac00;border-radius:12px;text-decoration:none;font-size:13px;font-weight:700;color:#5a8a00">
+    🌍 Try on iNaturalist Community
+  </a>
+
   <!-- ANALYZING -->
   <div id="analyzing-card">
     <div class="analyzing-spinner"></div>
@@ -328,7 +384,29 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
     <div class="err-icon">🌿</div>
     <div class="err-title">Couldn't identify</div>
     <div class="err-msg" id="error-msg">Try a clearer photo of the leaves or bark in good light.</div>
-    <button class="retake-btn" style="margin-top:14px" onclick="resetAll()">📷 Try Again</button>
+    <button class="retake-btn" style="margin-top:14px;margin-bottom:16px" onclick="resetAll()">📷 Try Again</button>
+
+    <!-- iNaturalist fallback -->
+    <div class="inat-section">
+      <div class="inat-badge">🌍 Community Powered</div>
+      <div class="inat-title">Try iNaturalist</div>
+      <div class="inat-sub">Upload your photo to iNaturalist — their global community of 3 million naturalists will identify it, often within hours!</div>
+      <a class="inat-btn" href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener">
+        🔍 Identify on iNaturalist →
+      </a>
+    </div>
+  </div>
+
+  <!-- iNaturalist permanent link -->
+  <div id="inat-permanent" style="display:none;margin-bottom:12px">
+    <div class="inat-section">
+      <div class="inat-badge">🌍 Want more info?</div>
+      <div class="inat-title">Verify on iNaturalist</div>
+      <div class="inat-sub">Get community confirmation and learn more about this species from millions of naturalists worldwide.</div>
+      <a class="inat-btn" id="inat-search-link" href="https://www.inaturalist.org/taxa/search" target="_blank">
+        🔍 View on iNaturalist →
+      </a>
+    </div>
   </div>
 
   <!-- RESULTS -->
@@ -672,6 +750,15 @@ async function tryClaudeVision() {
 
 function showResults(r) {
   currentResult = r;
+
+  // Update iNaturalist link with species
+  const inatSection = document.getElementById('inat-permanent');
+  if(inatSection) inatSection.style.display = 'block';
+  const inatLink = document.getElementById('inat-search-link');
+  if(inatLink && r.sci){
+    inatLink.href = `https://www.inaturalist.org/taxa/search?q=${encodeURIComponent(r.sci)}`;
+    inatLink.textContent = `🔍 View ${r.common} on iNaturalist →`;
+  }
 
   document.getElementById('result-source').textContent = `IDENTIFIED BY ${r.source}`;
   document.getElementById('result-name').textContent = r.common;
