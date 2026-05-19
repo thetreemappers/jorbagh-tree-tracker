@@ -362,15 +362,7 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
     🔬 Identify This Tree
   </button>
 
-  <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
-    <div style="flex:1;height:1px;background:#e0d8cc"></div>
-    <span style="font-size:11px;color:#8aaa7a">or</span>
-    <div style="flex:1;height:1px;background:#e0d8cc"></div>
-  </div>
-  <a href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener"
-    style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px;background:#f0f8e0;border:1.5px solid #74ac00;border-radius:12px;text-decoration:none;font-size:13px;font-weight:700;color:#5a8a00">
-    🌍 Try on iNaturalist Community
-  </a>
+
 
   <!-- ANALYZING -->
   <div id="analyzing-card">
@@ -381,33 +373,24 @@ html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:var(--crea
 
   <!-- ERROR -->
   <div id="error-card">
-    <div class="err-icon">🌿</div>
+    <div class="err-icon">🤔</div>
     <div class="err-title">Couldn't identify</div>
-    <div class="err-msg" id="error-msg">Try a clearer photo of the leaves or bark in good light.</div>
-    <button class="retake-btn" style="margin-top:14px;margin-bottom:16px" onclick="resetAll()">📷 Try Again</button>
-
-    <!-- iNaturalist fallback -->
-    <div class="inat-section">
-      <div class="inat-badge">🌍 Community Powered</div>
-      <div class="inat-title">Try iNaturalist</div>
-      <div class="inat-sub">Upload your photo to iNaturalist — their global community of 3 million naturalists will identify it, often within hours!</div>
-      <a class="inat-btn" href="https://www.inaturalist.org/observations/new" target="_blank" rel="noopener">
-        🔍 Identify on iNaturalist →
-      </a>
+    <div class="err-msg" id="error-msg">Try a clearer photo showing the leaves, bark or flowers in good light.</div>
+    <div style="margin-top:14px;background:#f8f4ed;border-radius:12px;padding:14px;text-align:left">
+      <div style="font-size:12px;font-weight:700;color:#3d5c30;margin-bottom:8px">📸 Tips for better results:</div>
+      <div style="font-size:12px;color:#7a9e68;line-height:1.8">
+        🍃 Get close to a single leaf<br>
+        🪵 Try photographing the bark<br>
+        🌸 Flowers or fruits help a lot<br>
+        ☀️ Use natural light, avoid flash
+      </div>
     </div>
+    <button class="retake-btn" style="margin-top:14px" onclick="resetAll()">📷 Try Again</button>
+
+
   </div>
 
-  <!-- iNaturalist permanent link -->
-  <div id="inat-permanent" style="display:none;margin-bottom:12px">
-    <div class="inat-section">
-      <div class="inat-badge">🌍 Want more info?</div>
-      <div class="inat-title">Verify on iNaturalist</div>
-      <div class="inat-sub">Get community confirmation and learn more about this species from millions of naturalists worldwide.</div>
-      <a class="inat-btn" id="inat-search-link" href="https://www.inaturalist.org/taxa/search" target="_blank">
-        🔍 View on iNaturalist →
-      </a>
-    </div>
-  </div>
+
 
   <!-- RESULTS -->
   <div id="results-card">
@@ -579,23 +562,21 @@ async function identifyTree() {
 
   let result = null;
 
-  // Step 1: Try PlantNet directly
+  // Step 1: Try PlantNet directly (allows CORS)
   setStep('🌿 Asking PlantNet plant AI...');
   result = await tryPlantNet();
 
-  // Step 2: Try Claude AI vision (actually looks at the photo)
+  // Step 2: Try Gemini directly (allows CORS from browser)
   if (!result) {
-    setStep('🤖 Asking Claude AI to examine the photo...');
-    result = await tryClaudeVision();
+    setStep('🤖 Asking Gemini AI...');
+    result = await tryGemini();
   }
 
   document.getElementById('analyzing-card').classList.remove('show');
   btn.disabled = false;
-  btn.innerHTML = '🔬 Identify This Tree';
+  btn.textContent = '🔬 Identify This Tree';
 
   if (result && result.confidence > 0) {
-    showResults(result);
-  } else if (result) {
     showResults(result);
   } else {
     document.getElementById('error-card').classList.add('show');
@@ -603,47 +584,50 @@ async function identifyTree() {
 }
 
 function setStep(msg) {
-  document.getElementById('analyzing-step').textContent = msg;
+  const el = document.getElementById('analyzing-step');
+  if(el) el.textContent = msg;
 }
 
-// ── PLANTNET (direct browser call) ───────────────────────────
+// ── PLANTNET ─────────────────────────────────────────────
 async function tryPlantNet() {
-  // Try PlantNet via proxy
   try {
-    setStep('🌿 Asking PlantNet plant AI...');
-    const resp = await fetch('https://my-api.plantnet.org/v2/identify/all?api-key=2b10yJM6CuBvi9Sac1t84q0gk&nb-results=5&lang=en', {
-      method: 'POST',
-      body: (() => {
-        const byteChars = atob(selectedPhotoBase64);
-        const byteArray = new Uint8Array(byteChars.length);
-        for(let i=0;i<byteChars.length;i++) byteArray[i]=byteChars.charCodeAt(i);
-        const blob = new Blob([byteArray],{type:selectedPhotoType||'image/jpeg'});
-        const fd = new FormData();
-        fd.append('images', blob, 'tree.jpg');
-        fd.append('organs', selectedOrgan||'leaf');
-        return fd;
-      })()
-    });
+    const byteChars = atob(selectedPhotoBase64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for(let i=0;i<byteChars.length;i++) byteArray[i]=byteChars.charCodeAt(i);
+    const blob = new Blob([byteArray], {type: selectedPhotoType||'image/jpeg'});
+    const fd = new FormData();
+    fd.append('images', blob, 'tree.jpg');
+    fd.append('organs', selectedOrgan||'leaf');
+
+    const resp = await fetch(
+      'https://my-api.plantnet.org/v2/identify/all?api-key=2b10yJM6CuBvi9Sac1t84q0gk&nb-results=5&lang=en',
+      { method: 'POST', body: fd }
+    );
     if (!resp.ok) throw new Error('PlantNet ' + resp.status);
     const data = await resp.json();
     if (!data.results?.length) return null;
-    setStep('✅ PlantNet identified the tree!');
+
     const top = data.results[0];
     const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
-    const confidence = Math.round((top.score||0)*100);
-    const kb = TREE_KB[sciName]||{};
+    const confidence = Math.round((top.score||0) * 100);
+    const kb = TREE_KB[sciName] || {};
+    const commonName = kb.common || top.species?.commonNames?.[0] || sciName;
+
     return {
-      source:'PLANTNET AI', common:kb.common||top.species?.commonNames?.[0]||sciName,
-      sci:sciName, confidence,
-      family:top.species?.family?.scientificNameWithoutAuthor||kb.family||'—',
-      inJorBagh:kb.inJorBagh?'✅ Yes, common in Delhi':'❓ Less common',
-      hindi:kb.hindi||'—', note:kb.note||null,
-      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
-      alternatives:data.results.slice(1,4).map(r=>({
-        name:r.species?.commonNames?.[0]||r.species?.scientificNameWithoutAuthor,
-        sci:r.species?.scientificNameWithoutAuthor,
-        conf:Math.round((r.score||0)*100),
-        emoji:TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji||'🌿'
+      source: 'PLANTNET AI',
+      common: commonName,
+      sci: sciName,
+      confidence,
+      family: top.species?.family?.scientificNameWithoutAuthor || kb.family || '—',
+      inJorBagh: kb.inJorBagh ? '✅ Yes, common in Delhi' : '❓ Less common in Delhi',
+      hindi: kb.hindi || '—',
+      note: kb.note || null,
+      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+      alternatives: data.results.slice(1,4).map(r => ({
+        name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
+        sci: r.species?.scientificNameWithoutAuthor,
+        conf: Math.round((r.score||0)*100),
+        emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji || '🌿'
       }))
     };
   } catch(e) {
@@ -652,97 +636,51 @@ async function tryPlantNet() {
   }
 }
 
-async function tryClaudeVision() {
+// ── GEMINI VISION ─────────────────────────────────────────
+async function tryGemini() {
   try {
-    setStep('🤖 Google Gemini AI is examining your photo...');
-
-    // Try proxy first
-    try {
-      const proxyResp = await fetch('/api/identify', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          service:'gemini',
-          imageBase64:selectedPhotoBase64,
-          imageType:selectedPhotoType||'image/jpeg',
-          organ:selectedOrgan||'leaf'
-        })
-      });
-      if(proxyResp.ok){
-        const json = await proxyResp.json();
-        if(json.success && json.data?.common_name){
-          const p=json.data;
-          const kb=TREE_KB[p.scientific_name]||{};
-          setStep('✅ Gemini identified the tree!');
-          return {
-            source:'GOOGLE GEMINI AI',
-            common:p.common_name, sci:p.scientific_name,
-            confidence:p.confidence||70,
-            family:p.family||kb.family||'—',
-            inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
-            hindi:p.hindi_name||kb.hindi||'—',
-            note:p.identification_notes||null,
-            organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
-            alternatives:(p.alternatives||[]).map(a=>({
-              name:a.common,sci:a.sci,conf:a.confidence,
-              emoji:TREE_KB[a.sci]?.emoji||'🌿'
-            }))
-          };
-        }
-      }
-    } catch(proxyErr){ console.warn('Proxy failed:', proxyErr.message); }
-
-    // Direct Gemini call
-    setStep('🤖 Connecting to Gemini AI...');
     const GEMINI_KEY = 'AIzaSyDttmwgCRGUGMU43HjZIX8cjxObhxTdSfM';
-    const prompt = `You are an expert botanist for Indian trees and plants in Delhi. Look at this photo and identify it. Respond ONLY with JSON: {"common_name":"name","hindi_name":"Hindi","scientific_name":"Genus species","family":"Family","confidence":85,"in_delhi":true,"identification_notes":"key visual features you can see","alternatives":[{"common":"alt","sci":"sci","confidence":20}]}`;
+    const prompt = `You are an expert botanist for Indian trees and plants in Delhi. Look at this photo and identify the tree or plant species. Respond ONLY with valid JSON no markdown: {"common_name":"English name","hindi_name":"Hindi in Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_delhi":true,"identification_notes":"2-3 sentences describing key visual features that helped identify it","alternatives":[{"common":"Second option","sci":"Scientific name","confidence":25},{"common":"Third option","sci":"Scientific name","confidence":10}]}`;
 
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          contents:[{parts:[
-            {inline_data:{mime_type:selectedPhotoType||'image/jpeg',data:selectedPhotoBase64}},
-            {text:prompt}
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [
+            { inline_data: { mime_type: selectedPhotoType||'image/jpeg', data: selectedPhotoBase64 } },
+            { text: prompt }
           ]}],
-          generationConfig:{temperature:0.1,maxOutputTokens:600}
+          generationConfig: { temperature: 0.1, maxOutputTokens: 600 }
         })
       }
     );
 
-    console.log('Gemini status:', resp.status);
-    if(!resp.ok){
-      const err = await resp.text();
-      console.error('Gemini error:', err);
-      throw new Error('Gemini ' + resp.status);
-    }
-
+    if (!resp.ok) throw new Error('Gemini ' + resp.status);
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-    console.log('Gemini response:', text);
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const p = JSON.parse(text.replace(/```json|```/g,'').trim());
-    if(!p.common_name) return null;
+    if (!p.common_name) return null;
 
-    const kb = TREE_KB[p.scientific_name]||{};
-    setStep('✅ Gemini identified the tree!');
+    const kb = TREE_KB[p.scientific_name] || {};
     return {
-      source:'GOOGLE GEMINI AI',
-      common:p.common_name, sci:p.scientific_name,
-      confidence:p.confidence||70,
-      family:p.family||kb.family||'—',
-      inJorBagh:p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
-      hindi:p.hindi_name||kb.hindi||'—',
-      note:p.identification_notes||null,
-      organ:selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
-      alternatives:(p.alternatives||[]).map(a=>({
-        name:a.common,sci:a.sci,conf:a.confidence,
-        emoji:TREE_KB[a.sci]?.emoji||'🌿'
+      source: 'GOOGLE GEMINI AI',
+      common: p.common_name,
+      sci: p.scientific_name,
+      confidence: p.confidence || 70,
+      family: p.family || kb.family || '—',
+      inJorBagh: p.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common',
+      hindi: p.hindi_name || kb.hindi || '—',
+      note: p.identification_notes || null,
+      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+      alternatives: (p.alternatives||[]).map(a => ({
+        name: a.common, sci: a.sci, conf: a.confidence,
+        emoji: TREE_KB[a.sci]?.emoji || '🌿'
       }))
     };
-  } catch(e){
-    console.error('Gemini failed:', e.message);
+  } catch(e) {
+    console.warn('Gemini failed:', e.message);
     return null;
   }
 }
@@ -801,6 +739,13 @@ function showResults(r) {
   document.getElementById('results-card').style.display = 'block';
   setTimeout(() => document.getElementById('results-card').classList.add('show'), 10);
   document.getElementById('verify-card').classList.add('show');
+
+  // Update "Add to Map" button with identified species
+  const addBtn = document.getElementById('add-to-map-btn');
+  if(addBtn && r.common){
+    addBtn.href = `submit.html?identify=1&common=${encodeURIComponent(r.common)}&sci=${encodeURIComponent(r.sci||'')}`;
+    addBtn.style.display = 'flex';
+  }
 
   // scroll to results
   setTimeout(() => document.getElementById('results-card').scrollIntoView({ behavior:'smooth', block:'start' }), 200);
