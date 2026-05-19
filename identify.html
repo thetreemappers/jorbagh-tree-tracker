@@ -562,21 +562,31 @@ async function identifyTree() {
 
   let result = null;
 
-  // Step 1: Try PlantNet directly (allows CORS)
-  setStep('🌿 Asking PlantNet plant AI...');
-  result = await tryPlantNet();
+  // Try proxy first (avoids CORS on mobile)
+  setStep('🌿 Asking PlantNet AI...');
+  result = await tryViaProxy('plantnet');
 
-  // Step 2: Try Gemini directly (allows CORS from browser)
   if (!result) {
     setStep('🤖 Asking Gemini AI...');
-    result = await tryGemini();
+    result = await tryViaProxy('gemini');
+  }
+
+  // Fallback: try direct calls
+  if (!result) {
+    setStep('🌿 Trying direct PlantNet...');
+    result = await tryPlantNetDirect();
+  }
+
+  if (!result) {
+    setStep('🤖 Trying direct Gemini...');
+    result = await tryGeminiDirect();
   }
 
   document.getElementById('analyzing-card').classList.remove('show');
   btn.disabled = false;
   btn.textContent = '🔬 Identify This Tree';
 
-  if (result && result.confidence > 0) {
+  if (result && result.common) {
     showResults(result);
   } else {
     document.getElementById('error-card').classList.add('show');
@@ -588,13 +598,75 @@ function setStep(msg) {
   if(el) el.textContent = msg;
 }
 
-// ── PLANTNET ─────────────────────────────────────────────
-async function tryPlantNet() {
+// ── VIA PROXY (best for mobile) ──────────────────────────
+async function tryViaProxy(service) {
   try {
-    const byteChars = atob(selectedPhotoBase64);
-    const byteArray = new Uint8Array(byteChars.length);
-    for(let i=0;i<byteChars.length;i++) byteArray[i]=byteChars.charCodeAt(i);
-    const blob = new Blob([byteArray], {type: selectedPhotoType||'image/jpeg'});
+    const resp = await fetch('/api/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service,
+        imageBase64: selectedPhotoBase64,
+        imageType: selectedPhotoType || 'image/jpeg',
+        organ: selectedOrgan || 'leaf'
+      })
+    });
+    if (!resp.ok) throw new Error('Proxy ' + resp.status);
+    const json = await resp.json();
+    if (!json.success) throw new Error(json.error || 'Failed');
+
+    if (service === 'gemini' && json.data?.common_name) {
+      const p = json.data;
+      const kb = TREE_KB[p.scientific_name] || {};
+      return {
+        source: 'GOOGLE GEMINI AI',
+        common: p.common_name, sci: p.scientific_name,
+        confidence: p.confidence || 70,
+        family: p.family || kb.family || '—',
+        inJorBagh: p.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common',
+        hindi: p.hindi_name || kb.hindi || '—',
+        note: p.identification_notes || null,
+        organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+        alternatives: (p.alternatives||[]).map(a=>({name:a.common,sci:a.sci,conf:a.confidence,emoji:TREE_KB[a.sci]?.emoji||'🌿'}))
+      };
+    }
+
+    if (service === 'plantnet' && json.data?.results?.length) {
+      const top = json.data.results[0];
+      const sciName = top.species?.scientificNameWithoutAuthor;
+      const kb = TREE_KB[sciName] || {};
+      return {
+        source: 'PLANTNET AI',
+        common: kb.common || top.species?.commonNames?.[0] || sciName,
+        sci: sciName,
+        confidence: Math.round((top.score||0)*100),
+        family: top.species?.family?.scientificNameWithoutAuthor || kb.family || '—',
+        inJorBagh: kb.inJorBagh ? '✅ Yes, common in Delhi' : '❓ Less common',
+        hindi: kb.hindi || '—',
+        note: null,
+        organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
+        alternatives: json.data.results.slice(1,4).map(r=>({
+          name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
+          sci: r.species?.scientificNameWithoutAuthor,
+          conf: Math.round((r.score||0)*100),
+          emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji||'🌿'
+        }))
+      };
+    }
+    return null;
+  } catch(e) {
+    console.warn('Proxy', service, 'failed:', e.message);
+    return null;
+  }
+}
+
+// ── DIRECT PLANTNET ──────────────────────────────────────
+async function tryPlantNetDirect() {
+  try {
+    const bytes = atob(selectedPhotoBase64);
+    const arr = new Uint8Array(bytes.length);
+    for(let i=0;i<bytes.length;i++) arr[i]=bytes.charCodeAt(i);
+    const blob = new Blob([arr], {type: selectedPhotoType||'image/jpeg'});
     const fd = new FormData();
     fd.append('images', blob, 'tree.jpg');
     fd.append('organs', selectedOrgan||'leaf');
@@ -606,83 +678,65 @@ async function tryPlantNet() {
     if (!resp.ok) throw new Error('PlantNet ' + resp.status);
     const data = await resp.json();
     if (!data.results?.length) return null;
-
     const top = data.results[0];
-    const sciName = top.species?.scientificNameWithoutAuthor || top.species?.scientificName;
-    const confidence = Math.round((top.score||0) * 100);
+    const sciName = top.species?.scientificNameWithoutAuthor;
     const kb = TREE_KB[sciName] || {};
-    const commonName = kb.common || top.species?.commonNames?.[0] || sciName;
-
     return {
       source: 'PLANTNET AI',
-      common: commonName,
+      common: kb.common || top.species?.commonNames?.[0] || sciName,
       sci: sciName,
-      confidence,
+      confidence: Math.round((top.score||0)*100),
       family: top.species?.family?.scientificNameWithoutAuthor || kb.family || '—',
-      inJorBagh: kb.inJorBagh ? '✅ Yes, common in Delhi' : '❓ Less common in Delhi',
-      hindi: kb.hindi || '—',
-      note: kb.note || null,
-      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
-      alternatives: data.results.slice(1,4).map(r => ({
-        name: r.species?.commonNames?.[0] || r.species?.scientificNameWithoutAuthor,
+      inJorBagh: kb.inJorBagh ? '✅ Yes, common in Delhi' : '❓ Less common',
+      hindi: kb.hindi || '—', note: null,
+      organ: selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
+      alternatives: data.results.slice(1,4).map(r=>({
+        name: r.species?.commonNames?.[0]||r.species?.scientificNameWithoutAuthor,
         sci: r.species?.scientificNameWithoutAuthor,
         conf: Math.round((r.score||0)*100),
-        emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji || '🌿'
+        emoji: TREE_KB[r.species?.scientificNameWithoutAuthor]?.emoji||'🌿'
       }))
     };
-  } catch(e) {
-    console.warn('PlantNet failed:', e.message);
-    return null;
-  }
+  } catch(e) { console.warn('PlantNet direct failed:', e.message); return null; }
 }
 
-// ── GEMINI VISION ─────────────────────────────────────────
-async function tryGemini() {
+// ── DIRECT GEMINI ────────────────────────────────────────
+async function tryGeminiDirect() {
   try {
     const GEMINI_KEY = 'AIzaSyDttmwgCRGUGMU43HjZIX8cjxObhxTdSfM';
-    const prompt = `You are an expert botanist for Indian trees and plants in Delhi. Look at this photo and identify the tree or plant species. Respond ONLY with valid JSON no markdown: {"common_name":"English name","hindi_name":"Hindi in Devanagari","scientific_name":"Genus species","family":"Plant family","confidence":85,"in_delhi":true,"identification_notes":"2-3 sentences describing key visual features that helped identify it","alternatives":[{"common":"Second option","sci":"Scientific name","confidence":25},{"common":"Third option","sci":"Scientific name","confidence":10}]}`;
-
+    const prompt = `You are an expert botanist for Indian trees and plants in Delhi. Identify this plant from the photo. Respond ONLY with valid JSON: {"common_name":"English name","hindi_name":"Hindi","scientific_name":"Genus species","family":"Family","confidence":85,"in_delhi":true,"identification_notes":"key features","alternatives":[{"common":"alt","sci":"sci","confidence":20}]}`;
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          contents: [{ parts: [
-            { inline_data: { mime_type: selectedPhotoType||'image/jpeg', data: selectedPhotoBase64 } },
-            { text: prompt }
+          contents:[{parts:[
+            {inline_data:{mime_type:selectedPhotoType||'image/jpeg',data:selectedPhotoBase64}},
+            {text:prompt}
           ]}],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 600 }
+          generationConfig:{temperature:0.1,maxOutputTokens:600}
         })
       }
     );
-
     if (!resp.ok) throw new Error('Gemini ' + resp.status);
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
     const p = JSON.parse(text.replace(/```json|```/g,'').trim());
     if (!p.common_name) return null;
-
-    const kb = TREE_KB[p.scientific_name] || {};
+    const kb = TREE_KB[p.scientific_name]||{};
     return {
       source: 'GOOGLE GEMINI AI',
-      common: p.common_name,
-      sci: p.scientific_name,
-      confidence: p.confidence || 70,
-      family: p.family || kb.family || '—',
-      inJorBagh: p.in_delhi ? '✅ Yes, found in Delhi' : '❓ Less common',
-      hindi: p.hindi_name || kb.hindi || '—',
-      note: p.identification_notes || null,
-      organ: selectedOrgan === 'auto' ? 'Auto-detected' : selectedOrgan,
-      alternatives: (p.alternatives||[]).map(a => ({
-        name: a.common, sci: a.sci, conf: a.confidence,
-        emoji: TREE_KB[a.sci]?.emoji || '🌿'
-      }))
+      common: p.common_name, sci: p.scientific_name,
+      confidence: p.confidence||70,
+      family: p.family||kb.family||'—',
+      inJorBagh: p.in_delhi?'✅ Yes, found in Delhi':'❓ Less common',
+      hindi: p.hindi_name||kb.hindi||'—',
+      note: p.identification_notes||null,
+      organ: selectedOrgan==='auto'?'Auto-detected':selectedOrgan,
+      alternatives:(p.alternatives||[]).map(a=>({name:a.common,sci:a.sci,conf:a.confidence,emoji:TREE_KB[a.sci]?.emoji||'🌿'}))
     };
-  } catch(e) {
-    console.warn('Gemini failed:', e.message);
-    return null;
-  }
+  } catch(e) { console.warn('Gemini direct failed:', e.message); return null; }
 }
 
 
