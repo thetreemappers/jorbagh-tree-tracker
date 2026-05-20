@@ -196,42 +196,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(245,240,228
 <!-- ── SUBMIT AUTH GATE ── -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 // ── SEASONAL PHOTOS ──────────────────────────────────────
-const seasonFiles = { spring: null, summer: null, winter: null };
+const seasonFiles = { spring: null, summer: null, winter: null, autumn: null };
 
 function onSeasonPhotoSelected(input, season) {
   const file = input.files[0];
   if (!file) return;
   seasonFiles[season] = file;
 
-  const objectUrl = URL.createObjectURL(file);
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    const MAX = 1200;
-    const ratio = Math.min(MAX/img.width, MAX/img.height, 1);
-    canvas.width = Math.round(img.width * ratio);
-    canvas.height = Math.round(img.height * ratio);
-    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-
+  const reader = new FileReader();
+  reader.onload = e => {
     const prev = document.getElementById('prev-' + season);
-    prev.src = canvas.toDataURL('image/jpeg', 0.85);
-    prev.style.display = 'block';
-    document.getElementById('puz-' + season).style.display = 'none';
-    document.getElementById('photo-zone-' + season).classList.add('has-photo');
-    URL.revokeObjectURL(objectUrl);
+    const icon = document.getElementById('icon-' + season);
+    const label = document.getElementById('label-' + season);
+    if(prev){ prev.src = e.target.result; prev.style.display = 'block'; }
+    if(icon) icon.style.display = 'none';
+    if(label) label.textContent = '✅ Photo added';
   };
-  img.onerror = () => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const prev = document.getElementById('prev-' + season);
-      prev.src = e.target.result;
-      prev.style.display = 'block';
-      document.getElementById('puz-' + season).style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-    URL.revokeObjectURL(objectUrl);
-  };
-  img.src = objectUrl;
+  reader.readAsDataURL(file);
 }
 
 </script>
@@ -509,70 +490,84 @@ function onSeasonPhotoSelected(input, season) {
 
         <!-- PHOTO -->
         <div class="fsec">
-          <div class="fsec-title">📷 Photos <span style="font-size:11px;color:var(--text3);font-weight:400">(add up to 4 seasonal photos)</span></div>
+          <div class="fsec-title">📷 Photos</div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">Add up to 4 seasonal photos. Tap any box to upload.</p>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-
-            <!-- Main photo -->
-            <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;">🌳 Main Photo</div>
-              <div class="photo-upload-zone" id="photo-zone" style="min-height:120px">
-                <input type="file" id="photo-input" accept="image/*,.heic,.heif" onchange="onPhotoSelected(this)">
-                <div class="puz-placeholder" id="puz-placeholder" style="padding:16px">
-                  <span class="puz-icon" style="font-size:28px">📷</span>
-                  <div class="puz-title" style="font-size:12px">Main photo</div>
-                </div>
-                <img id="photo-preview-img" alt="Main photo" style="height:120px">
-                <div class="photo-change-bar" id="photo-change-bar">📷 Change</div>
+          <!-- MAIN PHOTO -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">🌳 Main Photo</div>
+            <div class="photo-upload-zone" id="photo-zone" onclick="document.getElementById('photo-input').click()">
+              <input type="file" id="photo-input" accept="image/*,.heic,.heif" onchange="onPhotoSelected(this)" style="display:none">
+              <div id="puz-placeholder" style="text-align:center;padding:20px">
+                <span style="font-size:36px;display:block;margin-bottom:8px">📷</span>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">Tap to add main photo</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:4px">Shows on the map</div>
               </div>
+              <img id="photo-preview-img" alt="Main photo" style="width:100%;max-height:200px;object-fit:cover;border-radius:12px;display:none">
+              <div class="photo-change-bar" id="photo-change-bar" style="display:none">📷 Change photo</div>
             </div>
+          </div>
+
+          <!-- SEASONAL PHOTOS -->
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Seasonal Photos (optional)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
 
             <!-- Spring -->
             <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;">🌸 Spring / Flowering</div>
-              <div class="photo-upload-zone" id="photo-zone-spring" style="min-height:120px" onclick="document.getElementById('photo-spring').click()">
-                <input type="file" id="photo-spring" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'spring')" style="display:none">
-                <div id="puz-spring" style="padding:16px;text-align:center">
-                  <span style="font-size:28px;display:block;margin-bottom:4px">🌸</span>
-                  <div style="font-size:12px;font-weight:600;color:var(--text)">Spring photo</div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">🌸 Spring</div>
+              <label for="photo-spring" style="display:block;cursor:pointer">
+                <div style="border:2px dashed #c8e6b0;border-radius:12px;padding:16px;text-align:center;background:#f8fdf4;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <img id="prev-spring" style="width:100%;height:80px;object-fit:cover;border-radius:8px;display:none;margin-bottom:6px">
+                  <span id="icon-spring" style="font-size:24px">🌸</span>
+                  <div id="label-spring" style="font-size:11px;color:var(--text3);margin-top:4px;font-weight:500">Tap to add</div>
                 </div>
-                <img id="prev-spring" alt="Spring" style="width:100%;height:120px;object-fit:cover;border-radius:calc(var(--r) - 2px);display:none">
-              </div>
+                <input type="file" id="photo-spring" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'spring')" style="display:none">
+              </label>
             </div>
 
             <!-- Summer -->
             <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;">☀️ Summer / Full Canopy</div>
-              <div class="photo-upload-zone" id="photo-zone-summer" style="min-height:120px" onclick="document.getElementById('photo-summer').click()">
-                <input type="file" id="photo-summer" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'summer')" style="display:none">
-                <div id="puz-summer" style="padding:16px;text-align:center">
-                  <span style="font-size:28px;display:block;margin-bottom:4px">☀️</span>
-                  <div style="font-size:12px;font-weight:600;color:var(--text)">Summer photo</div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">☀️ Summer</div>
+              <label for="photo-summer" style="display:block;cursor:pointer">
+                <div style="border:2px dashed #ffe4a0;border-radius:12px;padding:16px;text-align:center;background:#fffcf0;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <img id="prev-summer" style="width:100%;height:80px;object-fit:cover;border-radius:8px;display:none;margin-bottom:6px">
+                  <span id="icon-summer" style="font-size:24px">☀️</span>
+                  <div id="label-summer" style="font-size:11px;color:var(--text3);margin-top:4px;font-weight:500">Tap to add</div>
                 </div>
-                <img id="prev-summer" alt="Summer" style="width:100%;height:120px;object-fit:cover;border-radius:calc(var(--r) - 2px);display:none">
-              </div>
+                <input type="file" id="photo-summer" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'summer')" style="display:none">
+              </label>
             </div>
 
             <!-- Winter -->
             <div>
-              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;">❄️ Winter / Bare</div>
-              <div class="photo-upload-zone" id="photo-zone-winter" style="min-height:120px" onclick="document.getElementById('photo-winter').click()">
-                <input type="file" id="photo-winter" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'winter')" style="display:none">
-                <div id="puz-winter" style="padding:16px;text-align:center">
-                  <span style="font-size:28px;display:block;margin-bottom:4px">❄️</span>
-                  <div style="font-size:12px;font-weight:600;color:var(--text)">Winter photo</div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">❄️ Winter</div>
+              <label for="photo-winter" style="display:block;cursor:pointer">
+                <div style="border:2px dashed #b8d4f0;border-radius:12px;padding:16px;text-align:center;background:#f0f6ff;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <img id="prev-winter" style="width:100%;height:80px;object-fit:cover;border-radius:8px;display:none;margin-bottom:6px">
+                  <span id="icon-winter" style="font-size:24px">❄️</span>
+                  <div id="label-winter" style="font-size:11px;color:var(--text3);margin-top:4px;font-weight:500">Tap to add</div>
                 </div>
-                <img id="prev-winter" alt="Winter" style="width:100%;height:120px;object-fit:cover;border-radius:calc(var(--r) - 2px);display:none">
-              </div>
+                <input type="file" id="photo-winter" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'winter')" style="display:none">
+              </label>
+            </div>
+
+            <!-- Autumn -->
+            <div>
+              <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px">🍂 Autumn</div>
+              <label for="photo-autumn" style="display:block;cursor:pointer">
+                <div style="border:2px dashed #e8c090;border-radius:12px;padding:16px;text-align:center;background:#fdf8f0;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <img id="prev-autumn" style="width:100%;height:80px;object-fit:cover;border-radius:8px;display:none;margin-bottom:6px">
+                  <span id="icon-autumn" style="font-size:24px">🍂</span>
+                  <div id="label-autumn" style="font-size:11px;color:var(--text3);margin-top:4px;font-weight:500">Tap to add</div>
+                </div>
+                <input type="file" id="photo-autumn" accept="image/*,.heic,.heif" onchange="onSeasonPhotoSelected(this,'autumn')" style="display:none">
+              </label>
             </div>
 
           </div>
-          <div class="photo-upload-progress" id="photo-progress">
-            <div class="pup-fill" id="pup-fill" style="width:0%"></div>
-          </div>
         </div>
 
-        <!-- NOTES -->
+                <!-- NOTES -->
         <div class="fsec">
           <div class="fsec-title">📝 Notes & Info</div>
           <div class="field"><label>Observations</label><textarea id="f-notes" placeholder="Near which gate or landmark? Flowers or fruit visible? Hollow trunk? Unusual features? Any history?"></textarea></div>
@@ -757,8 +752,12 @@ function onPhotoSelected(input){
   const reader = new FileReader();
   reader.onload = e => {
     const img = document.getElementById('photo-preview-img');
-    img.src = e.target.result; img.classList.add('show');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    img.classList.add('show');
     document.getElementById('puz-placeholder').style.display = 'none';
+    const bar = document.getElementById('photo-change-bar');
+    if(bar) bar.style.display = 'block';
     document.getElementById('photo-change-bar').classList.add('show');
     document.getElementById('photo-zone').classList.add('has-photo');
   };
