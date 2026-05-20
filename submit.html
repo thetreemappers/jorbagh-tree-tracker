@@ -655,63 +655,97 @@ let gpsWatcher = null, gpsReadings = [], selectedCond = 'Good';
 
 function startGPS(){
   const btn = document.getElementById('gps-btn');
-  btn.textContent = '⏳ Getting location...'; btn.disabled = true;
+  const status = document.getElementById('gps-status');
+
+  if(!navigator.geolocation){
+    status.textContent = '❌ GPS not supported on this browser';
+    status.classList.add('show');
+    return;
+  }
+
+  btn.textContent = '⏳ Getting location...';
+  btn.disabled = true;
+  status.classList.add('show');
+  status.textContent = 'Requesting location access...';
   gpsReadings = [];
   let count = 0;
   const MAX = 5;
-  const status = document.getElementById('gps-status');
-  status.classList.add('show');
 
-  gpsWatcher = navigator.geolocation.watchPosition(pos => {
-    const {latitude, longitude, accuracy} = pos.coords;
-    count++;
-    gpsReadings.push({lat:latitude, lng:longitude, acc:accuracy});
+  // Use getCurrentPosition first to trigger permission prompt on Safari
+  navigator.geolocation.getCurrentPosition(
+    firstPos => {
+      // Got first position — now watch for better accuracy
+      gpsReadings.push({lat:firstPos.coords.latitude, lng:firstPos.coords.longitude, acc:firstPos.coords.accuracy});
+      count = 1;
+      status.textContent = `Reading ${count}/${MAX} · ±${Math.round(firstPos.coords.accuracy)}m`;
 
-    document.getElementById('gr-lat').textContent = latitude.toFixed(5);
-    document.getElementById('gr-lng').textContent = longitude.toFixed(5);
-    document.getElementById('gr-acc').textContent = `±${Math.round(accuracy)}m`;
+      document.getElementById('gr-lat').textContent = firstPos.coords.latitude.toFixed(5);
+      document.getElementById('gr-lng').textContent = firstPos.coords.longitude.toFixed(5);
+      document.getElementById('gr-acc').textContent = `±${Math.round(firstPos.coords.accuracy)}m`;
 
-    const pct = Math.max(0, Math.min(100, 100 - accuracy * 3));
-    const col = accuracy < 10 ? '#3d9e2a' : accuracy < 20 ? '#e8b84b' : '#c0392b';
-    document.getElementById('gps-acc-fill').style.cssText = `width:${pct}%;background:${col}`;
-    status.textContent = `Reading ${count}/${MAX} · ±${Math.round(accuracy)}m`;
+      gpsWatcher = navigator.geolocation.watchPosition(pos => {
+        const {latitude, longitude, accuracy} = pos.coords;
+        count++;
+        gpsReadings.push({lat:latitude, lng:longitude, acc:accuracy});
 
-    if(count >= MAX){
-      const sorted = [...gpsReadings].sort((a,b)=>a.acc-b.acc);
-      const best = sorted.slice(0, Math.ceil(sorted.length/2));
-      const avgLat = best.reduce((s,r)=>s+r.lat,0)/best.length;
-      const avgLng = best.reduce((s,r)=>s+r.lng,0)/best.length;
-      const avgAcc = best.reduce((s,r)=>s+r.acc,0)/best.length;
+        document.getElementById('gr-lat').textContent = latitude.toFixed(5);
+        document.getElementById('gr-lng').textContent = longitude.toFixed(5);
+        document.getElementById('gr-acc').textContent = `±${Math.round(accuracy)}m`;
 
-      document.getElementById('f-lat').value = avgLat.toFixed(7);
-      document.getElementById('f-lng').value = avgLng.toFixed(7);
-      document.getElementById('gr-lat').textContent = avgLat.toFixed(5);
-      document.getElementById('gr-lng').textContent = avgLng.toFixed(5);
-      document.getElementById('gr-acc').textContent = `±${Math.round(avgAcc)}m`;
+        const pct = Math.max(0, Math.min(100, 100 - accuracy * 3));
+        const col = accuracy < 10 ? '#3d9e2a' : accuracy < 20 ? '#e8b84b' : '#c0392b';
+        document.getElementById('gps-acc-fill').style.cssText = `width:${pct}%;background:${col}`;
+        status.textContent = `Reading ${count}/${MAX} · ±${Math.round(accuracy)}m`;
 
-      navigator.geolocation.clearWatch(gpsWatcher);
-      btn.textContent = '✅ Location Locked';
-      status.textContent = `📍 Precision locked · ±${Math.round(avgAcc)}m · ${best.length} readings averaged`;
-      document.getElementById('gps-acc-fill').style.background = '#3d9e2a';
+        if(count >= MAX){
+          navigator.geolocation.clearWatch(gpsWatcher);
+          const sorted = [...gpsReadings].sort((a,b)=>a.acc-b.acc);
+          const best = sorted.slice(0, Math.ceil(sorted.length/2));
+          const avgLat = best.reduce((s,r)=>s+r.lat,0)/best.length;
+          const avgLng = best.reduce((s,r)=>s+r.lng,0)/best.length;
+          const avgAcc = best.reduce((s,r)=>s+r.acc,0)/best.length;
 
-      // Check for duplicates AFTER locking (non-blocking)
-      checkForNearbyTrees(avgLat, avgLng).then(dupTree => {
-        const dupWarn = document.getElementById('dup-warning');
-        if(!dupWarn) return;
-        if(dupTree){
-          dupWarn.innerHTML = `⚠️ A <strong>${dupTree.common_name}</strong> tree was already logged ${dupTree.dist}m from here by <strong>${dupTree.submitted_by||'someone'}</strong>. Are you sure this is a different tree?`;
-          dupWarn.style.display = 'block';
-        } else {
-          dupWarn.style.display = 'none';
+          document.getElementById('f-lat').value = avgLat.toFixed(7);
+          document.getElementById('f-lng').value = avgLng.toFixed(7);
+          document.getElementById('gr-lat').textContent = avgLat.toFixed(5);
+          document.getElementById('gr-lng').textContent = avgLng.toFixed(5);
+          document.getElementById('gr-acc').textContent = `±${Math.round(avgAcc)}m`;
+
+          btn.textContent = '✅ Location Locked';
+          btn.style.background = '#3d9e2a';
+          status.textContent = `📍 Location locked · ±${Math.round(avgAcc)}m`;
+          status.style.color = '#3d9e2a';
+          document.getElementById('gps-acc-fill').style.background = '#3d9e2a';
+
+          checkForNearbyTrees(avgLat, avgLng).then(dupTree => {
+            const dupWarn = document.getElementById('dup-warning');
+            if(!dupWarn) return;
+            if(dupTree){
+              dupWarn.innerHTML = `⚠️ A <strong>${dupTree.common_name}</strong> was already logged ${dupTree.dist}m from here. Are you sure this is a different tree?`;
+              dupWarn.style.display = 'block';
+            }
+          });
         }
-      });
-    }
-  }, err => {
-    console.error('GPS error:', err.code, err.message);
-    btn.textContent = '📡 Start Precision GPS'; btn.disabled = false;
-    status.textContent = '❌ Could not get location — please allow location access';
-    status.style.color = '#c0392b';
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+      },
+      err => { console.warn('Watch error:', err.message); },
+      {enableHighAccuracy:true, timeout:10000, maximumAge:0});
+    },
+    err => {
+      console.error('GPS denied:', err.code, err.message);
+      btn.disabled = false;
+      btn.textContent = '📡 Start Precision GPS';
+      if(err.code === 1){
+        status.textContent = '❌ Location access denied. Go to Settings → Safari → Location → Allow';
+      } else if(err.code === 2){
+        status.textContent = '❌ Location unavailable. Make sure you are outdoors.';
+      } else {
+        status.textContent = '❌ GPS timed out. Please try again.';
+      }
+      status.style.color = '#c0392b';
+      status.classList.add('show');
+    },
+    {enableHighAccuracy:true, timeout:15000, maximumAge:0}
+  );
 }
 
 // ── SPECIES SUGGESTIONS ──────────────────────────────────
@@ -817,11 +851,20 @@ async function submitTree(){
 
   if(!name){ alert('Please enter the tree name'); document.getElementById('f-common').focus(); return; }
   if(isNaN(lat) || isNaN(lng)){
-    const skip = confirm('No GPS location captured yet.\n\nClick OK to submit without location (not recommended)\nClick Cancel to go back and capture GPS first');
-    if(!skip) return;
-    // Use 0,0 as placeholder — admin can fix later
-    document.getElementById('f-lat').value = '0';
-    document.getElementById('f-lng').value = '0';
+    // Show inline message instead of annoying popup
+    const gpsBtn = document.getElementById('gps-btn');
+    if(gpsBtn){
+      gpsBtn.style.animation = 'pulse 0.5s ease 3';
+      gpsBtn.textContent = '📡 Please capture GPS first!';
+      gpsBtn.style.background = '#e8a820';
+      setTimeout(()=>{
+        gpsBtn.textContent = '📡 Start Precision GPS';
+        gpsBtn.style.background = '';
+      }, 3000);
+    }
+    gpsBtn.scrollIntoView({behavior:'smooth', block:'center'});
+    btn.disabled = false;
+    return;
   }
 
   const btn = document.getElementById('submit-btn');
