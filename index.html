@@ -98,6 +98,7 @@ function buildPhotoGallery(t) {
   gallery.style.display = 'block';
   gallery.style.cursor = 'zoom-in';
   gallery.onclick = (e) => {
+    e.stopPropagation();
     const img = e.target.closest('img');
     if(img) openLightbox(img.src, img.alt);
   };
@@ -112,10 +113,10 @@ function buildPhotoGallery(t) {
         </div>`).join('')}
     </div>
     ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
     <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
     </div>` : ''}
   `;
 
@@ -124,6 +125,7 @@ function buildPhotoGallery(t) {
 }
 
 function galleryNav(dir) {
+  if(event) event.stopPropagation();
   const count = window._galleryCount || 1;
   window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
   galleryGo(window._galleryCurrent);
@@ -1183,6 +1185,7 @@ function buildPhotoGallery(t) {
   gallery.style.display = 'block';
   gallery.style.cursor = 'zoom-in';
   gallery.onclick = (e) => {
+    e.stopPropagation();
     const img = e.target.closest('img');
     if(img) openLightbox(img.src, img.alt);
   };
@@ -1197,10 +1200,10 @@ function buildPhotoGallery(t) {
         </div>`).join('')}
     </div>
     ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
     <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
     </div>` : ''}
   `;
 
@@ -1209,6 +1212,7 @@ function buildPhotoGallery(t) {
 }
 
 function galleryNav(dir) {
+  if(event) event.stopPropagation();
   const count = window._galleryCount || 1;
   window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
   galleryGo(window._galleryCurrent);
@@ -1348,7 +1352,7 @@ function galleryGo(idx) {
   <div class="map-body">
     <div id="main-map">
       <!-- Tree popup -->
-      <div class="tree-popup-card" id="tree-popup">
+      <div class="tree-popup-card" id="tree-popup" onclick="event.stopPropagation()">
 
         <!-- Close button (always visible) -->
         <button class="tpc-close" onclick="closePopup()" style="position:absolute;top:10px;right:10px;z-index:20">✕</button>
@@ -1831,6 +1835,7 @@ function buildPhotoGallery(t) {
   gallery.style.display = 'block';
   gallery.style.cursor = 'zoom-in';
   gallery.onclick = (e) => {
+    e.stopPropagation();
     const img = e.target.closest('img');
     if(img) openLightbox(img.src, img.alt);
   };
@@ -1845,10 +1850,10 @@ function buildPhotoGallery(t) {
         </div>`).join('')}
     </div>
     ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="galleryNav(1)">›</button>
+    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
     <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="galleryGo(${i})"></div>`).join('')}
+      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
     </div>` : ''}
   `;
 
@@ -1857,6 +1862,7 @@ function buildPhotoGallery(t) {
 }
 
 function galleryNav(dir) {
+  if(event) event.stopPropagation();
   const count = window._galleryCount || 1;
   window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
   galleryGo(window._galleryCurrent);
