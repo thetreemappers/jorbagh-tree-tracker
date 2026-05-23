@@ -6,159 +6,11 @@
 <meta name="description" content="The Tree Mappers — Delhi's community urban forest map. Log, discover and protect every tree in your neighbourhood.">
 <title>The Tree Mappers · Delhi's Urban Forest</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js">
-// ── TASK 4: AREA ZOOM ────────────────────────────────────────
-const DELHI_AREAS = {
-  jorbagh:  { lat:28.5925, lng:77.2190, zoom:16, label:'Jor Bagh' },
-  lodhi:    { lat:28.5910, lng:77.2290, zoom:16, label:'Lodhi Colony' },
-  central:  { lat:28.6358, lng:77.2245, zoom:14, label:'Central Delhi' },
-  south:    { lat:28.5244, lng:77.1855, zoom:13, label:'South Delhi' },
-  north:    { lat:28.7274, lng:77.1834, zoom:13, label:'North Delhi' },
-  east:     { lat:28.6253, lng:77.3188, zoom:13, label:'East Delhi' },
-  west:     { lat:28.6519, lng:77.1025, zoom:13, label:'West Delhi' },
-};
-
-function zoomToArea(areaKey){
-  const area = DELHI_AREAS[areaKey];
-  if(!area || !mainMap) return;
-
-  // Clear area chip active states
-  document.querySelectorAll('#area-filter-row .mf-chip').forEach(c=>c.classList.remove('active'));
-  event.target.classList.add('active');
-
-  // Fly to area
-  mainMap.flyTo([area.lat, area.lng], area.zoom, { duration: 1.2 });
-
-  // Filter trees to this area
-  const areaTrees = allTrees.filter(t => {
-    const loc = getAreaName(t.latitude, t.longitude);
-    return loc.toLowerCase().includes(area.label.toLowerCase().split(' ')[0]);
-  });
-
-  // Show how many trees in this area
-  closePopup();
-}
-
-function getAreaName(lat, lng){
-  if(lat>28.58&&lat<28.61&&lng>77.20&&lng<77.23) return 'Jor Bagh';
-  if(lat>28.58&&lat<28.61&&lng>77.19&&lng<77.23) return 'Lodhi Colony';
-  if(lat>28.61&&lat<28.68&&lng>77.18&&lng<77.22) return 'Central Delhi';
-  if(lat>28.45&&lat<28.58&&lng>77.10&&lng<77.25) return 'South Delhi';
-  if(lat>28.68&&lat<28.80&&lng>77.10&&lng<77.30) return 'North Delhi';
-  if(lat>28.60&&lat<28.70&&lng>77.25&&lng<77.40) return 'East Delhi';
-  if(lat>28.55&&lat<28.70&&lng>77.00&&lng<77.15) return 'West Delhi';
-  return 'Delhi';
-}
-
-
-// ── UPDATE NAV BASED ON AUTH ─────────────────────────
-(async()=>{
-  try{
-    if(typeof supabase === 'undefined') return;
-    const {createClient} = supabase;
-    const sb2 = createClient('https://dcciktuwyjrvkynmxdjn.supabase.co','sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW');
-    const {data:{session}} = await sb2.auth.getSession();
-    const signinBtn = document.getElementById('nav-signin');
-    if(signinBtn){
-      if(session?.user){
-        signinBtn.textContent = '👤 My Profile';
-        signinBtn.href = 'login.html';
-        signinBtn.style.color = 'var(--sage)';
-        signinBtn.style.fontWeight = '600';
-      }
-    }
-  }catch(e){}
-})();
-
-
-// ── PHOTO GALLERY ────────────────────────────────────────
-function buildPhotoGallery(t) {
-  const photos = [
-    { url: t.photo_url, label: '🌳 Main Photo' },
-    { url: t.photo_spring, label: '🌸 Spring' },
-    { url: t.photo_summer, label: '☀️ Summer' },
-    { url: t.photo_winter, label: '❄️ Winter' },
-  ].filter(p => p.url);
-
-  // Find or create gallery container
-  let gallery = document.getElementById('tpc-gallery');
-  if (!gallery) {
-    gallery = document.createElement('div');
-    gallery.id = 'tpc-gallery';
-    gallery.className = 'photo-gallery';
-    const popup = document.getElementById('tree-popup');
-    popup.insertBefore(gallery, popup.firstChild);
-  }
-
-  if (photos.length === 0) {
-    gallery.style.display = 'none';
-    return;
-  }
-
-  gallery.style.display = 'block';
-  gallery.style.cursor = 'zoom-in';
-  gallery.onclick = (e) => {
-    e.stopPropagation();
-    const img = e.target.closest('img');
-    if(img) openLightbox(img.src, img.alt);
-  };
-  let current = 0;
-
-  gallery.innerHTML = `
-    <div class="gallery-slides" id="gallery-slides">
-      ${photos.map((p, i) => `
-        <div class="gallery-slide">
-          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'" style="cursor:zoom-in" onclick="openLightbox(this.src, this.alt)">
-          <div class="season-badge">${p.label}</div>
-        </div>`).join('')}
-    </div>
-    ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
-    <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
-    </div>` : ''}
-  `;
-
-  window._galleryCount = photos.length;
-  window._galleryCurrent = 0;
-}
-
-function galleryNav(dir) {
-  if(event) event.stopPropagation();
-  const count = window._galleryCount || 1;
-  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
-  galleryGo(window._galleryCurrent);
-}
-
-function galleryGo(idx) {
-  window._galleryCurrent = idx;
-  const slides = document.getElementById('gallery-slides');
-  if(slides){
-    slides.style.transition = 'transform .3s ease';
-    slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
-  }
-  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-}
-
-
-// ── LIGHTBOX ─────────────────────────────────────────────
-function openLightbox(src, caption) {
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox-caption').textContent = caption || '';
-  document.getElementById('lightbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-}
-// Close on Escape key
-document.addEventListener('keydown', e => {
-  if(e.key === 'Escape') closeLightbox();
-});
-
-</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
 <style>
 /* ── TOKENS ─────────────────────────────────────────── */
@@ -280,7 +132,6 @@ img { display: block; max-width: 100%; }
   padding-top: 64px; position: relative; overflow: hidden;
 }
 
-/* Texture overlay */
 #hero::before {
   content: '';
   position: absolute; inset: 0; z-index: 0;
@@ -342,7 +193,6 @@ img { display: block; max-width: 100%; }
 }
 .btn-outline:hover { border-color: var(--sage); transform: translateY(-2px); }
 
-/* HERO STATS */
 .hero-stats {
   display: flex; gap: 0;
   border-top: 1px solid var(--border);
@@ -361,7 +211,6 @@ img { display: block; max-width: 100%; }
 }
 .hstat-label { font-size: 12px; color: var(--text3); font-weight: 500; letter-spacing: 0.3px; }
 
-/* HERO RIGHT — MAP */
 .hero-right {
   position: relative; overflow: hidden;
   background: var(--mist);
@@ -484,7 +333,6 @@ img { display: block; max-width: 100%; }
   .gallery-slide img { height: 220px !important; }
 }
 
-/* Photo hero */
 .tpc-photo-wrap { position: relative; display: none; }
 .tpc-photo-wrap.show { display: block; }
 .tpc-photo { width: 100%; height: 200px; object-fit: cover; display: block; cursor: zoom-in; transition: opacity .2s; }
@@ -499,7 +347,6 @@ img { display: block; max-width: 100%; }
 .tpc-photo-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: white; line-height: 1.1; }
 .tpc-photo-sci { font-style: italic; font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
-/* Text header (no photo) */
 .tpc-head { background: var(--sage-dark); padding: 16px 16px; position: relative; display: none; }
 .tpc-head.show { display: block; }
 .tpc-close {
@@ -554,6 +401,20 @@ img { display: block; max-width: 100%; }
 .msb-tag.good { background: rgba(92,154,110,0.2); color: #a8d5a2; }
 .msb-tag.fair { background: rgba(196,147,58,0.2); color: #f0d9a8; }
 .msb-tag.poor { background: rgba(192,57,43,0.2); color: #f0a8a8; }
+
+/* ── CLUSTER STYLES (new) ── */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large { background: rgba(92,154,110,0.18) !important; }
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background: var(--sage-dark) !important;
+  color: white !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
 
 /* ── STATS SECTION ───────────────────────────────────── */
 #stats-section {
@@ -764,159 +625,80 @@ footer {
   margin-top: 1px;
 }
 
-
 /* ── MOBILE FIX ── */
 @media(max-width:600px){
-  /* NAV */
   #nav { padding: 0 16px; height: 56px; }
   .nav-brand { font-size: 16px; }
   .nav-brand-leaf { width: 26px; height: 26px; font-size: 13px; }
   .nav-ham { display: flex; }
   .nav-links { display: none; }
-
-  /* HERO */
-  #hero {
-    grid-template-columns: 1fr !important;
-    padding-top: 56px;
-    min-height: auto;
-    overflow: hidden;
-  }
-  .hero-left {
-    padding: 32px 20px 36px !important;
-    z-index: 2;
-  }
-  .hero-title {
-    font-size: 38px !important;
-    letter-spacing: -0.5px;
-    line-height: 1.05;
-  }
-  .hero-desc {
-    font-size: 15px !important;
-    margin-bottom: 28px;
-  }
+  #hero { grid-template-columns: 1fr !important; padding-top: 56px; min-height: auto; overflow: hidden; }
+  .hero-left { padding: 32px 20px 36px !important; z-index: 2; }
+  .hero-title { font-size: 38px !important; letter-spacing: -0.5px; line-height: 1.05; }
+  .hero-desc { font-size: 15px !important; margin-bottom: 28px; }
   .hero-tag { font-size: 10px; padding: 4px 10px; margin-bottom: 18px; }
   .hero-btns { flex-direction: column; gap: 10px; }
-  .btn-fill, .btn-outline {
-    width: 100%; justify-content: center;
-    padding: 14px 20px; font-size: 15px; border-radius: 12px;
-  }
-  .hero-stats {
-    gap: 0; margin-top: 32px; padding-top: 28px;
-  }
+  .btn-fill, .btn-outline { width: 100%; justify-content: center; padding: 14px 20px; font-size: 15px; border-radius: 12px; }
+  .hero-stats { gap: 0; margin-top: 32px; padding-top: 28px; }
   .hstat { padding-right: 16px; margin-right: 16px; }
   .hstat-val { font-size: 28px; }
   .hstat-label { font-size: 11px; }
   .hero-right { height: 260px !important; }
   .hero-map-card { bottom: 12px; right: 12px; padding: 10px 14px; }
-
-  /* TRUST BAR */
-  #trust-bar {
-    padding: 14px 16px;
-    flex-direction: column; gap: 10px; align-items: flex-start;
-  }
+  #trust-bar { padding: 14px 16px; flex-direction: column; gap: 10px; align-items: flex-start; }
   .trust-divider { display: none; }
   .trust-item { font-size: 12px; }
-
-  /* MAP SECTION */
   .map-top { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
   .map-top-left h2 { font-size: 20px; }
   .map-filter-row { gap: 6px; padding-bottom: 2px; }
   .mf-chip { font-size: 11px; padding: 6px 11px; }
   .map-sidebar { display: none !important; }
-  .tree-popup-card {
-    width: calc(100% - 24px) !important;
-    left: 12px !important; right: 12px !important;
-    bottom: 12px !important;
-  }
-
-  /* SECTIONS */
+  .tree-popup-card { width: calc(100% - 24px) !important; left: 12px !important; right: 12px !important; bottom: 12px !important; }
   .section { padding: 48px 20px !important; }
   #stats-section { padding: 48px 20px !important; }
   .section-title { font-size: 30px !important; letter-spacing: -0.3px; }
   .section-desc { font-size: 14px; }
-
-  /* STATS GRID */
   .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 12px; margin-top: 36px; }
   .stat-box { padding: 22px 16px; border-radius: 16px; }
   .sb-val { font-size: 38px; }
   .sb-label { font-size: 11px; }
   .sb-icon { font-size: 26px; margin-bottom: 10px; }
-
-  /* HOW IT WORKS */
   .how-grid { grid-template-columns: 1fr !important; gap: 14px; margin-top: 32px; }
   .how-card { padding: 24px 20px; border-radius: 16px; }
   .how-num { font-size: 52px; top: 14px; right: 16px; }
   .how-title { font-size: 18px; }
   .how-desc { font-size: 13px; }
-
-  /* SPECIES */
   .species-layout { grid-template-columns: 1fr !important; gap: 28px; }
   .species-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
   .sp-card { padding: 14px; border-radius: 12px; }
   .sp-emoji { font-size: 24px; }
   .sp-name { font-size: 13px; }
   .sp-sci { font-size: 9px; }
-
-  /* CTA */
   #cta-section { padding: 56px 20px !important; }
   .cta-btns { flex-direction: column; align-items: stretch; gap: 10px; }
   .cta-btns a { justify-content: center; text-align: center; }
-
-  /* FOOTER */
   footer { padding: 36px 20px 28px !important; }
   .footer-top { grid-template-columns: 1fr !important; gap: 28px; }
   .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
 }
-
 @media(max-width:380px){
   .hero-title { font-size: 32px !important; }
   .hstat { padding-right: 12px; margin-right: 12px; }
   .hstat-val { font-size: 24px; }
 }
 
-
 /* ── CRITICAL OVERFLOW FIX ── */
-html, body {
-  overflow-x: hidden !important;
-  max-width: 100vw !important;
-}
+html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 * { max-width: 100%; }
 
 @media(max-width:768px){
-  /* Force everything to fit */
-  #hero {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    overflow: hidden !important;
-    padding-top: 56px !important;
-  }
-  .hero-left {
-    width: 100% !important;
-    padding: 28px 20px 32px !important;
-    order: 1;
-  }
-  .hero-right {
-    width: 100% !important;
-    height: 220px !important;
-    position: relative !important;
-    order: 2;
-  }
-  #hero-map {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
+  #hero { display: flex !important; flex-direction: column !important; width: 100% !important; overflow: hidden !important; padding-top: 56px !important; }
+  .hero-left { width: 100% !important; padding: 28px 20px 32px !important; order: 1; }
+  .hero-right { width: 100% !important; height: 220px !important; position: relative !important; order: 2; }
+  #hero-map { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; }
   .hero-map-vignette { display: none; }
   .hero-map-card { display: none; }
-
-  /* Hero text */
-  .hero-title {
-    font-size: 36px !important;
-    line-height: 1.05 !important;
-    letter-spacing: -0.5px !important;
-  }
+  .hero-title { font-size: 36px !important; line-height: 1.05 !important; letter-spacing: -0.5px !important; }
   .hero-tag { font-size: 10px !important; margin-bottom: 14px !important; }
   .hero-desc { font-size: 14px !important; margin-bottom: 24px !important; max-width: 100% !important; }
   .hero-btns { flex-direction: column !important; gap: 10px !important; }
@@ -926,79 +708,45 @@ html, body {
   .hstat:last-child { padding: 0 !important; margin: 0 !important; }
   .hstat-val { font-size: 26px !important; }
   .hstat-label { font-size: 10px !important; }
-
-  /* NAV */
   #nav { padding: 0 16px !important; height: 56px !important; overflow: hidden !important; }
   .nav-links { display: none !important; }
   .nav-ham { display: flex !important; }
   #mobile-nav a { font-size: 16px !important; }
-
-  /* MAP SECTION */
   .map-top { padding: 14px 16px !important; flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
   .map-body { min-height: 400px !important; }
   .map-sidebar { display: none !important; }
   #main-map { width: 100% !important; }
-
-  /* POPUP */
-  .tree-popup-card {
-    width: calc(100% - 24px) !important;
-    left: 12px !important;
-    right: 12px !important;
-    bottom: 12px !important;
-    max-width: none !important;
-  }
-
-  /* ALL SECTIONS */
+  .tree-popup-card { width: calc(100% - 24px) !important; left: 12px !important; right: 12px !important; bottom: 12px !important; max-width: none !important; }
   .section, #stats-section, #cta-section { padding: 44px 20px !important; }
   .section-title { font-size: 28px !important; }
-
-  /* TRUST BAR */
   #trust-bar { padding: 14px 20px !important; flex-direction: column !important; gap: 8px !important; align-items: flex-start !important; }
   .trust-divider { display: none !important; }
-
-  /* STATS */
   .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-top: 28px !important; }
   .sb-val { font-size: 36px !important; }
-
-  /* SPECIES */
   .species-layout { grid-template-columns: 1fr !important; gap: 28px !important; }
   .species-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-
-  /* HOW */
   .how-grid { grid-template-columns: 1fr !important; gap: 12px !important; margin-top: 28px !important; }
   .how-card { padding: 22px 18px !important; }
-
-  /* CTA */
   .cta-btns { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
   .cta-btns a { text-align: center !important; justify-content: center !important; }
-
-  /* FOOTER */
   footer { padding: 32px 20px !important; }
   .footer-top { grid-template-columns: 1fr !important; gap: 24px !important; }
   .footer-bottom { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
 }
-
 
 /* ── SEASONAL PHOTO GALLERY ── */
 .photo-gallery { position: relative; width: 100%; background: #111; }
 .gallery-slides { display: flex; overflow: hidden; transition: none; width: 100%; }
 .gallery-slide { min-width: 100%; width: 100%; flex-shrink: 0; }
 .gallery-slide img { width: 100%; height: 200px; object-fit: cover; display: block; }
-
 .gallery-slide .season-badge {
   position: absolute; bottom: 8px; left: 8px;
   background: rgba(0,0,0,.6); color: white;
   font-size: 10px; font-weight: 600; padding: 3px 8px;
   border-radius: 6px; letter-spacing: .5px;
 }
-.gallery-dots {
-  position: absolute; bottom: 8px; right: 8px;
-  display: flex; gap: 4px;
-}
-.gallery-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(255,255,255,.5); cursor: pointer; transition: all .2s;
-}
+.gallery-dots { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px; }
+.gallery-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.5); cursor: pointer; transition: all .2s; }
 .gallery-dot.active { background: white; transform: scale(1.3); }
 .gallery-prev, .gallery-next {
   position: absolute; top: 50%; transform: translateY(-50%);
@@ -1011,7 +759,6 @@ html, body {
 .gallery-next { right: 6px; }
 .gallery-prev:hover, .gallery-next:hover { background: rgba(0,0,0,.7); }
 
-
 /* ── LIGHTBOX ── */
 #lightbox {
   position: fixed; inset: 0; z-index: 9999;
@@ -1020,12 +767,7 @@ html, body {
   padding: 20px; cursor: zoom-out;
 }
 #lightbox.open { display: flex; }
-#lightbox img {
-  max-width: 100%; max-height: 90vh;
-  border-radius: 12px; object-fit: contain;
-  box-shadow: 0 20px 80px rgba(0,0,0,.5);
-  cursor: default;
-}
+#lightbox img { max-width: 100%; max-height: 90vh; border-radius: 12px; object-fit: contain; box-shadow: 0 20px 80px rgba(0,0,0,.5); cursor: default; }
 #lightbox-close {
   position: fixed; top: 20px; right: 20px;
   width: 40px; height: 40px; border-radius: 50%;
@@ -1040,7 +782,6 @@ html, body {
   background: rgba(0,0,0,.6); color: white; font-size: 13px;
   padding: 8px 16px; border-radius: 20px; white-space: nowrap;
 }
-
 </style>
 </head>
 <body>
@@ -1050,8 +791,6 @@ html, body {
   const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
   const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
   const sb=supabase.createClient(SURL,SKEY);
-
-  // Show loading overlay while checking
   const overlay=document.createElement('div');
   overlay.id='auth-overlay';
   overlay.style.cssText='position:fixed;inset:0;background:#f8f4ed;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Outfit,sans-serif;';
@@ -1063,188 +802,29 @@ html, body {
       <div id="ag-spinner" style="width:28px;height:28px;border:2px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div>
       <a id="ag-btn" href="login.html" style="display:none;margin-top:20px;padding:13px 28px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-size:14px;font-weight:700">Sign In →</a>
     </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}
-/* ── SEASONAL PHOTO GALLERY ── */
-.photo-gallery { position: relative; width: 100%; background: #111; }
-.gallery-slides { display: flex; overflow: hidden; transition: none; width: 100%; }
-.gallery-slide { min-width: 100%; width: 100%; flex-shrink: 0; }
-.gallery-slide img { width: 100%; height: 200px; object-fit: cover; display: block; }
-
-.gallery-slide .season-badge {
-  position: absolute; bottom: 8px; left: 8px;
-  background: rgba(0,0,0,.6); color: white;
-  font-size: 10px; font-weight: 600; padding: 3px 8px;
-  border-radius: 6px; letter-spacing: .5px;
-}
-.gallery-dots {
-  position: absolute; bottom: 8px; right: 8px;
-  display: flex; gap: 4px;
-}
-.gallery-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgba(255,255,255,.5); cursor: pointer; transition: all .2s;
-}
-.gallery-dot.active { background: white; transform: scale(1.3); }
-.gallery-prev, .gallery-next {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  background: rgba(0,0,0,.4); border: none; color: white;
-  width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
-  font-size: 14px; display: flex; align-items: center; justify-content: center;
-  z-index: 10; transition: background .2s;
-}
-.gallery-prev { left: 6px; }
-.gallery-next { right: 6px; }
-.gallery-prev:hover, .gallery-next:hover { background: rgba(0,0,0,.7); }
-
-
-/* ── LIGHTBOX ── */
-#lightbox {
-  position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,.92);
-  display: none; align-items: center; justify-content: center;
-  padding: 20px; cursor: zoom-out;
-}
-#lightbox.open { display: flex; }
-#lightbox img {
-  max-width: 100%; max-height: 90vh;
-  border-radius: 12px; object-fit: contain;
-  box-shadow: 0 20px 80px rgba(0,0,0,.5);
-  cursor: default;
-}
-#lightbox-close {
-  position: fixed; top: 20px; right: 20px;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(255,255,255,.15); border: none;
-  color: white; font-size: 20px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .2s;
-}
-#lightbox-close:hover { background: rgba(255,255,255,.25); }
-#lightbox-caption {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: rgba(0,0,0,.6); color: white; font-size: 13px;
-  padding: 8px 16px; border-radius: 20px; white-space: nowrap;
-}
-
-</style>`;
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
   document.body.prepend(overlay);
-
-  function showBlock(msg, sub, showBtn=true){
+  function showBlock(msg,sub,showBtn=true){
     document.getElementById('ag-msg').textContent=msg;
     document.getElementById('ag-sub').textContent=sub;
     document.getElementById('ag-spinner').style.display='none';
     if(showBtn) document.getElementById('ag-btn').style.display='inline-block';
   }
-
   try {
     const {data:{session}}=await sb.auth.getSession();
-
-    // Not logged in → redirect to login
-    if(!session?.user){
-      showBlock('This map is members only','Please sign in or register to continue');
-      return;
-    }
-
-    // Logged in — check approval status
+    if(!session?.user){ showBlock('This map is members only','Please sign in or register to continue'); return; }
     const {data:profile}=await sb.from('profiles').select('status,role').eq('id',session.user.id).single();
-
-    if(!profile){
-      showBlock('Account not found','Please register again to continue');
-      return;
-    }
-
-    if(profile.status==='pending' || !profile.status){
-      showBlock(
-        '⏳ Awaiting Approval',
-        'Your account is pending admin approval. You will get access once approved. Please check back soon!',
-        true
-      );
+    if(!profile){ showBlock('Account not found','Please register again to continue'); return; }
+    if(profile.status==='pending'||!profile.status){
+      showBlock('⏳ Awaiting Approval','Your account is pending admin approval. Please check back soon!',true);
       document.getElementById('ag-btn').textContent='← Back to Login';
       return;
     }
-
-    // Approved! Remove overlay and let them in
-    overlay.style.opacity='0';
-    overlay.style.transition='opacity .3s';
+    overlay.style.opacity='0'; overlay.style.transition='opacity .3s';
     setTimeout(()=>overlay.remove(),300);
-
-  } catch(e){
-    showBlock('Something went wrong','Please try refreshing the page');
-  }
+  } catch(e){ showBlock('Something went wrong','Please try refreshing the page'); }
 })();
-
-// ── PHOTO GALLERY ────────────────────────────────────────
-function buildPhotoGallery(t) {
-  const photos = [
-    { url: t.photo_url, label: '🌳 Main Photo' },
-    { url: t.photo_spring, label: '🌸 Spring' },
-    { url: t.photo_summer, label: '☀️ Summer' },
-    { url: t.photo_winter, label: '❄️ Winter' },
-  ].filter(p => p.url);
-
-  // Find or create gallery container
-  let gallery = document.getElementById('tpc-gallery');
-  if (!gallery) {
-    gallery = document.createElement('div');
-    gallery.id = 'tpc-gallery';
-    gallery.className = 'photo-gallery';
-    const popup = document.getElementById('tree-popup');
-    popup.insertBefore(gallery, popup.firstChild);
-  }
-
-  if (photos.length === 0) {
-    gallery.style.display = 'none';
-    return;
-  }
-
-  gallery.style.display = 'block';
-  gallery.style.cursor = 'zoom-in';
-  gallery.onclick = (e) => {
-    e.stopPropagation();
-    const img = e.target.closest('img');
-    if(img) openLightbox(img.src, img.alt);
-  };
-  let current = 0;
-
-  gallery.innerHTML = `
-    <div class="gallery-slides" id="gallery-slides">
-      ${photos.map((p, i) => `
-        <div class="gallery-slide">
-          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'" style="cursor:zoom-in" onclick="openLightbox(this.src, this.alt)">
-          <div class="season-badge">${p.label}</div>
-        </div>`).join('')}
-    </div>
-    ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
-    <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
-    </div>` : ''}
-  `;
-
-  window._galleryCount = photos.length;
-  window._galleryCurrent = 0;
-}
-
-function galleryNav(dir) {
-  if(event) event.stopPropagation();
-  const count = window._galleryCount || 1;
-  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
-  galleryGo(window._galleryCurrent);
-}
-
-function galleryGo(idx) {
-  window._galleryCurrent = idx;
-  const slides = document.getElementById('gallery-slides');
-  if(slides){
-    slides.style.transition = 'transform .3s ease';
-    slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
-  }
-  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-}
-
 </script>
-
 
 <!-- NAV -->
 <nav id="nav">
@@ -1296,18 +876,9 @@ function galleryGo(idx) {
       <a href="submit.html" class="btn-outline">➕ Add a Tree Near You</a>
     </div>
     <div class="hero-stats fade-up fade-up-4">
-      <div class="hstat">
-        <div class="hstat-val" id="h-total">—</div>
-        <div class="hstat-label">Trees Logged</div>
-      </div>
-      <div class="hstat">
-        <div class="hstat-val" id="h-species">—</div>
-        <div class="hstat-label">Species Found</div>
-      </div>
-      <div class="hstat">
-        <div class="hstat-val" id="h-contrib">—</div>
-        <div class="hstat-label">Contributors</div>
-      </div>
+      <div class="hstat"><div class="hstat-val" id="h-total">—</div><div class="hstat-label">Trees Logged</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-species">—</div><div class="hstat-label">Species Found</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-contrib">—</div><div class="hstat-label">Contributors</div></div>
     </div>
   </div>
   <div class="hero-right">
@@ -1315,10 +886,7 @@ function galleryGo(idx) {
     <div class="hero-map-vignette"></div>
     <div class="hero-map-card">
       <div class="hmc-pulse"></div>
-      <div>
-        <div class="hmc-text">Live Tree Map</div>
-        <div class="hmc-sub">Updated in real time</div>
-      </div>
+      <div><div class="hmc-text">Live Tree Map</div><div class="hmc-sub">Updated in real time</div></div>
     </div>
   </div>
 </section>
@@ -1366,21 +934,13 @@ function galleryGo(idx) {
   </div>
   <div class="map-body">
     <div id="main-map">
-      <!-- Tree popup -->
       <div class="tree-popup-card" id="tree-popup" onclick="event.stopPropagation()">
-
-        <!-- Close button (always visible) -->
         <button class="tpc-close" onclick="closePopup()" style="position:absolute;top:10px;right:10px;z-index:20">✕</button>
-
-        <!-- Photo gallery (built dynamically) -->
-
-        <!-- Text header (shown when no photo) -->
         <div class="tpc-head" id="tpc-head">
           <div class="tpc-tag" id="tpc-tag">🌳 Tree</div>
           <div class="tpc-name" id="tpc-name">—</div>
           <div class="tpc-sci" id="tpc-sci"></div>
         </div>
-
         <div class="tpc-body">
           <div class="tpc-row"><span>Trunk diameter</span><span id="tpc-diam">—</span></div>
           <div class="tpc-row"><span>Height</span><span id="tpc-height">—</span></div>
@@ -1419,24 +979,9 @@ function galleryGo(idx) {
     <p class="section-desc">Anyone in Delhi can help build the most complete urban tree map the city has ever had.</p>
   </div>
   <div class="how-grid">
-    <div class="how-card">
-      <div class="how-num">01</div>
-      <span class="how-icon">📍</span>
-      <div class="how-title">Find a Tree</div>
-      <div class="how-desc">Walk to any tree in your neighbourhood — on your street, in a park, outside your colony gate. If it's not on the map yet, it needs you.</div>
-    </div>
-    <div class="how-card">
-      <div class="how-num">02</div>
-      <span class="how-icon">🔬</span>
-      <div class="how-title">Identify the Species</div>
-      <div class="how-desc">Not sure what tree it is? Use our AI identification tool — take a photo of the leaves or bark and it tells you the species instantly with confidence score.</div>
-    </div>
-    <div class="how-card">
-      <div class="how-num">03</div>
-      <span class="how-icon">🌱</span>
-      <div class="how-title">Log It for Everyone</div>
-      <div class="how-desc">Tap GPS for precision coordinates, take a photo, fill in a few details. Your tree appears on the map immediately — visible to everyone in Delhi.</div>
-    </div>
+    <div class="how-card"><div class="how-num">01</div><span class="how-icon">📍</span><div class="how-title">Find a Tree</div><div class="how-desc">Walk to any tree in your neighbourhood — on your street, in a park, outside your colony gate. If it's not on the map yet, it needs you.</div></div>
+    <div class="how-card"><div class="how-num">02</div><span class="how-icon">🔬</span><div class="how-title">Identify the Species</div><div class="how-desc">Not sure what tree it is? Use our AI identification tool — take a photo of the leaves or bark and it tells you the species instantly with confidence score.</div></div>
+    <div class="how-card"><div class="how-num">03</div><span class="how-icon">🌱</span><div class="how-title">Log It for Everyone</div><div class="how-desc">Tap GPS for precision coordinates, take a photo, fill in a few details. Your tree appears on the map immediately — visible to everyone in Delhi.</div></div>
   </div>
 </section>
 
@@ -1450,9 +995,7 @@ function galleryGo(idx) {
       <br><br>
       <a href="identify.html" class="btn-fill" style="width:fit-content">🔬 Identify a Tree with AI</a>
     </div>
-    <div class="species-grid" id="species-grid">
-      <!-- Built dynamically -->
-    </div>
+    <div class="species-grid" id="species-grid"></div>
   </div>
 </section>
 
@@ -1501,8 +1044,14 @@ function galleryGo(idx) {
   </div>
 </footer>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+  <div id="lightbox-caption"></div>
+</div>
+
 <script>
-// ── CONFIG ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://dcciktuwyjrvkynmxdjn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
 
@@ -1524,18 +1073,28 @@ const gc = n => (SP[n]||{col:'#4a9e32'}).col;
 const ge = n => (SP[n]||{e:'🌳'}).e;
 const gr = d => d<30?6:d<60?9:d<90?13:17;
 
-let allTrees = [], activeFilter = null, heroMap, mainMap, mainMarkers = [];
+let allTrees = [], activeFilter = null, heroMap, mainMap, clusterGroup;
 
 // ── NAV ───────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 30);
 });
-function toggleNav() {
-  document.getElementById('mobile-nav').classList.toggle('open');
-}
-function closeNav() {
-  document.getElementById('mobile-nav').classList.remove('open');
-}
+function toggleNav() { document.getElementById('mobile-nav').classList.toggle('open'); }
+function closeNav() { document.getElementById('mobile-nav').classList.remove('open'); }
+
+// Update nav sign-in link if logged in
+(async()=>{
+  try{
+    const sb2 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const {data:{session}} = await sb2.auth.getSession();
+    const signinBtn = document.getElementById('nav-signin');
+    if(signinBtn && session?.user){
+      signinBtn.textContent = '👤 My Profile';
+      signinBtn.style.color = 'var(--sage)';
+      signinBtn.style.fontWeight = '600';
+    }
+  }catch(e){}
+})();
 
 // ── FETCH ─────────────────────────────────────────────
 async function fetchTrees() {
@@ -1545,10 +1104,7 @@ async function fetchTrees() {
     });
     if (!r.ok) throw new Error();
     return await r.json();
-  } catch(e) {
-    console.warn('Could not load trees');
-    return [];
-  }
+  } catch(e) { return []; }
 }
 
 // ── HERO MAP ──────────────────────────────────────────
@@ -1558,9 +1114,7 @@ function initHeroMap(trees) {
     zoomControl: false, attributionControl: false,
     scrollWheelZoom: false, dragging: false, touchZoom: false
   });
-  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-    maxZoom: 20, attribution: '© Google Maps'
-  }).addTo(heroMap);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(heroMap);
   trees.forEach(t => {
     L.circleMarker([t.latitude, t.longitude], {
       radius: gr(t.trunk_diameter||30) + 2,
@@ -1569,86 +1123,81 @@ function initHeroMap(trees) {
     }).addTo(heroMap);
   });
   if (trees.length > 0) {
-    const bounds = L.latLngBounds(trees.map(t => [t.latitude, t.longitude]));
-    heroMap.fitBounds(bounds, { padding: [40, 40] });
+    heroMap.fitBounds(L.latLngBounds(trees.map(t => [t.latitude, t.longitude])), { padding: [40,40] });
   }
 }
 
 // ── MAIN MAP ──────────────────────────────────────────
 function initMainMap(trees) {
-  mainMap = L.map('main-map', {
-    center: [28.6139, 77.2090], zoom: 11, zoomControl: true
+  mainMap = L.map('main-map', { center: [28.6139, 77.2090], zoom: 11, zoomControl: true });
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '© Google Maps' }).addTo(mainMap);
+
+  // ── NEW: marker cluster group ──
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 60,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    spiderfyOnMaxZoom: true,
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+      const size = count < 10 ? 34 : count < 50 ? 40 : 48;
+      return L.divIcon({
+        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--sage-dark);border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;color:white;font-family:'Outfit',sans-serif;font-weight:700;font-size:${size<40?12:14}px;">${count}</div>`,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2]
+      });
+    }
   });
-  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-    maxZoom: 20, attribution: '© Google Maps'
-  }).addTo(mainMap);
+  mainMap.addLayer(clusterGroup);
+
   renderMarkers(trees);
-  mainMap.on('click', e => {
-    if (!e.originalEvent.defaultPrevented) closePopup();
-  });
+  mainMap.on('click', e => { if(!e.originalEvent.defaultPrevented) closePopup(); });
   if (trees.length > 0) {
     setTimeout(() => {
-      const bounds = L.latLngBounds(trees.map(t => [t.latitude, t.longitude]));
-      mainMap.fitBounds(bounds, { padding: [50, 60] });
+      mainMap.fitBounds(L.latLngBounds(trees.map(t => [t.latitude, t.longitude])), { padding: [50,60] });
     }, 300);
   }
 }
 
 function renderMarkers(trees) {
-  mainMarkers.forEach(m => mainMap.removeLayer(m));
-  mainMarkers = [];
+  clusterGroup.clearLayers();
   trees.forEach(t => {
+    const radius = gr(t.trunk_diameter||30);
     const m = L.circleMarker([t.latitude, t.longitude], {
-      radius: gr(t.trunk_diameter||30),
+      radius,
       fillColor: gc(t.common_name), fillOpacity: .88,
       color: 'white', weight: 2
     });
     m.on('click', e => { e.originalEvent.preventDefault(); showPopup(t); });
-    m.on('mouseover', function() { this.setStyle({ radius: gr(t.trunk_diameter||30)+3, fillOpacity: 1 }); });
-    m.on('mouseout', function() { this.setStyle({ radius: gr(t.trunk_diameter||30), fillOpacity: .88 }); });
-    m.addTo(mainMap);
-    mainMarkers.push(m);
+    m.on('mouseover', function() { this.setStyle({ radius: radius+3, fillOpacity: 1 }); });
+    m.on('mouseout', function() { this.setStyle({ radius, fillOpacity: .88 }); });
+    clusterGroup.addLayer(m);
   });
 }
 
 // ── POPUP ─────────────────────────────────────────────
 function showPopup(t) {
-  // Build photo gallery
   buildPhotoGallery(t);
-
-  // Text header — always show
   const textHead = document.getElementById('tpc-head');
   if (textHead) textHead.classList.add('show');
-
   document.getElementById('tpc-tag').textContent = ge(t.common_name) + ' ' + t.common_name;
   document.getElementById('tpc-name').textContent = t.common_name;
   document.getElementById('tpc-sci').textContent = t.scientific_name || '';
   document.getElementById('tpc-diam').textContent = (t.trunk_diameter||'?') + ' cm';
   document.getElementById('tpc-height').textContent = t.height || 'Medium';
   document.getElementById('tpc-cond').textContent = t.condition || 'Good';
-
   const ne = document.getElementById('tpc-note');
-  if (t.notes) { ne.textContent = t.notes; ne.style.display = 'block'; }
-  else ne.style.display = 'none';
-
+  if (t.notes) { ne.textContent = t.notes; ne.style.display = 'block'; } else ne.style.display = 'none';
   const byWrap = document.getElementById('tpc-by-wrap');
-  if (t.submitted_by) {
-    document.getElementById('tpc-by').textContent = t.submitted_by;
-    byWrap.style.display = 'flex';
-  } else byWrap.style.display = 'none';
-
+  if (t.submitted_by) { document.getElementById('tpc-by').textContent = t.submitted_by; byWrap.style.display = 'flex'; } else byWrap.style.display = 'none';
   document.getElementById('tree-popup').classList.add('open');
   mainMap.panTo([t.latitude, t.longitude]);
-
-  // Sidebar highlight
   document.querySelectorAll('.msb-item').forEach(el => el.classList.remove('active'));
   const si = document.getElementById('si-' + t.id);
   if (si) { si.classList.add('active'); si.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
-
-function closePopup() {
-  document.getElementById('tree-popup').classList.remove('open');
-}
+function closePopup() { document.getElementById('tree-popup').classList.remove('open'); }
 
 // ── FILTER ────────────────────────────────────────────
 function buildFilterChips(trees) {
@@ -1664,7 +1213,6 @@ function buildFilterChips(trees) {
     bar.appendChild(chip);
   });
 }
-
 function filterMap(name, el) {
   activeFilter = name;
   document.querySelectorAll('.mf-chip').forEach(c => c.classList.remove('active'));
@@ -1674,11 +1222,9 @@ function filterMap(name, el) {
   buildSidebar(filtered);
   closePopup();
   if (name && filtered.length) {
-    const bounds = L.latLngBounds(filtered.map(t => [t.latitude, t.longitude]));
-    mainMap.fitBounds(bounds, { padding: [60, 60] });
+    mainMap.fitBounds(L.latLngBounds(filtered.map(t => [t.latitude, t.longitude])), { padding: [60,60] });
   } else if (allTrees.length) {
-    const bounds = L.latLngBounds(allTrees.map(t => [t.latitude, t.longitude]));
-    mainMap.fitBounds(bounds, { padding: [50, 60] });
+    mainMap.fitBounds(L.latLngBounds(allTrees.map(t => [t.latitude, t.longitude])), { padding: [50,60] });
   }
 }
 
@@ -1726,13 +1272,12 @@ function buildSpeciesGrid(trees) {
   }
   grid.innerHTML = sorted.map(([name, cnt]) => {
     const sp = SP[name] || {};
-    return `
-      <div class="sp-card" onclick="scrollAndFilter('${name}')">
-        <span class="sp-emoji">${sp.e||'🌳'}</span>
-        <div class="sp-name">${name}</div>
-        <div class="sp-sci">${sp.sci||''}</div>
-        <span class="sp-count">🌳 ${cnt} tree${cnt>1?'s':''}</span>
-      </div>`;
+    return `<div class="sp-card" onclick="scrollAndFilter('${name}')">
+      <span class="sp-emoji">${sp.e||'🌳'}</span>
+      <div class="sp-name">${name}</div>
+      <div class="sp-sci">${sp.sci||''}</div>
+      <span class="sp-count">🌳 ${cnt} tree${cnt>1?'s':''}</span>
+    </div>`;
   }).join('');
 }
 function scrollAndFilter(name) {
@@ -1754,23 +1299,90 @@ function updateStats(trees) {
   ].forEach(([id,v]) => { const el=document.getElementById(id); if(el) el.textContent=v||'0'; });
 }
 
+// ── AREA ZOOM ─────────────────────────────────────────
+const DELHI_AREAS = {
+  jorbagh: {lat:28.5925,lng:77.2190,zoom:16},
+  lodhi:   {lat:28.5910,lng:77.2290,zoom:16},
+  central: {lat:28.6358,lng:77.2245,zoom:14},
+  south:   {lat:28.5244,lng:77.1855,zoom:13},
+  north:   {lat:28.7274,lng:77.1834,zoom:13},
+  east:    {lat:28.6253,lng:77.3188,zoom:13},
+  west:    {lat:28.6519,lng:77.1025,zoom:13},
+};
+function zoomToArea(key) {
+  const a = DELHI_AREAS[key]; if(!a||!mainMap) return;
+  document.querySelectorAll('#area-filter-row .mf-chip').forEach(c=>c.classList.remove('active'));
+  event.target.classList.add('active');
+  mainMap.flyTo([a.lat, a.lng], a.zoom, {duration:1.2});
+  closePopup();
+}
+
+// ── PHOTO GALLERY ─────────────────────────────────────
+function buildPhotoGallery(t) {
+  const photos = [
+    {url:t.photo_url,label:'🌳 Main Photo'},
+    {url:t.photo_spring,label:'🌸 Spring'},
+    {url:t.photo_summer,label:'☀️ Summer'},
+    {url:t.photo_winter,label:'❄️ Winter'},
+  ].filter(p=>p.url);
+  let gallery = document.getElementById('tpc-gallery');
+  if(!gallery){
+    gallery = document.createElement('div');
+    gallery.id='tpc-gallery'; gallery.className='photo-gallery';
+    document.getElementById('tree-popup').insertBefore(gallery, document.getElementById('tree-popup').firstChild);
+  }
+  if(!photos.length){ gallery.style.display='none'; return; }
+  gallery.style.display='block';
+  gallery.innerHTML = `
+    <div class="gallery-slides" id="gallery-slides">
+      ${photos.map(p=>`<div class="gallery-slide"><img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'" style="cursor:zoom-in" onclick="openLightbox(this.src,this.alt)"><div class="season-badge">${p.label}</div></div>`).join('')}
+    </div>
+    ${photos.length>1?`
+    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
+    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
+    <div class="gallery-dots">${photos.map((_,i)=>`<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}</div>`:''}`;
+  window._galleryCount=photos.length; window._galleryCurrent=0;
+}
+function galleryNav(dir){
+  if(event) event.stopPropagation();
+  const count=window._galleryCount||1;
+  window._galleryCurrent=(window._galleryCurrent+dir+count)%count;
+  galleryGo(window._galleryCurrent);
+}
+function galleryGo(idx){
+  window._galleryCurrent=idx;
+  const slides=document.getElementById('gallery-slides');
+  if(slides){slides.style.transition='transform .3s ease';slides.style.transform='translateX(-'+(idx*100)+'%)';}
+  document.querySelectorAll('.gallery-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+
+// ── LIGHTBOX ──────────────────────────────────────────
+function openLightbox(src,caption){
+  document.getElementById('lightbox-img').src=src;
+  document.getElementById('lightbox-caption').textContent=caption||'';
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
 // ── INIT ──────────────────────────────────────────────
 (async () => {
   const trees = await fetchTrees();
   allTrees = trees;
-
   initHeroMap(trees);
   initMainMap(trees);
   buildFilterChips(trees);
   buildSidebar(trees);
   buildSpeciesGrid(trees);
   updateStats(trees);
-
-  // Auto-refresh every 30s
   setInterval(async () => {
     const fresh = await fetchTrees();
     allTrees = fresh;
-    const filtered = activeFilter ? fresh.filter(t => t.common_name === activeFilter) : fresh;
+    const filtered = activeFilter ? fresh.filter(t=>t.common_name===activeFilter) : fresh;
     renderMarkers(filtered);
     buildSidebar(filtered);
     buildFilterChips(fresh);
@@ -1778,129 +1390,6 @@ function updateStats(trees) {
     buildSpeciesGrid(fresh);
   }, 30000);
 })();
-
-// ── TASK 4: AREA ZOOM ────────────────────────────────────────
-const DELHI_AREAS = {
-  jorbagh:  { lat:28.5925, lng:77.2190, zoom:16, label:'Jor Bagh' },
-  lodhi:    { lat:28.5910, lng:77.2290, zoom:16, label:'Lodhi Colony' },
-  central:  { lat:28.6358, lng:77.2245, zoom:14, label:'Central Delhi' },
-  south:    { lat:28.5244, lng:77.1855, zoom:13, label:'South Delhi' },
-  north:    { lat:28.7274, lng:77.1834, zoom:13, label:'North Delhi' },
-  east:     { lat:28.6253, lng:77.3188, zoom:13, label:'East Delhi' },
-  west:     { lat:28.6519, lng:77.1025, zoom:13, label:'West Delhi' },
-};
-
-function zoomToArea(areaKey){
-  const area = DELHI_AREAS[areaKey];
-  if(!area || !mainMap) return;
-
-  // Clear area chip active states
-  document.querySelectorAll('#area-filter-row .mf-chip').forEach(c=>c.classList.remove('active'));
-  event.target.classList.add('active');
-
-  // Fly to area
-  mainMap.flyTo([area.lat, area.lng], area.zoom, { duration: 1.2 });
-
-  // Filter trees to this area
-  const areaTrees = allTrees.filter(t => {
-    const loc = getAreaName(t.latitude, t.longitude);
-    return loc.toLowerCase().includes(area.label.toLowerCase().split(' ')[0]);
-  });
-
-  // Show how many trees in this area
-  closePopup();
-}
-
-function getAreaName(lat, lng){
-  if(lat>28.58&&lat<28.61&&lng>77.20&&lng<77.23) return 'Jor Bagh';
-  if(lat>28.58&&lat<28.61&&lng>77.19&&lng<77.23) return 'Lodhi Colony';
-  if(lat>28.61&&lat<28.68&&lng>77.18&&lng<77.22) return 'Central Delhi';
-  if(lat>28.45&&lat<28.58&&lng>77.10&&lng<77.25) return 'South Delhi';
-  if(lat>28.68&&lat<28.80&&lng>77.10&&lng<77.30) return 'North Delhi';
-  if(lat>28.60&&lat<28.70&&lng>77.25&&lng<77.40) return 'East Delhi';
-  if(lat>28.55&&lat<28.70&&lng>77.00&&lng<77.15) return 'West Delhi';
-  return 'Delhi';
-}
-
-
-// ── PHOTO GALLERY ────────────────────────────────────────
-function buildPhotoGallery(t) {
-  const photos = [
-    { url: t.photo_url, label: '🌳 Main Photo' },
-    { url: t.photo_spring, label: '🌸 Spring' },
-    { url: t.photo_summer, label: '☀️ Summer' },
-    { url: t.photo_winter, label: '❄️ Winter' },
-  ].filter(p => p.url);
-
-  // Find or create gallery container
-  let gallery = document.getElementById('tpc-gallery');
-  if (!gallery) {
-    gallery = document.createElement('div');
-    gallery.id = 'tpc-gallery';
-    gallery.className = 'photo-gallery';
-    const popup = document.getElementById('tree-popup');
-    popup.insertBefore(gallery, popup.firstChild);
-  }
-
-  if (photos.length === 0) {
-    gallery.style.display = 'none';
-    return;
-  }
-
-  gallery.style.display = 'block';
-  gallery.style.cursor = 'zoom-in';
-  gallery.onclick = (e) => {
-    e.stopPropagation();
-    const img = e.target.closest('img');
-    if(img) openLightbox(img.src, img.alt);
-  };
-  let current = 0;
-
-  gallery.innerHTML = `
-    <div class="gallery-slides" id="gallery-slides">
-      ${photos.map((p, i) => `
-        <div class="gallery-slide">
-          <img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'" style="cursor:zoom-in" onclick="openLightbox(this.src, this.alt)">
-          <div class="season-badge">${p.label}</div>
-        </div>`).join('')}
-    </div>
-    ${photos.length > 1 ? `
-    <button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">‹</button>
-    <button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">›</button>
-    <div class="gallery-dots">
-      ${photos.map((_, i) => `<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}
-    </div>` : ''}
-  `;
-
-  window._galleryCount = photos.length;
-  window._galleryCurrent = 0;
-}
-
-function galleryNav(dir) {
-  if(event) event.stopPropagation();
-  const count = window._galleryCount || 1;
-  window._galleryCurrent = (window._galleryCurrent + dir + count) % count;
-  galleryGo(window._galleryCurrent);
-}
-
-function galleryGo(idx) {
-  window._galleryCurrent = idx;
-  const slides = document.getElementById('gallery-slides');
-  if(slides){
-    slides.style.transition = 'transform .3s ease';
-    slides.style.transform = 'translateX(-' + (idx * 100) + '%)';
-  }
-  document.querySelectorAll('.gallery-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-}
-
 </script>
-
-<!-- LIGHTBOX -->
-<div id="lightbox" onclick="closeLightbox()">
-  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
-  <div id="lightbox-caption"></div>
-</div>
-
 </body>
 </html>
