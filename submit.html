@@ -19,13 +19,38 @@
 body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
 
 /* NAV */
-.nav{background:var(--cream);border-bottom:1px solid var(--border);padding:calc(var(--safe-top)+12px) 20px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.nav-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--green);text-decoration:none;}
-.nav-logo span{color:var(--gold);}
+.nav{
+  background:rgba(247,242,232,0.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 48px;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.nav-brand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-decoration:none;line-height:1;}
+.nav-brand .logo-main{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;line-height:1;}
+.nav-brand .logo-name{color:#5aad3f;}
+.nav-brand .logo-tracker{color:#c9a84c;}
+.nav-brand .logo-tagline{font-family:'Outfit',sans-serif;font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:#8b6347;padding-left:32px;margin-top:1px;}
+.nav-links{display:flex;align-items:center;gap:28px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--text);}
 .nav-back{font-size:13px;font-weight:600;color:var(--sage);text-decoration:none;display:flex;align-items:center;gap:4px;}
+.nav-cta{background:var(--green);color:white !important;padding:9px 20px;border-radius:24px;font-size:14px !important;font-weight:600 !important;transition:all .2s;box-shadow:0 3px 12px rgba(30,61,40,0.25);}
+.nav-cta:hover{background:var(--sage);}
+.nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:none;border:none;}
+.nav-ham span{display:block;width:22px;height:2px;background:var(--green);border-radius:2px;}
+#sub-mobile-nav{display:none;position:fixed;inset:64px 0 0;background:var(--cream);z-index:800;flex-direction:column;padding:28px 24px;gap:4px;border-top:1px solid var(--border);}
+#sub-mobile-nav.open{display:flex;}
+#sub-mobile-nav a{font-size:17px;font-weight:500;color:var(--text);padding:13px 0;border-bottom:1px solid var(--border);text-decoration:none;display:flex;align-items:center;gap:10px;}
+#sub-mobile-nav .mob-cta{margin-top:12px;background:var(--green);color:white;padding:15px;border-radius:14px;text-align:center;font-weight:600;justify-content:center;}
+@media(max-width:900px){
+  .nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .nav-ham{display:flex;}
+}
 
 /* FORM */
-.wrap{max-width:560px;margin:0 auto;padding:20px 16px calc(var(--safe-bottom)+40px);}
+.wrap{max-width:560px;margin:0 auto;padding:32px 16px calc(var(--safe-bottom)+40px);}
 .page-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .page-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.5;}
 
@@ -166,9 +191,35 @@ textarea{resize:vertical;min-height:80px;}
 </script>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo">🌳 Jor Bagh <span>Tracker</span></a>
-  <a href="index.html" class="nav-back">← Back to Map</a>
+  <a href="index.html" class="nav-brand">
+    <div class="logo-main">
+      <span style="font-size:22px;line-height:1">🌳</span>
+      <span class="logo-name">Jor Bagh</span>
+      <span class="logo-tracker">Tree Tracker</span>
+    </div>
+    <div class="logo-tagline">New Delhi Urban Forest Map</div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html#map-section">Map</a>
+    <a href="index.html#species-section">Species</a>
+    <a href="index.html#stats-section">Stats</a>
+    <a href="identify.html">🔬 Identify</a>
+    <a href="login.html" id="nav-signin" style="font-size:13px;font-weight:500;color:var(--text2)">Sign In</a>
+    <a href="index.html" style="font-size:13px;font-weight:600;color:var(--sage)">← Back to Map</a>
+  </div>
+  <button class="nav-ham" onclick="document.getElementById('sub-mobile-nav').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
+<div id="sub-mobile-nav">
+  <a href="index.html#map-section" onclick="this.closest('#sub-mobile-nav').classList.remove('open')">🗺️ Map</a>
+  <a href="index.html#species-section" onclick="this.closest('#sub-mobile-nav').classList.remove('open')">🌿 Species</a>
+  <a href="index.html#stats-section" onclick="this.closest('#sub-mobile-nav').classList.remove('open')">📊 Stats</a>
+  <a href="identify.html">🔬 AI Identify</a>
+  <a href="login.html">👤 Sign In</a>
+  <a href="index.html" class="mob-cta">← Back to Map</a>
+</div>
 
 <div class="wrap">
   <div class="page-title">🌿 Add a Tree</div>
