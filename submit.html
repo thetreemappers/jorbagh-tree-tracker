@@ -61,7 +61,16 @@ textarea{resize:vertical;min-height:80px;}
 .gps-r-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
 .gps-status{font-size:12px;color:var(--text3);margin-top:8px;text-align:center;display:none;}
 .gps-status.show{display:block;}
+
+/* DUPLICATE WARNING — improved to show all nearby trees */
 .dup-warn{background:#fef3cd;border:1px solid #f0d9a8;border-radius:10px;padding:12px;font-size:12px;color:#8a6400;line-height:1.5;margin-top:10px;display:none;}
+.dup-warn-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.dup-tree-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.6);border-radius:8px;padding:7px 10px;margin-bottom:5px;}
+.dup-tree-row:last-of-type{margin-bottom:0;}
+.dup-tree-name{font-weight:700;color:#5a4000;flex:1;}
+.dup-tree-by{font-size:11px;color:#8a6400;}
+.dup-tree-dist{background:#f0d9a8;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:#7a5200;white-space:nowrap;}
+.dup-note{font-size:11px;color:#a07800;margin-top:8px;padding-top:8px;border-top:1px solid #f0d9a8;}
 
 /* PHOTOS */
 .photo-main-label{
@@ -148,12 +157,8 @@ textarea{resize:vertical;min-height:80px;}
     if(!session?.user){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Sign in to Add a Tree</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">You need an approved account to add trees to the map.</div><a href="login.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Sign In →</a><div style="margin-top:14px"><a href="index.html" style="font-size:12px;color:#7a9e68;text-decoration:none">← Back to Map</a></div></div>';return;}
     const {data:prof}=await SB.from('profiles').select('status').eq('id',session.user.id).single();
     if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval. You\'ll be able to add trees once approved.</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">← Back to Map</a></div>';return;}
-    // Get name
     const name=prof?.full_name||session.user.user_metadata?.full_name||session.user.email.split('@')[0];
-    setTimeout(()=>{
-      const nf=document.getElementById('f-name');
-      if(nf&&!nf.value) nf.value=name;
-    },100);
+    setTimeout(()=>{const nf=document.getElementById('f-name');if(nf&&!nf.value) nf.value=name;},100);
     overlay.style.opacity='0';overlay.style.transition='opacity .3s';
     setTimeout(()=>overlay.remove(),300);
   }catch(e){overlay.remove();}
@@ -394,7 +399,7 @@ function update(lat,lng,acc,count,max){
   document.getElementById('gr-lat').textContent=lat.toFixed(5);
   document.getElementById('gr-lng').textContent=lng.toFixed(5);
   document.getElementById('gr-acc').textContent='±'+Math.round(acc)+'m';
-  document.getElementById('gps-status').textContent=`Reading ${count}/${max} · ±${Math.round(acc)}m`;
+  document.getElementById('gps-status').textContent='Reading '+count+'/'+max+' · ±'+Math.round(acc)+'m';
 }
 
 function lock(){
@@ -413,28 +418,44 @@ function lock(){
   const status=document.getElementById('gps-status');
   status.textContent='📍 Location locked · ±'+Math.round(acc)+'m';
   status.style.color='var(--sage)';
-  // Duplicate check
   checkDuplicate(lat,lng);
 }
 
+// ── DUPLICATE CHECK — shows ALL trees within 20m, not just the first ──
 async function checkDuplicate(lat,lng){
   try{
-    const r=await fetch(`${SURL}/rest/v1/trees?select=common_name,submitted_by,latitude,longitude`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});
+    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{
+      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}
+    });
     const trees=await r.json();
-    for(const t of trees){
-      const d=dist(lat,lng,t.latitude,t.longitude);
-      if(d<=10){
-        const el=document.getElementById('dup-warn');
-        el.innerHTML=`⚠️ A <strong>${t.common_name}</strong> was already logged ${Math.round(d)}m from here by <strong>${t.submitted_by||'someone'}</strong>. Are you sure this is a different tree?`;
-        el.style.display='block'; return;
-      }
-    }
+    // Find all trees within 20 metres
+    const nearby=trees
+      .map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)}))
+      .filter(t=>t.d<=20)
+      .sort((a,b)=>a.d-b.d);
+
+    const el=document.getElementById('dup-warn');
+    if(!nearby.length){ el.style.display='none'; return; }
+
+    const rows=nearby.map(t=>`
+      <div class="dup-tree-row">
+        <span class="dup-tree-name">${t.common_name||'Unknown tree'}</span>
+        <span class="dup-tree-by">by ${t.submitted_by||'someone'}</span>
+        <span class="dup-tree-dist">${Math.round(t.d)}m away</span>
+      </div>`).join('');
+
+    el.innerHTML=`
+      <div class="dup-warn-title">⚠️ ${nearby.length} tree${nearby.length>1?'s':''} already logged nearby</div>
+      ${rows}
+      <div class="dup-note">If your tree is different from the above, that's fine — go ahead and submit!</div>`;
+    el.style.display='block';
   }catch(e){}
 }
 
 function dist(lat1,lng1,lat2,lng2){
   const R=6371000,dL=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180;
-  return R*2*Math.atan2(Math.sqrt(Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2),Math.sqrt(1-Math.sin(dL/2)**2-Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2));
+  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
 // Photos
@@ -467,7 +488,6 @@ function onSeasonPhoto(input,season){
 // Upload
 async function uploadPhoto(file){
   try{
-    // Compress if needed
     const blob=await new Promise(res=>{
       const img=new Image();
       img.onload=()=>{
@@ -480,14 +500,14 @@ async function uploadPhoto(file){
       img.onerror=()=>res(file);
       img.src=URL.createObjectURL(file);
     });
-    const fname=`tree_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-    const r=await fetch(`${SURL}/storage/v1/object/tree-photos/${fname}`,{
+    const fname='tree_'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.jpg';
+    const r=await fetch(SURL+'/storage/v1/object/tree-photos/'+fname,{
       method:'POST',
       headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'image/jpeg','x-upsert':'true'},
       body:blob
     });
     if(!r.ok) throw new Error('Upload '+r.status);
-    return `${SURL}/storage/v1/object/public/tree-photos/${fname}`;
+    return SURL+'/storage/v1/object/public/tree-photos/'+fname;
   }catch(e){console.warn('Upload failed:',e.message);return null;}
 }
 
@@ -510,7 +530,6 @@ async function submitTree(){
 
   btn.disabled=true;
 
-  // Upload photos
   let photoUrl=null,photoSpring=null,photoSummer=null,photoWinter=null,photoAutumn=null;
   const uploads=[
     {file:mainFile,label:'main'},
@@ -521,7 +540,7 @@ async function submitTree(){
   ].filter(u=>u.file);
 
   for(let i=0;i<uploads.length;i++){
-    btn.textContent=`📷 Uploading photo ${i+1}/${uploads.length}...`;
+    btn.textContent='📷 Uploading photo '+(i+1)+'/'+uploads.length+'...';
     const url=await uploadPhoto(uploads[i].file);
     if(uploads[i].label==='main') photoUrl=url;
     else if(uploads[i].label==='spring') photoSpring=url;
@@ -548,7 +567,7 @@ async function submitTree(){
   };
 
   try{
-    const r=await fetch(`${SURL}/rest/v1/trees`,{
+    const r=await fetch(SURL+'/rest/v1/trees',{
       method:'POST',
       headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body:JSON.stringify(tree)
@@ -560,7 +579,6 @@ async function submitTree(){
     return;
   }
 
-  // Show success
   if(photoUrl){
     const si=document.getElementById('success-img');
     si.src=photoUrl; si.style.display='block';
