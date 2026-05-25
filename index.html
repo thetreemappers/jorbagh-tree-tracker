@@ -1071,7 +1071,7 @@ const SP = {
 };
 const gc = n => (SP[n]||{col:'#4a9e32'}).col;
 const ge = n => (SP[n]||{e:'🌳'}).e;
-const gr = d => d<30?6:d<60?9:d<90?13:17;
+const gr = d => d<30?14:d<60?17:d<90?20:24;
 
 let allTrees = [], activeFilter = null, heroMap, mainMap, clusterGroup;
 
@@ -1117,9 +1117,9 @@ function initHeroMap(trees) {
   L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(heroMap);
   trees.forEach(t => {
     L.circleMarker([t.latitude, t.longitude], {
-      radius: gr(t.trunk_diameter||30) + 2,
-      fillColor: gc(t.common_name), fillOpacity: .88,
-      color: 'white', weight: 2
+      radius: gr(t.trunk_diameter||30),
+      fillColor: gc(t.common_name), fillOpacity: .95,
+      color: 'white', weight: 2.5
     }).addTo(heroMap);
   });
   if (trees.length > 0) {
@@ -1163,15 +1163,38 @@ function initMainMap(trees) {
 function renderMarkers(trees) {
   clusterGroup.clearLayers();
   trees.forEach(t => {
-    const radius = gr(t.trunk_diameter||30);
-    const m = L.circleMarker([t.latitude, t.longitude], {
-      radius,
-      fillColor: gc(t.common_name), fillOpacity: .88,
-      color: 'white', weight: 2
+    const size = gr(t.trunk_diameter||30);
+    const color = gc(t.common_name);
+    const emoji = ge(t.common_name);
+    const icon = L.divIcon({
+      className: '',
+      iconSize: [size*2, size*2 + 8],
+      iconAnchor: [size, size*2 + 8],
+      html: `<div style="
+        position:relative;
+        display:flex;flex-direction:column;align-items:center;
+        filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));
+        cursor:pointer;
+      ">
+        <div style="
+          width:${size*2}px;height:${size*2}px;
+          border-radius:50%;
+          background:${color};
+          border:2.5px solid white;
+          display:flex;align-items:center;justify-content:center;
+          font-size:${size}px;
+          line-height:1;
+        ">${emoji}</div>
+        <div style="
+          width:3px;height:8px;
+          background:${color};
+          border-radius:0 0 2px 2px;
+          margin-top:-1px;
+        "></div>
+      </div>`
     });
+    const m = L.marker([t.latitude, t.longitude], { icon });
     m.on('click', e => { e.originalEvent.preventDefault(); showPopup(t); });
-    m.on('mouseover', function() { this.setStyle({ radius: radius+3, fillOpacity: 1 }); });
-    m.on('mouseout', function() { this.setStyle({ radius, fillOpacity: .88 }); });
     clusterGroup.addLayer(m);
   });
 }
