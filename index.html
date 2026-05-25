@@ -277,7 +277,7 @@ img { display: block; max-width: 100%; }
 #map-section {
   background: var(--ink);
   display: flex; flex-direction: column;
-  min-height: auto;
+  height: auto;
 }
 
 .map-top {
@@ -306,8 +306,8 @@ img { display: block; max-width: 100%; }
 .mf-chip.active { background: var(--leaf); border-color: var(--leaf); color: white; }
 .mf-chip:hover:not(.active) { background: rgba(255,255,255,0.1); color: white; }
 
-.map-body { display: flex; flex: 1; min-height: 420px; height: 420px; }
-#main-map { flex: 1; position: relative; }
+.map-body { display: flex; height: 480px; overflow: hidden; flex-shrink: 0; }
+#main-map { flex: 1; position: relative; min-height: 420px; }
 
 /* MAP POPUP */
 .tree-popup-card {
@@ -713,7 +713,7 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
   .nav-ham { display: flex !important; }
   #mobile-nav a { font-size: 16px !important; }
   .map-top { padding: 14px 16px !important; flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
-  .map-body { min-height: 400px !important; }
+  .map-body { height: 380px !important; overflow: hidden; }
   .map-sidebar { display: none !important; }
   #main-map { width: 100% !important; }
   .tree-popup-card { width: calc(100% - 24px) !important; left: 12px !important; right: 12px !important; bottom: 12px !important; max-width: none !important; }
@@ -1375,6 +1375,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
   allTrees = trees;
   initHeroMap(trees);
   initMainMap(trees);
+  // Fix: invalidate Leaflet size when map scrolls into view
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting && mainMap) mainMap.invalidateSize(); });
+  }, {threshold: 0.1});
+  obs.observe(document.getElementById('main-map'));
   buildFilterChips(trees);
   buildSidebar(trees);
   buildSpeciesGrid(trees);
