@@ -88,89 +88,89 @@ textarea{resize:vertical;min-height:80px;}
 }
 .loc-picker-btn:active{transform:scale(.98);}
 
-/* Full-screen map overlay — like Uber */
+/* ── FULL-SCREEN UBER-STYLE OVERLAY ── */
 #map-overlay{
   position:fixed;
   top:0;left:0;right:0;bottom:0;
   z-index:2000;
   display:none;
   flex-direction:column;
-  background:#eee;
-  /* iOS safe area */
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:#f0ede6;
 }
 #map-overlay.open{display:flex;}
 
-/* Header sits ABOVE the map, in normal flow */
+/* Header — sits above map in normal flow */
 .mpo-header{
-  position:relative;
-  z-index:10;
+  flex-shrink:0;
   background:rgba(247,242,232,0.97);
-  backdrop-filter:blur(12px);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
   padding:12px 16px;
   display:flex;align-items:center;gap:10px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
+  z-index:1;
 }
 .mpo-back{
   width:38px;height:38px;border-radius:50%;
   background:var(--green);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  font-size:16px;color:white;
+  font-size:18px;color:white;
   box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0;
 }
-.mpo-title{
-  font-size:13px;font-weight:600;color:var(--text2);flex:1;line-height:1.4;
-}
+.mpo-title{font-size:13px;font-weight:600;color:var(--text2);flex:1;line-height:1.4;}
 
-/* Map fills remaining space between header and bottom sheet */
-#picker-map{
+/* Map area — fills space between header and bottom sheet */
+#map-area{
   flex:1;
-  width:100%;
-  min-height:0; /* critical for flex children */
   position:relative;
+  min-height:0;
   overflow:hidden;
 }
-
-/* Fixed pin — centred over the MAP only, not the whole overlay */
-/* We use a wrapper div that sits over the map */
-#map-pin-container{
+#picker-map{
   position:absolute;
   top:0;left:0;right:0;bottom:0;
-  pointer-events:none;
-  z-index:10;
-  display:flex;align-items:center;justify-content:center;
-}
-.map-pin-wrap{
-  display:flex;flex-direction:column;align-items:center;
-  transform:translateY(-50%); /* pin tip sits at exact centre */
-  transition:transform .15s;
-  filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));
-}
-.map-pin-wrap.dragging{transform:translateY(-58%);}
-.map-pin-head{
-  width:48px;height:48px;border-radius:50%;
-  background:var(--green);border:3px solid white;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;
-}
-.map-pin-tail{
-  width:4px;height:18px;background:var(--green);
-  border-radius:0 0 3px 3px;
-}
-.map-pin-shadow{
-  width:12px;height:5px;background:rgba(0,0,0,.2);
-  border-radius:50%;margin-top:1px;
 }
 
-/* Bottom sheet — like Uber confirm panel */
+/* THE PIN — must be z-index 1000+ to sit above Leaflet tile panes (max ~600) */
+#centre-pin{
+  position:absolute;
+  top:50%;left:50%;
+  z-index:1000;
+  pointer-events:none;
+  /* translate so the TIP of the pin is at exact centre */
+  transform:translate(-50%, -100%);
+  display:flex;flex-direction:column;align-items:center;
+  transition:transform 0.15s ease;
+}
+#centre-pin.lifted{
+  transform:translate(-50%, -110%);
+}
+.pin-head{
+  width:52px;height:52px;
+  border-radius:50%;
+  background:var(--green);
+  border:3px solid white;
+  box-shadow:0 4px 16px rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+}
+.pin-stem{
+  width:4px;height:20px;
+  background:var(--green);
+  border-radius:0 0 4px 4px;
+}
+.pin-shadow{
+  width:14px;height:6px;
+  background:rgba(0,0,0,.18);
+  border-radius:50%;
+}
+
+/* Bottom confirm sheet */
 .mpo-bottom{
-  background:white;
-  padding:18px 20px calc(env(safe-area-inset-bottom,0px) + 16px);
-  border-top-left-radius:20px;border-top-right-radius:20px;
-  box-shadow:0 -6px 28px rgba(0,0,0,.12);
   flex-shrink:0;
+  background:white;
+  padding:16px 20px calc(env(safe-area-inset-bottom,16px) + 4px);
+  border-radius:20px 20px 0 0;
+  box-shadow:0 -4px 24px rgba(0,0,0,.12);
 }
 .mpo-nearby-label{
   font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
@@ -398,35 +398,35 @@ textarea{resize:vertical;min-height:80px;}
 
   <!-- FULL-SCREEN MAP OVERLAY -->
   <div id="map-overlay">
+
     <!-- Header -->
     <div class="mpo-header">
       <button class="mpo-back" onclick="closeMapPicker()">←</button>
-      <div class="mpo-title">📍 Move map to place the pin on the tree</div>
+      <div class="mpo-title">📍 Drag the map so the 🌳 pin is on the tree</div>
     </div>
 
-    <!-- Map + pin together -->
-    <div id="picker-map">
-      <!-- Pin container centred over map -->
-      <div id="map-pin-container">
-        <div class="map-pin-wrap" id="map-pin">
-          <div class="map-pin-head">🌳</div>
-          <div class="map-pin-tail"></div>
-          <div class="map-pin-shadow"></div>
-        </div>
+    <!-- Map + pin in same relative container -->
+    <div id="map-area">
+      <div id="picker-map"></div>
+      <!-- Pin rendered OVER the map via z-index:1000 -->
+      <div id="centre-pin">
+        <div class="pin-head">🌳</div>
+        <div class="pin-stem"></div>
+        <div class="pin-shadow"></div>
       </div>
     </div>
 
-    <!-- Bottom confirm sheet -->
+    <!-- Bottom sheet -->
     <div class="mpo-bottom">
       <div class="mpo-nearby-label" id="mpo-nearby-label">Nearby trees</div>
-      <div class="mpo-addr" id="mpo-addr">Move the map to position the pin</div>
+      <div class="mpo-addr" id="mpo-addr">Move the map to place the pin</div>
       <div class="mpo-coords" id="mpo-coords">—</div>
       <div class="mpo-nearby" id="mpo-nearby"></div>
       <button class="mpo-confirm" onclick="confirmLocation()">✅ Confirm Tree Location</button>
     </div>
   </div>
 
-  <!-- TREE IDENTITY -->
+  <!-- TREE IDENTITY -->  <!-- TREE IDENTITY -->
   <div class="section">
     <div class="sec-label">🌳 Tree Identity</div>
     <div class="species-chips" id="species-chips"></div>
@@ -614,6 +614,8 @@ function initPickerMap(){
       center:[startLat,startLng], zoom:17,
       zoomControl:true, attributionControl:false
     });
+    // Push Leaflet tile pane below our pin (Leaflet tiles are z-index ~200-400)
+    // Our pin is z-index:1000 so it always shows above tiles
     L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
       maxZoom:21
     }).addTo(pickerMap);
@@ -627,11 +629,11 @@ function initPickerMap(){
 
     // On every map move, update coords + nearby trees
     pickerMap.on('movestart',()=>{
-      document.getElementById('map-pin').classList.add('dragging');
+      document.getElementById('centre-pin').classList.add('lifted');
       document.getElementById('mpo-addr').textContent='Positioning...';
     });
     pickerMap.on('moveend',()=>{
-      document.getElementById('map-pin').classList.remove('dragging');
+      document.getElementById('centre-pin').classList.remove('lifted');
       const c=pickerMap.getCenter();
       updatePickerInfo(c.lat,c.lng);
     });
