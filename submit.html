@@ -6,6 +6,8 @@
 <title>Add a Tree · The Tree Mappers</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
   --green:#1a3a0f;--sage:#2d6a1e;--leaf:#4a9e32;--lime:#8ecf5e;
@@ -75,6 +77,125 @@ textarea{resize:vertical;min-height:80px;}
 .field{margin-bottom:12px;}
 .field:last-child{margin:0;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ── UBER-STYLE MAP PICKER ── */
+.loc-picker-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--green),var(--sage));
+  border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.loc-picker-btn:active{transform:scale(.98);}
+
+/* Full-screen map overlay — like Uber */
+#map-overlay{
+  position:fixed;inset:0;z-index:2000;
+  display:none;flex-direction:column;
+  background:#1a1a1a;
+}
+#map-overlay.open{display:flex;}
+
+.mpo-header{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  padding:calc(var(--safe-top)+14px) 16px 14px;
+  display:flex;align-items:center;gap:12px;
+}
+.mpo-back{
+  width:40px;height:40px;border-radius:50%;
+  background:white;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.25);flex-shrink:0;
+}
+.mpo-title{
+  background:white;border-radius:12px;padding:10px 16px;
+  font-size:14px;font-weight:600;color:#1a2118;flex:1;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+
+/* Map fills screen */
+#picker-map{flex:1;width:100%;}
+
+/* Fixed pin in centre of map */
+.map-pin-wrap{
+  position:absolute;top:50%;left:50%;z-index:10;
+  transform:translate(-50%,-100%);
+  pointer-events:none;
+  transition:transform .15s;
+}
+.map-pin-wrap.dragging{transform:translate(-50%,-110%);}
+.map-pin{
+  display:flex;flex-direction:column;align-items:center;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+}
+.map-pin-head{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--green);border:3px solid white;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+}
+.map-pin-tail{
+  width:3px;height:16px;background:var(--green);
+  border-radius:0 0 2px 2px;
+}
+.map-pin-dot{
+  width:8px;height:4px;background:rgba(0,0,0,.25);
+  border-radius:50%;margin-top:1px;
+}
+
+/* Bottom sheet — like Uber confirm panel */
+.mpo-bottom{
+  background:white;
+  padding:16px 20px calc(var(--safe-bottom)+16px);
+  border-top-left-radius:20px;border-top-right-radius:20px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.15);
+  flex-shrink:0;
+}
+.mpo-nearby-label{
+  font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:8px;
+}
+.mpo-addr{
+  font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;
+  min-height:22px;
+}
+.mpo-coords{
+  font-size:11px;color:var(--text3);font-family:monospace;margin-bottom:14px;
+}
+.mpo-nearby{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.mpo-nearby-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--parchment);border-radius:10px;padding:9px 12px;
+  cursor:pointer;border:1.5px solid transparent;transition:all .15s;
+}
+.mpo-nearby-item:hover{border-color:var(--leaf);}
+.mpo-nearby-item .ni-icon{font-size:18px;flex-shrink:0;}
+.mpo-nearby-item .ni-name{font-size:13px;font-weight:600;color:var(--text);flex:1;}
+.mpo-nearby-item .ni-dist{font-size:11px;font-weight:600;color:var(--text3);background:rgba(0,0,0,.06);padding:2px 8px;border-radius:8px;white-space:nowrap;}
+.mpo-nearby-empty{font-size:12px;color:var(--text3);padding:4px 0 8px;display:flex;align-items:center;gap:6px;}
+
+.mpo-confirm{
+  width:100%;padding:15px;
+  background:var(--green);color:white;
+  border:none;border-radius:14px;
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(26,58,15,.3);
+}
+.mpo-confirm:active{transform:scale(.98);}
+
+/* Location locked state in form */
+.loc-locked{
+  display:none;background:var(--parchment);border:1.5px solid rgba(42,107,30,.2);
+  border-radius:12px;padding:12px 14px;align-items:center;gap:10px;
+}
+.loc-locked.show{display:flex;}
+.loc-locked-icon{font-size:22px;flex-shrink:0;}
+.loc-locked-info{flex:1;}
+.loc-locked-addr{font-size:13px;font-weight:600;color:var(--text);}
+.loc-locked-coords{font-size:11px;color:var(--text3);font-family:monospace;margin-top:2px;}
+.loc-change-btn{font-size:12px;font-weight:600;color:var(--sage);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background .15s;}
+.loc-change-btn:hover{background:rgba(42,107,30,.08);}
 
 /* GPS */
 .gps-btn{
@@ -230,19 +351,58 @@ textarea{resize:vertical;min-height:80px;}
   <div class="page-title">🌿 Add a Tree</div>
   <div class="page-sub">Every tree you log becomes a permanent part of Delhi's urban forest record.</div>
 
-  <!-- GPS LOCATION -->
+  <!-- UBER-STYLE LOCATION PICKER -->
   <div class="section">
     <div class="sec-label">📍 Location</div>
-    <button class="gps-btn" id="gps-btn" onclick="startGPS()">📡 Start Precision GPS</button>
-    <div class="gps-readings">
-      <div class="gps-r"><div class="gps-r-val" id="gr-lat">—</div><div class="gps-r-label">Latitude</div></div>
-      <div class="gps-r"><div class="gps-r-val" id="gr-lng">—</div><div class="gps-r-label">Longitude</div></div>
-      <div class="gps-r"><div class="gps-r-val" id="gr-acc">—</div><div class="gps-r-label">Accuracy</div></div>
+
+    <!-- Step 1: button to open picker -->
+    <button class="loc-picker-btn" id="loc-picker-btn" onclick="openMapPicker()">
+      📍 Set Tree Location on Map
+    </button>
+
+    <!-- Step 2: locked state shown after confirming -->
+    <div class="loc-locked" id="loc-locked">
+      <div class="loc-locked-icon">📍</div>
+      <div class="loc-locked-info">
+        <div class="loc-locked-addr" id="loc-locked-addr">Location set</div>
+        <div class="loc-locked-coords" id="loc-locked-coords"></div>
+      </div>
+      <button class="loc-change-btn" onclick="openMapPicker()">Change</button>
     </div>
-    <div class="gps-status" id="gps-status"></div>
+
     <div class="dup-warn" id="dup-warn"></div>
     <input type="hidden" id="f-lat">
     <input type="hidden" id="f-lng">
+  </div>
+
+  <!-- FULL-SCREEN MAP OVERLAY -->
+  <div id="map-overlay">
+    <!-- Header -->
+    <div class="mpo-header">
+      <button class="mpo-back" onclick="closeMapPicker()">←</button>
+      <div class="mpo-title">📍 Move map to place the pin on the tree</div>
+    </div>
+
+    <!-- Map -->
+    <div id="picker-map"></div>
+
+    <!-- Fixed centre pin -->
+    <div class="map-pin-wrap" id="map-pin">
+      <div class="map-pin">
+        <div class="map-pin-head">🌳</div>
+        <div class="map-pin-tail"></div>
+        <div class="map-pin-dot"></div>
+      </div>
+    </div>
+
+    <!-- Bottom confirm sheet -->
+    <div class="mpo-bottom">
+      <div class="mpo-nearby-label" id="mpo-nearby-label">Nearby trees</div>
+      <div class="mpo-addr" id="mpo-addr">Move the map to position the pin</div>
+      <div class="mpo-coords" id="mpo-coords">—</div>
+      <div class="mpo-nearby" id="mpo-nearby"></div>
+      <button class="mpo-confirm" onclick="confirmLocation()">✅ Confirm Tree Location</button>
+    </div>
   </div>
 
   <!-- TREE IDENTITY -->
@@ -412,69 +572,147 @@ function setCond(val,el){
   el.classList.add('active');
 }
 
-// GPS
-function startGPS(){
-  const btn=document.getElementById('gps-btn');
-  const status=document.getElementById('gps-status');
-  if(!navigator.geolocation){
-    status.textContent='❌ GPS not available on this browser';
-    status.classList.add('show'); return;
+// ── MAP PICKER (Uber-style) ──
+let pickerMap=null, allTreesCache=[], moveTimer=null;
+
+function openMapPicker(){
+  document.getElementById('map-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+
+  if(!pickerMap){
+    // Start centred on Delhi / Jor Bagh
+    const startLat=28.5925, startLng=77.2190;
+    pickerMap=L.map('picker-map',{
+      center:[startLat,startLng], zoom:17,
+      zoomControl:true, attributionControl:false
+    });
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+      maxZoom:21
+    }).addTo(pickerMap);
+
+    // Try to jump to user's real GPS
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        pickerMap.setView([pos.coords.latitude,pos.coords.longitude],18);
+      },()=>{},{enableHighAccuracy:true,timeout:8000,maximumAge:30000});
+    }
+
+    // On every map move, update coords + nearby trees
+    pickerMap.on('movestart',()=>{
+      document.getElementById('map-pin').classList.add('dragging');
+      document.getElementById('mpo-addr').textContent='Positioning...';
+    });
+    pickerMap.on('moveend',()=>{
+      document.getElementById('map-pin').classList.remove('dragging');
+      const c=pickerMap.getCenter();
+      updatePickerInfo(c.lat,c.lng);
+    });
+
+    // Load all trees for nearby display
+    loadTreesCache();
+
+    // Initial update
+    updatePickerInfo(startLat,startLng);
+  } else {
+    // Already initialised — force resize in case it was hidden
+    setTimeout(()=>pickerMap.invalidateSize(),100);
+    const c=pickerMap.getCenter();
+    updatePickerInfo(c.lat,c.lng);
   }
-  btn.textContent='⏳ Getting location...'; btn.disabled=true;
-  status.textContent='Requesting location...'; status.classList.add('show');
-  gpsReadings=[];
-  let count=0; const MAX=5;
-
-  navigator.geolocation.getCurrentPosition(first=>{
-    gpsReadings.push({lat:first.coords.latitude,lng:first.coords.longitude,acc:first.coords.accuracy});
-    count=1;
-    update(first.coords.latitude,first.coords.longitude,first.coords.accuracy,count,MAX);
-
-    gpsWatcher=navigator.geolocation.watchPosition(pos=>{
-      count++;
-      gpsReadings.push({lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy});
-      update(pos.coords.latitude,pos.coords.longitude,pos.coords.accuracy,count,MAX);
-      if(count>=MAX){
-        navigator.geolocation.clearWatch(gpsWatcher);
-        lock();
-      }
-    }, err=>{
-      console.warn('watch error:',err.message);
-      if(count>=1) lock();
-    },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
-  }, err=>{
-    btn.disabled=false; btn.textContent='📡 Start Precision GPS';
-    if(err.code===1) status.textContent='❌ Location denied. On iPhone: Settings → Safari → Location → Allow';
-    else if(err.code===2) status.textContent='❌ Location unavailable. Try outdoors.';
-    else status.textContent='❌ GPS timed out. Please try again.';
-    status.style.color='#c03222';
-  },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 
-function update(lat,lng,acc,count,max){
-  document.getElementById('gr-lat').textContent=lat.toFixed(5);
-  document.getElementById('gr-lng').textContent=lng.toFixed(5);
-  document.getElementById('gr-acc').textContent='±'+Math.round(acc)+'m';
-  document.getElementById('gps-status').textContent='Reading '+count+'/'+max+' · ±'+Math.round(acc)+'m';
+function closeMapPicker(){
+  document.getElementById('map-overlay').classList.remove('open');
+  document.body.style.overflow='';
 }
 
-function lock(){
-  const sorted=[...gpsReadings].sort((a,b)=>a.acc-b.acc);
-  const best=sorted.slice(0,Math.ceil(sorted.length/2));
-  const lat=best.reduce((s,r)=>s+r.lat,0)/best.length;
-  const lng=best.reduce((s,r)=>s+r.lng,0)/best.length;
-  const acc=best.reduce((s,r)=>s+r.acc,0)/best.length;
+async function loadTreesCache(){
+  try{
+    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{
+      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}
+    });
+    allTreesCache=await r.json();
+  }catch(e){}
+}
+
+function updatePickerInfo(lat,lng){
+  // Coords display
+  document.getElementById('mpo-coords').textContent=lat.toFixed(6)+', '+lng.toFixed(6);
+
+  // Reverse geocode with Nominatim (free, no key needed)
+  clearTimeout(moveTimer);
+  moveTimer=setTimeout(async()=>{
+    try{
+      const r=await fetch(
+        'https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json',
+        {headers:{'Accept-Language':'en'}}
+      );
+      const d=await r.json();
+      const addr=d.address;
+      // Build a short readable address
+      const parts=[
+        addr.road||addr.pedestrian||addr.path,
+        addr.suburb||addr.neighbourhood||addr.quarter,
+        addr.city||addr.town||addr.village
+      ].filter(Boolean);
+      document.getElementById('mpo-addr').textContent=parts.join(', ')||d.display_name.split(',').slice(0,2).join(',');
+    }catch(e){
+      document.getElementById('mpo-addr').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5);
+    }
+  },600);
+
+  // Show nearby trees
+  showNearbyInPicker(lat,lng);
+}
+
+const SP_EMOJI={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳','Moringa':'🌱'};
+
+function showNearbyInPicker(lat,lng){
+  const nearby=allTreesCache
+    .map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)}))
+    .filter(t=>t.d<=50)
+    .sort((a,b)=>a.d-b.d)
+    .slice(0,3);
+
+  const box=document.getElementById('mpo-nearby');
+  const label=document.getElementById('mpo-nearby-label');
+
+  if(!nearby.length){
+    label.textContent='No trees logged here yet';
+    box.innerHTML='<div class="mpo-nearby-empty">🌱 Be the first to add a tree in this spot!</div>';
+    return;
+  }
+
+  label.textContent=nearby.length+' tree'+(nearby.length>1?'s':'')+' already logged nearby';
+  box.innerHTML=nearby.map(t=>`
+    <div class="mpo-nearby-item">
+      <span class="ni-icon">${SP_EMOJI[t.common_name]||'🌳'}</span>
+      <span class="ni-name">${t.common_name||'Unknown'}<br><span style="font-size:11px;font-weight:400;color:var(--text3)">by ${t.submitted_by||'Community'}</span></span>
+      <span class="ni-dist">${Math.round(t.d)}m</span>
+    </div>`).join('');
+}
+
+function confirmLocation(){
+  const c=pickerMap.getCenter();
+  const lat=c.lat, lng=c.lng;
+
+  // Save to hidden fields
   document.getElementById('f-lat').value=lat.toFixed(7);
   document.getElementById('f-lng').value=lng.toFixed(7);
-  document.getElementById('gr-lat').textContent=lat.toFixed(5);
-  document.getElementById('gr-lng').textContent=lng.toFixed(5);
-  document.getElementById('gr-acc').textContent='±'+Math.round(acc)+'m';
-  const btn=document.getElementById('gps-btn');
-  btn.textContent='✅ Location Locked'; btn.disabled=false; btn.classList.add('locked');
-  const status=document.getElementById('gps-status');
-  status.textContent='📍 Location locked · ±'+Math.round(acc)+'m';
-  status.style.color='var(--sage)';
+
+  // Update locked display
+  const addrText=document.getElementById('mpo-addr').textContent;
+  document.getElementById('loc-locked-addr').textContent='📍 '+addrText;
+  document.getElementById('loc-locked-coords').textContent=lat.toFixed(5)+', '+lng.toFixed(5);
+
+  // Show locked state, hide button
+  document.getElementById('loc-picker-btn').style.display='none';
+  document.getElementById('loc-locked').classList.add('show');
+
+  // Duplicate check in form
   checkDuplicate(lat,lng);
+
+  closeMapPicker();
 }
 
 // ── DUPLICATE CHECK — shows ALL trees within 20m, not just the first ──
@@ -576,11 +814,11 @@ async function submitTree(){
 
   if(!name){alert('Please enter the tree name');document.getElementById('f-common').focus();return;}
   if(isNaN(lat)||isNaN(lng)){
-    const gpsBtn=document.getElementById('gps-btn');
-    gpsBtn.textContent='📡 Please tap GPS first!';
-    gpsBtn.style.background='#e8a820';
-    setTimeout(()=>{gpsBtn.textContent='📡 Start Precision GPS';gpsBtn.style.background='';},3000);
-    gpsBtn.scrollIntoView({behavior:'smooth',block:'center'});
+    const pb=document.getElementById('loc-picker-btn');
+    pb.textContent='📍 Please set location first!';
+    pb.style.background='#e8a820';
+    setTimeout(()=>{pb.textContent='📍 Set Tree Location on Map';pb.style.background='';},3000);
+    pb.scrollIntoView({behavior:'smooth',block:'center'});
     return;
   }
 
@@ -655,11 +893,10 @@ function resetForm(){
   document.getElementById('gr-lat').textContent='—';
   document.getElementById('gr-lng').textContent='—';
   document.getElementById('gr-acc').textContent='—';
-  document.getElementById('gps-btn').textContent='📡 Start Precision GPS';
-  document.getElementById('gps-btn').classList.remove('locked');
-  document.getElementById('gps-btn').disabled=false;
-  document.getElementById('gps-status').classList.remove('show');
-  document.getElementById('gps-status').style.color='';
+  document.getElementById('loc-picker-btn').style.display='flex';
+  document.getElementById('loc-locked').classList.remove('show');
+  document.getElementById('loc-locked-addr').textContent='Location set';
+  document.getElementById('loc-locked-coords').textContent='';
   document.getElementById('dup-warn').style.display='none';
   document.getElementById('main-preview').style.display='none';
   document.getElementById('main-placeholder').style.display='flex';
