@@ -90,65 +90,86 @@ textarea{resize:vertical;min-height:80px;}
 
 /* Full-screen map overlay — like Uber */
 #map-overlay{
-  position:fixed;inset:0;z-index:2000;
-  display:none;flex-direction:column;
-  background:#1a1a1a;
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  z-index:2000;
+  display:none;
+  flex-direction:column;
+  background:#eee;
+  /* iOS safe area */
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
 #map-overlay.open{display:flex;}
 
+/* Header sits ABOVE the map, in normal flow */
 .mpo-header{
-  position:absolute;top:0;left:0;right:0;z-index:10;
-  padding:calc(var(--safe-top)+14px) 16px 14px;
-  display:flex;align-items:center;gap:12px;
+  position:relative;
+  z-index:10;
+  background:rgba(247,242,232,0.97);
+  backdrop-filter:blur(12px);
+  padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
 }
 .mpo-back{
-  width:40px;height:40px;border-radius:50%;
-  background:white;border:none;cursor:pointer;
+  width:38px;height:38px;border-radius:50%;
+  background:var(--green);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.25);flex-shrink:0;
+  font-size:16px;color:white;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0;
 }
 .mpo-title{
-  background:white;border-radius:12px;padding:10px 16px;
-  font-size:14px;font-weight:600;color:#1a2118;flex:1;
-  box-shadow:0 2px 8px rgba(0,0,0,.2);
+  font-size:13px;font-weight:600;color:var(--text2);flex:1;line-height:1.4;
 }
 
-/* Map fills screen */
-#picker-map{flex:1;width:100%;}
+/* Map fills remaining space between header and bottom sheet */
+#picker-map{
+  flex:1;
+  width:100%;
+  min-height:0; /* critical for flex children */
+  position:relative;
+  overflow:hidden;
+}
 
-/* Fixed pin in centre of map */
-.map-pin-wrap{
-  position:absolute;top:50%;left:50%;z-index:10;
-  transform:translate(-50%,-100%);
+/* Fixed pin — centred over the MAP only, not the whole overlay */
+/* We use a wrapper div that sits over the map */
+#map-pin-container{
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
   pointer-events:none;
-  transition:transform .15s;
+  z-index:10;
+  display:flex;align-items:center;justify-content:center;
 }
-.map-pin-wrap.dragging{transform:translate(-50%,-110%);}
-.map-pin{
+.map-pin-wrap{
   display:flex;flex-direction:column;align-items:center;
-  filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));
+  transform:translateY(-50%); /* pin tip sits at exact centre */
+  transition:transform .15s;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));
 }
+.map-pin-wrap.dragging{transform:translateY(-58%);}
 .map-pin-head{
-  width:44px;height:44px;border-radius:50%;
+  width:48px;height:48px;border-radius:50%;
   background:var(--green);border:3px solid white;
   display:flex;align-items:center;justify-content:center;
-  font-size:20px;
+  font-size:22px;
 }
 .map-pin-tail{
-  width:3px;height:16px;background:var(--green);
-  border-radius:0 0 2px 2px;
+  width:4px;height:18px;background:var(--green);
+  border-radius:0 0 3px 3px;
 }
-.map-pin-dot{
-  width:8px;height:4px;background:rgba(0,0,0,.25);
+.map-pin-shadow{
+  width:12px;height:5px;background:rgba(0,0,0,.2);
   border-radius:50%;margin-top:1px;
 }
 
 /* Bottom sheet — like Uber confirm panel */
 .mpo-bottom{
   background:white;
-  padding:16px 20px calc(var(--safe-bottom)+16px);
+  padding:18px 20px calc(env(safe-area-inset-bottom,0px) + 16px);
   border-top-left-radius:20px;border-top-right-radius:20px;
-  box-shadow:0 -4px 24px rgba(0,0,0,.15);
+  box-shadow:0 -6px 28px rgba(0,0,0,.12);
   flex-shrink:0;
 }
 .mpo-nearby-label{
@@ -383,15 +404,15 @@ textarea{resize:vertical;min-height:80px;}
       <div class="mpo-title">📍 Move map to place the pin on the tree</div>
     </div>
 
-    <!-- Map -->
-    <div id="picker-map"></div>
-
-    <!-- Fixed centre pin -->
-    <div class="map-pin-wrap" id="map-pin">
-      <div class="map-pin">
-        <div class="map-pin-head">🌳</div>
-        <div class="map-pin-tail"></div>
-        <div class="map-pin-dot"></div>
+    <!-- Map + pin together -->
+    <div id="picker-map">
+      <!-- Pin container centred over map -->
+      <div id="map-pin-container">
+        <div class="map-pin-wrap" id="map-pin">
+          <div class="map-pin-head">🌳</div>
+          <div class="map-pin-tail"></div>
+          <div class="map-pin-shadow"></div>
+        </div>
       </div>
     </div>
 
@@ -579,6 +600,13 @@ function openMapPicker(){
   document.getElementById('map-overlay').classList.add('open');
   document.body.style.overflow='hidden';
 
+  // Make sure overlay is visible before init
+  requestAnimationFrame(()=>{
+    if(pickerMap){ pickerMap.invalidateSize(); return; }
+    initPickerMap();
+  });
+}
+function initPickerMap(){
   if(!pickerMap){
     // Start centred on Delhi / Jor Bagh
     const startLat=28.5925, startLng=77.2190;
@@ -613,11 +641,6 @@ function openMapPicker(){
 
     // Initial update
     updatePickerInfo(startLat,startLng);
-  } else {
-    // Already initialised — force resize in case it was hidden
-    setTimeout(()=>pickerMap.invalidateSize(),100);
-    const c=pickerMap.getCenter();
-    updatePickerInfo(c.lat,c.lng);
   }
 }
 
