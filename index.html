@@ -541,6 +541,7 @@ footer {
 .footer-made span { color: var(--lime); }
 
 /* ── LEAFLET OVERRIDES ───────────────────────────────── */
+.leaflet-control-attribution { display: none !important; }
 .leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: var(--shadow-lg) !important; }
 .leaflet-popup-content { font-family: 'Outfit', sans-serif !important; }
 .leaflet-control-zoom { border: 1px solid var(--border) !important; border-radius: 10px !important; overflow: hidden; }
@@ -1114,7 +1115,7 @@ function initHeroMap(trees) {
     zoomControl: false, attributionControl: false,
     scrollWheelZoom: false, dragging: false, touchZoom: false
   });
-  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20 }).addTo(heroMap);
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '' }).addTo(heroMap);
   trees.forEach(t => {
     L.circleMarker([t.latitude, t.longitude], {
       radius: gr(t.trunk_diameter||30),
