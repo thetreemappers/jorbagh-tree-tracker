@@ -38,7 +38,6 @@
   --shadow-lg:  0 16px 56px rgba(26,33,24,0.18);
   --r:          14px;
 }
-
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; font-size: 16px; }
@@ -50,7 +49,6 @@ body {
 }
 a { text-decoration: none; color: inherit; }
 img { display: block; max-width: 100%; }
-
 /* ── NAV ─────────────────────────────────────────────── */
 #nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 900;
@@ -63,7 +61,6 @@ img { display: block; max-width: 100%; }
   transition: box-shadow .3s;
 }
 #nav.scrolled { box-shadow: var(--shadow-sm); }
-
 .nav-brand {
   display: flex; align-items: center; gap: 10px;
   font-family: 'Cormorant Garamond', serif;
@@ -78,7 +75,6 @@ img { display: block; max-width: 100%; }
 }
 .nav-brand-leaf span { transform: rotate(45deg); display: block; }
 .nav-brand em { color: var(--gold); font-style: italic; }
-
 .nav-links {
   display: flex; align-items: center; gap: 32px;
 }
@@ -87,7 +83,6 @@ img { display: block; max-width: 100%; }
   transition: color .2s; letter-spacing: 0.1px;
 }
 .nav-links a:hover { color: var(--ink); }
-
 .nav-cta {
   display: flex; align-items: center; gap: 8px;
   background: var(--sage-dark); color: white !important;
@@ -96,7 +91,6 @@ img { display: block; max-width: 100%; }
   transition: all .2s; box-shadow: 0 3px 12px rgba(30,61,40,0.25);
 }
 .nav-cta:hover { background: var(--sage-mid); transform: translateY(-1px); }
-
 .nav-ham {
   display: none; flex-direction: column; gap: 5px;
   cursor: pointer; padding: 6px; background: none; border: none;
@@ -105,7 +99,6 @@ img { display: block; max-width: 100%; }
   display: block; width: 22px; height: 2px;
   background: var(--sage-dark); border-radius: 2px; transition: all .3s;
 }
-
 /* MOBILE MENU */
 #mobile-nav {
   display: none; position: fixed; inset: 64px 0 0;
@@ -124,14 +117,12 @@ img { display: block; max-width: 100%; }
   padding: 16px; border-radius: 14px; text-align: center;
   font-weight: 600; border: none; justify-content: center;
 }
-
 /* ── HERO ─────────────────────────────────────────────── */
 #hero {
   min-height: 100vh;
   display: grid; grid-template-columns: 1fr 1fr;
   padding-top: 64px; position: relative; overflow: hidden;
 }
-
 #hero::before {
   content: '';
   position: absolute; inset: 0; z-index: 0;
@@ -140,13 +131,11 @@ img { display: block; max-width: 100%; }
     radial-gradient(circle at 80% 20%, rgba(196,147,58,0.08) 0%, transparent 40%);
   pointer-events: none;
 }
-
 .hero-left {
   display: flex; flex-direction: column; justify-content: center;
   padding: 80px 60px 80px 80px;
   position: relative; z-index: 2;
 }
-
 .hero-tag {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--pale); color: var(--sage-dark);
@@ -155,7 +144,6 @@ img { display: block; max-width: 100%; }
   text-transform: uppercase; margin-bottom: 28px; width: fit-content;
   border: 1px solid rgba(61,107,74,0.2);
 }
-
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(44px, 5.5vw, 76px);
@@ -165,14 +153,11 @@ img { display: block; max-width: 100%; }
 }
 .hero-title em { color: var(--sage); font-style: italic; }
 .hero-title .gold { color: var(--gold); font-style: normal; }
-
 .hero-desc {
   font-size: 17px; line-height: 1.75; color: var(--text2);
   max-width: 460px; margin-bottom: 40px; font-weight: 300;
 }
-
 .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 56px; }
-
 .btn-fill {
   display: inline-flex; align-items: center; gap: 9px;
   background: var(--sage-dark); color: white;
@@ -182,7 +167,6 @@ img { display: block; max-width: 100%; }
   box-shadow: 0 4px 18px rgba(30,61,40,0.28);
 }
 .btn-fill:hover { background: var(--sage-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,61,40,0.32); }
-
 .btn-outline {
   display: inline-flex; align-items: center; gap: 9px;
   background: white; color: var(--sage-dark);
@@ -192,7 +176,6 @@ img { display: block; max-width: 100%; }
   transition: all .22s; box-shadow: var(--shadow-sm);
 }
 .btn-outline:hover { border-color: var(--sage); transform: translateY(-2px); }
-
 .hero-stats {
   display: flex; gap: 0;
   border-top: 1px solid var(--border);
@@ -210,7 +193,6 @@ img { display: block; max-width: 100%; }
   line-height: 1; margin-bottom: 4px;
 }
 .hstat-label { font-size: 12px; color: var(--text3); font-weight: 500; letter-spacing: 0.3px; }
-
 .hero-right {
   position: relative; overflow: hidden;
   background: var(--mist);
@@ -237,7 +219,6 @@ img { display: block; max-width: 100%; }
 @keyframes hmcPulse { 0%,100%{box-shadow:0 0 0 3px rgba(92,154,110,.25)} 50%{box-shadow:0 0 0 8px rgba(92,154,110,.05)} }
 .hmc-text { font-size: 13px; font-weight: 600; color: var(--ink); }
 .hmc-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
-
 /* ── TRUST BAR ───────────────────────────────────────── */
 #trust-bar {
   background: var(--sage-dark);
@@ -251,7 +232,6 @@ img { display: block; max-width: 100%; }
 }
 .trust-icon { font-size: 18px; }
 .trust-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.15); }
-
 /* ── SECTION COMMON ──────────────────────────────────── */
 .section { padding: 100px 80px; }
 .section-tag {
@@ -272,14 +252,12 @@ img { display: block; max-width: 100%; }
   font-size: 16px; line-height: 1.75; color: var(--text2);
   max-width: 520px; font-weight: 300;
 }
-
 /* ── MAP SECTION ─────────────────────────────────────── */
 #map-section {
   background: var(--ink);
   display: flex; flex-direction: column;
   height: auto;
 }
-
 .map-top {
   display: flex; align-items: center; justify-content: space-between;
   padding: 28px 48px 22px; flex-shrink: 0;
@@ -290,7 +268,6 @@ img { display: block; max-width: 100%; }
   font-size: 26px; font-weight: 600; color: white; margin-bottom: 3px;
 }
 .map-top-left p { font-size: 12px; color: rgba(255,255,255,0.35); }
-
 .map-filter-row {
   display: flex; gap: 8px; overflow-x: auto;
   scrollbar-width: none; padding-bottom: 2px;
@@ -305,10 +282,8 @@ img { display: block; max-width: 100%; }
 }
 .mf-chip.active { background: var(--leaf); border-color: var(--leaf); color: white; }
 .mf-chip:hover:not(.active) { background: rgba(255,255,255,0.1); color: white; }
-
 .map-body { display: flex; height: 480px; overflow: hidden; flex-shrink: 0; }
 #main-map { flex: 1; position: relative; min-height: 420px; }
-
 /* MAP POPUP */
 .tree-popup-card {
   position: absolute; bottom: 28px; left: 28px; z-index: 500;
@@ -320,7 +295,6 @@ img { display: block; max-width: 100%; }
   max-height: calc(100% - 60px); overflow-y: auto;
 }
 .tree-popup-card.open { transform: translateY(0); opacity: 1; pointer-events: all; display: block; }
-
 @media(max-width: 600px){
   .tree-popup-card {
     position: fixed !important;
@@ -332,7 +306,6 @@ img { display: block; max-width: 100%; }
   .tree-popup-card.open { transform: translateY(0) !important; }
   .gallery-slide img { height: 220px !important; }
 }
-
 .tpc-photo-wrap { position: relative; display: none; }
 .tpc-photo-wrap.show { display: block; }
 .tpc-photo { width: 100%; height: 200px; object-fit: cover; display: block; cursor: zoom-in; transition: opacity .2s; }
@@ -346,7 +319,6 @@ img { display: block; max-width: 100%; }
 .tpc-photo-tag { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 3px; }
 .tpc-photo-name { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: white; line-height: 1.1; }
 .tpc-photo-sci { font-style: italic; font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
-
 .tpc-head { background: var(--sage-dark); padding: 16px 16px; position: relative; display: none; }
 .tpc-head.show { display: block; }
 .tpc-close {
@@ -360,7 +332,6 @@ img { display: block; max-width: 100%; }
 .tpc-tag { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--lime); margin-bottom: 4px; }
 .tpc-name { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: white; }
 .tpc-sci { font-style: italic; font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
-
 .tpc-body { padding: 14px 16px; }
 .tpc-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
 .tpc-row:last-child { border: none; }
@@ -368,7 +339,6 @@ img { display: block; max-width: 100%; }
 .tpc-row span:last-child { font-weight: 600; }
 .tpc-note { font-size: 12px; color: var(--text2); background: var(--mist); border-radius: 8px; padding: 9px 11px; margin-top: 10px; line-height: 1.5; }
 .tpc-by { font-size: 11px; color: var(--text3); margin-top: 10px; display: flex; align-items: center; gap: 4px; }
-
 /* MAP SIDEBAR */
 .map-sidebar {
   width: 280px; background: #0f1a0d;
@@ -401,7 +371,6 @@ img { display: block; max-width: 100%; }
 .msb-tag.good { background: rgba(92,154,110,0.2); color: #a8d5a2; }
 .msb-tag.fair { background: rgba(196,147,58,0.2); color: #f0d9a8; }
 .msb-tag.poor { background: rgba(192,57,43,0.2); color: #f0a8a8; }
-
 /* ── CLUSTER STYLES (new) ── */
 .marker-cluster-small,
 .marker-cluster-medium,
@@ -415,7 +384,6 @@ img { display: block; max-width: 100%; }
   font-weight: 700 !important;
   font-size: 13px !important;
 }
-
 /* ── STATS SECTION ───────────────────────────────────── */
 #stats-section {
   background: var(--sage-dark);
@@ -440,7 +408,6 @@ img { display: block; max-width: 100%; }
 .sb-icon { font-size: 32px; margin-bottom: 14px; display: block; }
 .sb-val { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 600; color: white; line-height: 1; margin-bottom: 6px; }
 .sb-label { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; font-weight: 500; }
-
 /* ── HOW IT WORKS ────────────────────────────────────── */
 #how-section { background: var(--parchment); }
 .how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-top: 56px; }
@@ -458,7 +425,6 @@ img { display: block; max-width: 100%; }
 .how-icon { font-size: 36px; margin-bottom: 18px; display: block; }
 .how-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--ink); margin-bottom: 10px; }
 .how-desc { font-size: 14px; line-height: 1.75; color: var(--text2); font-weight: 300; }
-
 /* ── SPECIES SECTION ─────────────────────────────────── */
 #species-section { background: var(--linen); }
 .species-intro { max-width: 500px; }
@@ -481,7 +447,6 @@ img { display: block; max-width: 100%; }
 .sp-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; color: var(--ink); }
 .sp-sci { font-size: 10px; font-style: italic; color: var(--text3); margin-bottom: 7px; }
 .sp-count { font-size: 11px; font-weight: 600; color: var(--sage); background: var(--mist); padding: 3px 8px; border-radius: 8px; display: inline-block; }
-
 /* ── CTA SECTION ─────────────────────────────────────── */
 #cta-section {
   background: var(--cream);
@@ -514,7 +479,6 @@ img { display: block; max-width: 100%; }
 .cta-title em { color: var(--sage); font-style: italic; }
 .cta-desc { font-size: 17px; line-height: 1.75; color: var(--text2); margin-bottom: 40px; font-weight: 300; }
 .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
 /* ── FOOTER ──────────────────────────────────────────── */
 footer {
   background: var(--ink);
@@ -539,14 +503,12 @@ footer {
 .footer-copy { font-size: 12px; color: rgba(255,255,255,0.2); }
 .footer-made { font-size: 12px; color: rgba(255,255,255,0.2); }
 .footer-made span { color: var(--lime); }
-
 /* ── LEAFLET OVERRIDES ───────────────────────────────── */
 .leaflet-control-attribution { display: none !important; }
 .leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: var(--shadow-lg) !important; }
 .leaflet-popup-content { font-family: 'Outfit', sans-serif !important; }
 .leaflet-control-zoom { border: 1px solid var(--border) !important; border-radius: 10px !important; overflow: hidden; }
 .leaflet-control-zoom a { font-family: 'Outfit', sans-serif !important; }
-
 /* ── ANIMATIONS ──────────────────────────────────────── */
 @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 .fade-up { opacity: 0; animation: fadeUp .7s ease forwards; }
@@ -554,7 +516,6 @@ footer {
 .fade-up-2 { animation-delay: .22s; }
 .fade-up-3 { animation-delay: .34s; }
 .fade-up-4 { animation-delay: .46s; }
-
 /* ── RESPONSIVE ──────────────────────────────────────── */
 @media(max-width:1100px) {
   #hero { grid-template-columns: 1fr; min-height: auto; }
@@ -593,7 +554,6 @@ footer {
   #trust-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
   .trust-divider { display: none; }
 }
-
 /* ── LOGO ── */
 .nav-logo, .nav-brand {
   display: flex !important;
@@ -625,7 +585,6 @@ footer {
   padding-left: 32px;
   margin-top: 1px;
 }
-
 /* ── MOBILE FIX ── */
 @media(max-width:600px){
   #nav { padding: 0 16px; height: 56px; }
@@ -687,11 +646,9 @@ footer {
   .hstat { padding-right: 12px; margin-right: 12px; }
   .hstat-val { font-size: 24px; }
 }
-
 /* ── CRITICAL OVERFLOW FIX ── */
 html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 * { max-width: 100%; }
-
 @media(max-width:768px){
   #hero { display: flex !important; flex-direction: column !important; width: 100% !important; overflow: hidden !important; padding-top: 56px !important; }
   .hero-left { width: 100% !important; padding: 28px 20px 32px !important; order: 1; }
@@ -734,7 +691,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
   .footer-top { grid-template-columns: 1fr !important; gap: 24px !important; }
   .footer-bottom { flex-direction: column !important; gap: 8px !important; text-align: center !important; }
 }
-
 /* ── SEASONAL PHOTO GALLERY ── */
 .photo-gallery { position: relative; width: 100%; background: #111; }
 .gallery-slides { display: flex; overflow: hidden; transition: none; width: 100%; }
@@ -759,7 +715,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 .gallery-prev { left: 6px; }
 .gallery-next { right: 6px; }
 .gallery-prev:hover, .gallery-next:hover { background: rgba(0,0,0,.7); }
-
 /* ── LIGHTBOX ── */
 #lightbox {
   position: fixed; inset: 0; z-index: 9999;
@@ -786,7 +741,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
 </style>
 </head>
 <body>
-
 <script>
 (async function authGate(){
   const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
@@ -826,7 +780,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
   } catch(e){ showBlock('Something went wrong','Please try refreshing the page'); }
 })();
 </script>
-
 <!-- NAV -->
 <nav id="nav">
   <a href="index.html" class="nav-logo nav-brand">
@@ -850,7 +803,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     <span></span><span></span><span></span>
   </button>
 </nav>
-
 <!-- MOBILE NAV -->
 <div id="mobile-nav">
   <a href="#map-section" onclick="closeNav()">🗺️ Map</a>
@@ -861,7 +813,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
   <a href="app.html">📱 Mobile App</a>
   <a href="submit.html" class="mob-cta">➕ Add a Tree</a>
 </div>
-
 <!-- HERO -->
 <section id="hero">
   <div class="hero-left">
@@ -891,7 +842,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     </div>
   </div>
 </section>
-
 <!-- TRUST BAR -->
 <div id="trust-bar">
   <div class="trust-item"><span class="trust-icon">🆓</span> Always free to use</div>
@@ -904,7 +854,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
   <div class="trust-divider"></div>
   <div class="trust-item"><span class="trust-icon">🌳</span> Open community data</div>
 </div>
-
 <!-- MAP SECTION -->
 <div id="map-section">
   <div class="map-top">
@@ -959,7 +908,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     </div>
   </div>
 </div>
-
 <!-- STATS -->
 <section id="stats-section">
   <span class="section-tag">By the Numbers</span>
@@ -971,7 +919,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     <div class="stat-box"><span class="sb-icon">💚</span><div class="sb-val" id="st-good">—</div><div class="sb-label">Healthy Trees</div></div>
   </div>
 </section>
-
 <!-- HOW IT WORKS -->
 <section id="how-section" class="section">
   <div style="max-width:520px;margin-bottom:0">
@@ -985,7 +932,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     <div class="how-card"><div class="how-num">03</div><span class="how-icon">🌱</span><div class="how-title">Log It for Everyone</div><div class="how-desc">Tap GPS for precision coordinates, take a photo, fill in a few details. Your tree appears on the map immediately — visible to everyone in Delhi.</div></div>
   </div>
 </section>
-
 <!-- SPECIES -->
 <section id="species-section" class="section">
   <div class="species-layout">
@@ -999,7 +945,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     <div class="species-grid" id="species-grid"></div>
   </div>
 </section>
-
 <!-- CTA -->
 <section id="cta-section">
   <div class="cta-inner">
@@ -1012,7 +957,6 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     </div>
   </div>
 </section>
-
 <!-- FOOTER -->
 <footer>
   <div class="footer-top">
@@ -1044,24 +988,21 @@ html, body { overflow-x: hidden !important; max-width: 100vw !important; }
     <div class="footer-made">Made with <span>🌿</span> for Delhi's trees</div>
   </div>
 </footer>
-
 <!-- LIGHTBOX -->
 <div id="lightbox" onclick="closeLightbox()">
   <button id="lightbox-close" onclick="closeLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
   <div id="lightbox-caption"></div>
 </div>
-
 <script>
 const SUPABASE_URL = 'https://dcciktuwyjrvkynmxdjn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
-
 const SP = {
   'Neem':    {sci:'Azadirachta indica',   e:'🌿', col:'#4a8c3f'},
   'Peepal':  {sci:'Ficus religiosa',      e:'🍀', col:'#8c6a3f'},
-  'Gulmohar':{sci:'Delonix regia',        e:'🌸', col:'#c94e2a'},
+  'Gulmohar':{sci:'Delonix regia',        e:'🌺', col:'#c94e2a'},
   'Jamun':   {sci:'Syzygium cumini',      e:'🫐', col:'#5a2d82'},
-  'Amaltas': {sci:'Cassia fistula',       e:'🌻', col:'#c9a030'},
+  'Amaltas': {sci:'Cassia fistula',       e:'🌼', col:'#c9a030'},
   'Ashoka':  {sci:'Polyalthia longifolia',e:'🌲', col:'#2d6e4a'},
   'Arjun':   {sci:'Terminalia arjuna',    e:'🪵', col:'#7a5c2e'},
   'Pilkhan': {sci:'Ficus virens',         e:'🍃', col:'#3a7a6e'},
@@ -1073,16 +1014,13 @@ const SP = {
 const gc = n => (SP[n]||{col:'#4a9e32'}).col;
 const ge = n => (SP[n]||{e:'🌳'}).e;
 const gr = d => d<30?14:d<60?17:d<90?20:24;
-
 let allTrees = [], activeFilter = null, heroMap, mainMap, clusterGroup;
-
 // ── NAV ───────────────────────────────────────────────
 window.addEventListener('scroll', () => {
   document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 30);
 });
 function toggleNav() { document.getElementById('mobile-nav').classList.toggle('open'); }
 function closeNav() { document.getElementById('mobile-nav').classList.remove('open'); }
-
 // Update nav sign-in link if logged in
 (async()=>{
   try{
@@ -1096,7 +1034,6 @@ function closeNav() { document.getElementById('mobile-nav').classList.remove('op
     }
   }catch(e){}
 })();
-
 // ── FETCH ─────────────────────────────────────────────
 async function fetchTrees() {
   try {
@@ -1107,7 +1044,6 @@ async function fetchTrees() {
     return await r.json();
   } catch(e) { return []; }
 }
-
 // ── HERO MAP ──────────────────────────────────────────
 function initHeroMap(trees) {
   heroMap = L.map('hero-map', {
@@ -1127,12 +1063,10 @@ function initHeroMap(trees) {
     heroMap.fitBounds(L.latLngBounds(trees.map(t => [t.latitude, t.longitude])), { padding: [40,40] });
   }
 }
-
 // ── MAIN MAP ──────────────────────────────────────────
 function initMainMap(trees) {
   mainMap = L.map('main-map', { center: [28.6139, 77.2090], zoom: 11, zoomControl: true });
   L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, attribution: '© Google Maps' }).addTo(mainMap);
-
   // ── NEW: marker cluster group ──
   clusterGroup = L.markerClusterGroup({
     maxClusterRadius: 60,
@@ -1151,7 +1085,6 @@ function initMainMap(trees) {
     }
   });
   mainMap.addLayer(clusterGroup);
-
   renderMarkers(trees);
   mainMap.on('click', e => { if(!e.originalEvent.defaultPrevented) closePopup(); });
   if (trees.length > 0) {
@@ -1160,7 +1093,6 @@ function initMainMap(trees) {
     }, 300);
   }
 }
-
 function renderMarkers(trees) {
   clusterGroup.clearLayers();
   trees.forEach(t => {
@@ -1199,7 +1131,6 @@ function renderMarkers(trees) {
     clusterGroup.addLayer(m);
   });
 }
-
 // ── POPUP ─────────────────────────────────────────────
 function showPopup(t) {
   buildPhotoGallery(t);
@@ -1222,7 +1153,6 @@ function showPopup(t) {
   if (si) { si.classList.add('active'); si.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
 }
 function closePopup() { document.getElementById('tree-popup').classList.remove('open'); }
-
 // ── FILTER ────────────────────────────────────────────
 function buildFilterChips(trees) {
   const counts = {};
@@ -1251,7 +1181,6 @@ function filterMap(name, el) {
     mainMap.fitBounds(L.latLngBounds(allTrees.map(t => [t.latitude, t.longitude])), { padding: [50,60] });
   }
 }
-
 // ── SIDEBAR ───────────────────────────────────────────
 function buildSidebar(trees) {
   const list = document.getElementById('msb-list');
@@ -1283,7 +1212,6 @@ function sidebarSearch(q) {
   ) : allTrees;
   buildSidebar(f);
 }
-
 // ── SPECIES GRID ──────────────────────────────────────
 function buildSpeciesGrid(trees) {
   const counts = {};
@@ -1311,7 +1239,6 @@ function scrollAndFilter(name) {
     if (chip) filterMap(name, chip);
   }, 800);
 }
-
 // ── STATS ─────────────────────────────────────────────
 function updateStats(trees) {
   const total = trees.length;
@@ -1322,7 +1249,6 @@ function updateStats(trees) {
    ['st-total',total],['st-species',species],['st-contrib',contrib],['st-good',good]
   ].forEach(([id,v]) => { const el=document.getElementById(id); if(el) el.textContent=v||'0'; });
 }
-
 // ── AREA ZOOM ─────────────────────────────────────────
 const DELHI_AREAS = {
   jorbagh: {lat:28.5925,lng:77.2190,zoom:16},
@@ -1340,7 +1266,6 @@ function zoomToArea(key) {
   mainMap.flyTo([a.lat, a.lng], a.zoom, {duration:1.2});
   closePopup();
 }
-
 // ── PHOTO GALLERY ─────────────────────────────────────
 function buildPhotoGallery(t) {
   const photos = [
@@ -1379,7 +1304,6 @@ function galleryGo(idx){
   if(slides){slides.style.transition='transform .3s ease';slides.style.transform='translateX(-'+(idx*100)+'%)';}
   document.querySelectorAll('.gallery-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
 }
-
 // ── LIGHTBOX ──────────────────────────────────────────
 function openLightbox(src,caption){
   document.getElementById('lightbox-img').src=src;
@@ -1392,7 +1316,6 @@ function closeLightbox(){
   document.body.style.overflow='';
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
-
 // ── INIT ──────────────────────────────────────────────
 (async () => {
   const trees = await fetchTrees();
