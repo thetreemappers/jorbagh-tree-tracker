@@ -16,11 +16,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
-.admin-nav{
-  background:var(--forest);padding:calc(var(--safe-top)+12px) 20px 12px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-}
+.admin-nav{background:var(--forest);padding:calc(var(--safe-top)+12px) 20px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .an-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:white;text-decoration:none;}
 .an-logo span{color:var(--gold);}
 .an-badge{background:rgba(200,146,42,.25);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:6px;}
@@ -47,7 +43,7 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);m
 .sc-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(248,244,237,.5);}
 .sc-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text);}
 .sc-head p{font-size:11px;color:var(--text3);margin-top:2px;}
-.member-item{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;transition:background .15s, opacity .3s, max-height .3s, padding .3s;}
+.member-item{padding:14px 16px;border-bottom:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:12px;transition:background .15s;}
 .member-item:last-child{border:none;}
 .member-item:hover{background:rgba(42,106,30,.02);}
 .mi-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
@@ -105,7 +101,6 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);m
 #access-denied h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;margin-bottom:8px;}
 #access-denied p{font-size:14px;color:var(--text3);margin-bottom:24px;}
 #access-denied a{display:inline-block;padding:12px 24px;background:var(--canopy);color:white;border-radius:10px;text-decoration:none;font-weight:600;}
-#login-gate{display:none;max-width:400px;margin:60px auto;padding:0 20px;}
 @media(max-width:768px){
   .stats-row{grid-template-columns:1fr 1fr;gap:10px;}
   .cif-row{grid-template-columns:1fr;gap:8px;}
@@ -156,25 +151,19 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);m
     </div>
     <div class="tab-panel active" id="panel-pending">
       <div class="section-card">
-        <div class="sc-head">
-          <div><h3>⏳ Pending Approvals</h3><p>New registrations waiting for your approval</p></div>
-        </div>
+        <div class="sc-head"><div><h3>⏳ Pending Approvals</h3><p>New registrations waiting for your approval</p></div></div>
         <div id="pending-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
       </div>
     </div>
     <div class="tab-panel" id="panel-members">
       <div class="section-card">
-        <div class="sc-head">
-          <div><h3>👥 All Members</h3><p>Everyone who has registered</p></div>
-        </div>
+        <div class="sc-head"><div><h3>👥 All Members</h3><p>Everyone who has registered</p></div></div>
         <div id="members-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
       </div>
     </div>
     <div class="tab-panel" id="panel-trees">
       <div class="section-card">
-        <div class="sc-head">
-          <div><h3>🌳 All Trees</h3><p>Every tree logged on the map</p></div>
-        </div>
+        <div class="sc-head"><div><h3>🌳 All Trees</h3><p>Every tree logged on the map</p></div></div>
         <div id="trees-list"><div class="loading"><div class="spinner"></div>Loading...</div></div>
       </div>
     </div>
@@ -221,20 +210,18 @@ function toast(msg,dur=2500){
   el.textContent=msg; el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),dur);
 }
-
 function switchTab(tab){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   document.getElementById('tab-'+tab).classList.add('active');
 }
-
 async function init(){
   try{
     const {data:{session}}=await sb.auth.getSession();
-    if(!session?.user){ window.location.href='login.html'; return; }
+    if(!session?.user){window.location.href='login.html';return;}
     currentUser=session.user;
-    const {data:profile,error:profErr}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+    const {data:profile}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
     if(profile&&['admin','co-admin'].includes(profile.role)){
       document.getElementById('admin-main').style.display='block';
       await loadAll();
@@ -249,14 +236,17 @@ async function init(){
     await loadAll();
   }
 }
-
 async function loadAll(){
   await Promise.all([loadMembers(),loadTrees(),loadInvites()]);
 }
 
+// ── MEMBERS ──────────────────────────────────────────────────
 async function loadMembers(){
   const {data}=await sb.from('profiles').select('*').order('joined_at',{ascending:false});
   allMembers=data||[];
+  renderMembers();
+}
+function renderMembers(){
   const pending=allMembers.filter(m=>!m.status||m.status==='pending');
   const treeCounts={};
   allTrees.forEach(t=>{treeCounts[t.submitted_by]=(treeCounts[t.submitted_by]||0)+1;});
@@ -271,7 +261,6 @@ async function loadMembers(){
     ?allMembers.map((m,i)=>memberRow(m,i,treeCounts)).join('')
     :'<div class="empty"><div class="empty-icon">👥</div>No members yet</div>';
 }
-
 function memberRow(m,i,treeCounts){
   const name=m.full_name||'Unknown';
   const trees=treeCounts[name]||0;
@@ -284,7 +273,7 @@ function memberRow(m,i,treeCounts){
     :m.role==='member'
       ?`<button class="btn-make-admin" onclick="makeCoAdmin('${m.id}','${name}')">⭐ Make Co-Admin</button>`
       :`<span style="font-size:11px;color:var(--text3)">${m.role}</span>`;
-  return `<div class="member-item" id="member-${m.id}">
+  return `<div class="member-item">
     <div class="mi-avatar" style="background:${COLORS[i%COLORS.length]}">${name.charAt(0).toUpperCase()}</div>
     <div class="mi-body">
       <div class="mi-name">${name}</div>
@@ -294,69 +283,37 @@ function memberRow(m,i,treeCounts){
     <div class="mi-actions">${actions}</div>
   </div>`;
 }
-
-function removeMemberFromDOM(id){
-  // Remove from both pending-list and members-list
-  document.querySelectorAll('#member-'+id).forEach(el=>{
-    el.style.transition='opacity .3s, max-height .4s, padding .4s';
-    el.style.overflow='hidden';
-    el.style.opacity='0';
-    const h=el.offsetHeight;
-    el.style.maxHeight=h+'px';
-    setTimeout(()=>{el.style.maxHeight='0';el.style.padding='0';el.style.borderBottom='none';},200);
-    setTimeout(()=>el.remove(),500);
-  });
-  // querySelectorAll with id doesn't work for duplicates — use attribute selector
-  document.querySelectorAll('[id="member-'+id+'"]').forEach(el=>{
-    el.style.transition='opacity .3s, max-height .4s, padding .4s';
-    el.style.overflow='hidden';
-    el.style.opacity='0';
-    setTimeout(()=>{el.style.maxHeight='0';el.style.padding='0';el.style.borderBottom='none';},200);
-    setTimeout(()=>el.remove(),500);
-  });
-}
-
 async function approveUser(id,name){
-  await sb.from('profiles').update({
+  const {error}=await sb.from('profiles').update({
     status:'approved',
     approved_at:new Date().toISOString(),
     approved_by:currentUser.email
   }).eq('id',id);
+  if(error){toast('❌ Failed: '+error.message);return;}
+  // Update local array, re-render — no DB re-fetch
+  allMembers=allMembers.map(m=>String(m.id)===String(id)?{...m,status:'approved'}:m);
+  renderMembers();
   toast(`✅ ${name} approved!`);
-  await loadMembers();
 }
-
 async function rejectUser(id,name){
   if(!confirm(`Remove ${name}'s registration?`)) return;
   const {error}=await sb.from('profiles').delete().eq('id',id);
-  if(error){ toast('❌ Failed: '+error.message); return; }
-  // Remove cards from DOM immediately — don't wait for reload
-  document.querySelectorAll('[id="member-'+id+'"]').forEach(el=>{
-    el.style.overflow='hidden';
-    el.style.transition='opacity .25s ease, max-height .35s ease, padding .35s ease';
-    el.style.opacity='0';
-    const h=el.offsetHeight+'px';
-    el.style.maxHeight=h;
-    setTimeout(()=>{
-      el.style.maxHeight='0';
-      el.style.padding='0';
-      el.style.borderBottom='none';
-    },150);
-    setTimeout(()=>el.remove(),450);
-  });
+  if(error){toast('❌ Failed: '+error.message);return;}
+  // Remove from local array, re-render — no DB re-fetch so card never comes back
+  allMembers=allMembers.filter(m=>String(m.id)!==String(id));
+  renderMembers();
   toast(`🗑️ ${name} removed`);
-  // Reload in background to sync counts
-  setTimeout(()=>loadMembers(),500);
 }
-
 async function makeCoAdmin(id,name){
   if(!confirm(`Make ${name} a Co-Admin?`)) return;
   const {error}=await sb.from('profiles').update({role:'co-admin'}).eq('id',id);
-  if(error){ toast('❌ Failed: '+error.message); return; }
+  if(error){toast('❌ Failed: '+error.message);return;}
+  allMembers=allMembers.map(m=>String(m.id)===String(id)?{...m,role:'co-admin'}:m);
+  renderMembers();
   toast(`⭐ ${name} is now Co-Admin!`);
-  await loadMembers();
 }
 
+// ── TREES ──────────────────────────────────────────────────────
 async function loadTrees(){
   const {data}=await sb.from('trees').select('*').order('created_at',{ascending:false});
   allTrees=data||[];
@@ -377,7 +334,6 @@ async function loadTrees(){
       </div>`).join('')
     :'<div class="empty"><div class="empty-icon">🌱</div>No trees yet</div>';
 }
-
 async function deleteTree(id,name){
   const el=document.getElementById('tree-'+id);
   if(el) el.style.background='#fde8e8';
@@ -404,6 +360,7 @@ async function deleteTree(id,name){
   toast(`✅ ${name} tree deleted`);
 }
 
+// ── INVITES ────────────────────────────────────────────────────
 async function loadInvites(){
   const {data}=await sb.from('invite_codes').select('*').order('created_at',{ascending:false});
   const codes=data||[];
@@ -421,18 +378,16 @@ async function loadInvites(){
       </div>`).join('')
     :'<div class="empty"><div class="empty-icon">🔑</div>No invite codes yet</div>';
 }
-
 async function createInvite(){
   let code=document.getElementById('new-code').value.trim().toUpperCase();
   const role=document.getElementById('new-role').value;
   if(!code) code='TM'+Math.random().toString(36).slice(2,7).toUpperCase();
   const {error}=await sb.from('invite_codes').insert({code,role,label:role==='co-admin'?'Co-Admin invite':'Member invite'});
-  if(error){ toast('❌ Code already exists — try a different one'); return; }
+  if(error){toast('❌ Code already exists — try a different one');return;}
   document.getElementById('new-code').value='';
   toast(`✅ Code ${code} created!`);
   await loadInvites();
 }
-
 function copyInviteLink(code,baseUrl){
   const link=`${baseUrl}/login.html?invite=${code}`;
   navigator.clipboard.writeText(link).then(()=>{
@@ -441,12 +396,10 @@ function copyInviteLink(code,baseUrl){
     setTimeout(()=>{btn.textContent='📋 Copy Link';btn.classList.remove('copied');},2000);
   });
 }
-
 async function signOut(){
   await sb.auth.signOut();
   window.location.href='login.html';
 }
-
 const urlParams=new URLSearchParams(window.location.search);
 if(urlParams.get('invite')) sessionStorage.setItem('pendingInvite',urlParams.get('invite'));
 init();
