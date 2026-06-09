@@ -147,10 +147,10 @@ textarea{resize:vertical;min-height:80px;}
   try{
     const {data:{session}}=await SB.auth.getSession();
     if(!session?.user){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Sign in to Add a Tree</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">You need an approved account to add trees to the map.</div><a href="login.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Sign In →</a><div style="margin-top:14px"><a href="index.html" style="font-size:12px;color:#7a9e68;text-decoration:none">← Back to Map</a></div></div>';return;}
-    const {data:prof}=await SB.from('profiles').select('status').eq('id',session.user.id).single();
+    const {data:prof}=await SB.from('profiles').select('status,full_name').eq('id',session.user.id).single();
     if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval.</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">← Back to Map</a></div>';return;}
     const name=prof?.full_name||session.user.user_metadata?.full_name||session.user.email.split('@')[0];
-    setTimeout(()=>{const nf=document.getElementById('f-name');if(nf&&!nf.value) nf.value=name;},100);
+    setTimeout(()=>{const nf=document.getElementById('f-name');if(nf&&!nf.value)nf.value=name;},100);
     overlay.style.opacity='0';overlay.style.transition='opacity .3s';
     setTimeout(()=>overlay.remove(),300);
   }catch(e){overlay.remove();}
@@ -288,7 +288,7 @@ textarea{resize:vertical;min-height:80px;}
 const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
 const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
 const SB=supabase.createClient(SURL,SKEY);
-let gpsWatcher=null,gpsReadings=[],selectedCond='Good';
+let selectedCond='Good';
 let mainFile=null,seasonFiles={spring:null,summer:null,winter:null,autumn:null};
 const SPECIES=['Neem','Peepal','Gulmohar','Jamun','Amaltas','Ashoka','Arjun','Pilkhan','Bargad','Moringa','Figs','Areca'];
 const SCI={'Neem':'Azadirachta indica','Peepal':'Ficus religiosa','Gulmohar':'Delonix regia','Jamun':'Syzygium cumini','Amaltas':'Cassia fistula','Ashoka':'Saraca indica','Bargad':'Ficus benghalensis','Moringa':'Moringa oleifera'};
@@ -302,6 +302,12 @@ const SCI={'Neem':'Azadirachta indica','Peepal':'Ficus religiosa','Gulmohar':'De
   });
 })();
 function setCond(val,el){selectedCond=val;document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+// ── HELPERS ──
+function isHeicFile(file){
+  const n=file.name.toLowerCase();
+  return file.type==='image/heic'||file.type==='image/heif'||n.endsWith('.heic')||n.endsWith('.heif');
+}
 
 // ── MAP PICKER ──
 let pickerMap=null,allTreesCache=[],moveTimer=null;
@@ -383,12 +389,24 @@ function showPhotoPlaceholder(ph){
 }
 function acceptPhoto(file){
   mainFile=file;
+  const ph=document.getElementById('main-placeholder');
+  const changeBar=document.getElementById('main-change');
+
+  if(isHeicFile(file)){
+    // Browsers can't render HEIC — show a success placeholder instead
+    document.getElementById('main-preview').style.display='none';
+    ph.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center"><div style="font-size:36px;margin-bottom:8px">✅</div><div style="font-size:14px;font-weight:600;color:var(--text)">iPhone photo ready</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Will be uploaded when you submit</div></div>';
+    ph.style.display='flex';
+    changeBar.style.display='block';
+    return;
+  }
+
   const reader=new FileReader();
   reader.onload=e=>{
     const img=document.getElementById('main-preview');
     img.src=e.target.result;img.style.display='block';
-    document.getElementById('main-placeholder').style.display='none';
-    document.getElementById('main-change').style.display='block';
+    ph.style.display='none';
+    changeBar.style.display='block';
   };
   reader.readAsDataURL(file);
 }
@@ -397,11 +415,8 @@ async function onMainPhoto(input){
   const file=input.files[0];if(!file) return;
   const ph=document.getElementById('main-placeholder');
 
-  // ── HEIC/HEIF (iPhone photos) can't be processed by canvas in most browsers
-  //    so skip validation and accept them directly ──
-  const fname=file.name.toLowerCase();
-  const isHeic=file.type==='image/heic'||file.type==='image/heif'||fname.endsWith('.heic')||fname.endsWith('.heif');
-  if(isHeic){acceptPhoto(file);return;}
+  // HEIC/HEIF: can't be processed by canvas — skip validation, accept directly
+  if(isHeicFile(file)){acceptPhoto(file);return;}
 
   // Show checking spinner
   ph.style.display='flex';
@@ -409,12 +424,12 @@ async function onMainPhoto(input){
 
   try{
     const smallB64=await resizeForValidation(file,512);
-    if(!smallB64){acceptPhoto(file);return;} // canvas failed — accept anyway
+    if(!smallB64){acceptPhoto(file);return;}
 
     const r=await fetch(SURL+'/functions/v1/validate-photo',{
       method:'POST',
       headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json'},
-      body:JSON.stringify({imageBase64:smallB64.split(',')[1],mediaType:file.type||'image/jpeg'})
+      body:JSON.stringify({imageBase64:smallB64.split(',')[1],mediaType:'image/jpeg'})
     });
     const result=await r.json();
 
@@ -426,7 +441,7 @@ async function onMainPhoto(input){
       return;
     }
   }catch(e){
-    console.warn('Photo validation unavailable, proceeding:',e.message);
+    console.warn('Validation unavailable, proceeding:',e.message);
   }
   acceptPhoto(file);
 }
@@ -439,11 +454,41 @@ function onSeasonPhoto(input,season){
   reader.readAsDataURL(file);
 }
 
+// ── UPLOAD — handles HEIC natively, resizes JPG/PNG ──
 async function uploadPhoto(file){
   try{
-    const blob=await new Promise(res=>{const img=new Image();img.onload=()=>{const max=1200,ratio=Math.min(max/img.width,max/img.height,1);const c=document.createElement('canvas');c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>res(b||file),'image/jpeg',0.85);};img.onerror=()=>res(file);img.src=URL.createObjectURL(file);});
-    const fname='tree_'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.jpg';
-    const r=await fetch(SURL+'/storage/v1/object/tree-photos/'+fname,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'image/jpeg','x-upsert':'true'},body:blob});
+    const heic=isHeicFile(file);
+    let blob,contentType,ext;
+
+    if(heic){
+      // Upload HEIC directly — no canvas resize
+      blob=file;
+      contentType=file.type||'image/heic';
+      ext='.heic';
+    } else {
+      // Resize to max 1200px for JPG/PNG
+      blob=await new Promise(res=>{
+        const img=new Image();
+        img.onload=()=>{
+          const max=1200,ratio=Math.min(max/img.width,max/img.height,1);
+          const c=document.createElement('canvas');
+          c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          c.toBlob(b=>res(b||file),'image/jpeg',0.85);
+        };
+        img.onerror=()=>res(file);
+        img.src=URL.createObjectURL(file);
+      });
+      contentType='image/jpeg';
+      ext='.jpg';
+    }
+
+    const fname='tree_'+Date.now()+'_'+Math.random().toString(36).slice(2)+ext;
+    const r=await fetch(SURL+'/storage/v1/object/tree-photos/'+fname,{
+      method:'POST',
+      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':contentType,'x-upsert':'true'},
+      body:blob
+    });
     if(!r.ok) throw new Error('Upload '+r.status);
     return SURL+'/storage/v1/object/public/tree-photos/'+fname;
   }catch(e){console.warn('Upload failed:',e.message);return null;}
