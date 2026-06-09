@@ -20,14 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{overflow-x:hidden;max-width:100vw;}
 body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
-/* NAV */
-.nav{
-  background:rgba(247,242,232,0.95);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  padding:0 48px;height:64px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;
-}
+.nav{background:rgba(247,242,232,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .nav-brand{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-decoration:none;line-height:1;}
 .nav-brand .logo-main{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;line-height:1;}
 .nav-brand .logo-name{color:#5aad3f;}
@@ -36,167 +29,55 @@ body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);m
 .nav-links{display:flex;align-items:center;gap:28px;}
 .nav-links a{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;}
 .nav-links a:hover{color:var(--text);}
-.nav-back{font-size:13px;font-weight:600;color:var(--sage);text-decoration:none;display:flex;align-items:center;gap:4px;}
-.nav-cta{background:var(--green);color:white !important;padding:9px 20px;border-radius:24px;font-size:14px !important;font-weight:600 !important;transition:all .2s;box-shadow:0 3px 12px rgba(30,61,40,0.25);}
-.nav-cta:hover{background:var(--sage);}
 .nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:none;border:none;}
 .nav-ham span{display:block;width:22px;height:2px;background:var(--green);border-radius:2px;}
 #sub-mobile-nav{display:none;position:fixed;inset:64px 0 0;background:var(--cream);z-index:800;flex-direction:column;padding:28px 24px;gap:4px;border-top:1px solid var(--border);}
 #sub-mobile-nav.open{display:flex;}
 #sub-mobile-nav a{font-size:17px;font-weight:500;color:var(--text);padding:13px 0;border-bottom:1px solid var(--border);text-decoration:none;display:flex;align-items:center;gap:10px;}
 #sub-mobile-nav .mob-cta{margin-top:12px;background:var(--green);color:white;padding:15px;border-radius:14px;text-align:center;font-weight:600;justify-content:center;}
-@media(max-width:900px){
-  .nav{padding:0 20px;}
-  .nav-links{display:none;}
-  .nav-ham{display:flex;}
-}
-/* FORM */
+@media(max-width:900px){.nav{padding:0 20px;}.nav-links{display:none;}.nav-ham{display:flex;}}
 .wrap{max-width:560px;margin:0 auto;padding:32px 20px calc(var(--safe-bottom)+40px);box-sizing:border-box;width:100%;}
 .page-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;padding-left:4px;}
 .page-sub{font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.5;padding-left:4px;}
-@media(max-width:480px){
-  .wrap{padding:28px 20px calc(var(--safe-bottom)+40px);}
-}
+@media(max-width:480px){.wrap{padding:28px 20px calc(var(--safe-bottom)+40px);}}
 .section{background:white;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
 .sec-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-/* INPUTS */
 label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;}
-input[type=text],input[type=number],select,textarea{
-  width:100%;padding:12px 14px;border:1.5px solid #ddd5c8;border-radius:10px;
-  font-family:'Outfit',sans-serif;font-size:15px;color:var(--text);background:var(--cream);
-  outline:none;transition:border .2s;-webkit-appearance:none;
-}
+input[type=text],input[type=number],select,textarea{width:100%;padding:12px 14px;border:1.5px solid #ddd5c8;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;color:var(--text);background:var(--cream);outline:none;transition:border .2s;-webkit-appearance:none;}
 input:focus,select:focus,textarea:focus{border-color:var(--leaf);background:white;}
 input::placeholder,textarea::placeholder{color:#b8a898;}
 textarea{resize:vertical;min-height:80px;}
 .field{margin-bottom:12px;}
 .field:last-child{margin:0;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-/* ── UBER-STYLE MAP PICKER ── */
-.loc-picker-btn{
-  width:100%;padding:14px;
-  background:linear-gradient(135deg,var(--green),var(--sage));
-  border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;
-  font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
+.loc-picker-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--green),var(--sage));border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
 .loc-picker-btn:active{transform:scale(.98);}
-/* ── FULL-SCREEN UBER-STYLE OVERLAY ── */
-#map-overlay{
-  position:fixed;
-  top:0;left:0;right:0;bottom:0;
-  z-index:2000;
-  display:none;
-  flex-direction:column;
-  background:#f0ede6;
-}
+#map-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2000;display:none;flex-direction:column;background:#f0ede6;}
 #map-overlay.open{display:flex;}
-/* Header — sits above map in normal flow */
-.mpo-header{
-  flex-shrink:0;
-  background:rgba(247,242,232,0.97);
-  backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--border);
-  padding:12px 16px;
-  display:flex;align-items:center;gap:10px;
-  z-index:1;
-}
-.mpo-back{
-  width:38px;height:38px;border-radius:50%;
-  background:var(--green);border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;color:white;
-  box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0;
-}
+.mpo-header{flex-shrink:0;background:rgba(247,242,232,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:1;}
+.mpo-back{width:38px;height:38px;border-radius:50%;background:var(--green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;box-shadow:0 2px 8px rgba(0,0,0,.2);flex-shrink:0;}
 .mpo-title{font-size:13px;font-weight:600;color:var(--text2);flex:1;line-height:1.4;}
-/* Map area — fills space between header and bottom sheet */
-#map-area{
-  flex:1;
-  position:relative;
-  min-height:0;
-  overflow:hidden;
-}
-#picker-map{
-  position:absolute;
-  top:0;left:0;right:0;bottom:0;
-}
-/* THE PIN — must be z-index 1000+ to sit above Leaflet tile panes (max ~600) */
-#centre-pin{
-  position:absolute;
-  top:50%;left:50%;
-  z-index:1000;
-  pointer-events:none;
-  /* translate so the TIP of the pin is at exact centre */
-  transform:translate(-50%, -100%);
-  display:flex;flex-direction:column;align-items:center;
-  transition:transform 0.15s ease;
-}
-#centre-pin.lifted{
-  transform:translate(-50%, -110%);
-}
-.pin-head{
-  width:52px;height:52px;
-  border-radius:50%;
-  background:var(--green);
-  border:3px solid white;
-  box-shadow:0 4px 16px rgba(0,0,0,.35);
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;
-}
-.pin-stem{
-  width:4px;height:20px;
-  background:var(--green);
-  border-radius:0 0 4px 4px;
-}
-.pin-shadow{
-  width:14px;height:6px;
-  background:rgba(0,0,0,.18);
-  border-radius:50%;
-}
-/* Bottom confirm sheet */
-.mpo-bottom{
-  flex-shrink:0;
-  background:white;
-  padding:16px 20px calc(env(safe-area-inset-bottom,16px) + 4px);
-  border-radius:20px 20px 0 0;
-  box-shadow:0 -4px 24px rgba(0,0,0,.12);
-}
-.mpo-nearby-label{
-  font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-  color:var(--text3);margin-bottom:8px;
-}
-.mpo-addr{
-  font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;
-  min-height:22px;
-}
-.mpo-coords{
-  font-size:11px;color:var(--text3);font-family:monospace;margin-bottom:14px;
-}
+#map-area{flex:1;position:relative;min-height:0;overflow:hidden;}
+#picker-map{position:absolute;top:0;left:0;right:0;bottom:0;}
+#centre-pin{position:absolute;top:50%;left:50%;z-index:1000;pointer-events:none;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;transition:transform 0.15s ease;}
+#centre-pin.lifted{transform:translate(-50%,-110%);}
+.pin-head{width:52px;height:52px;border-radius:50%;background:var(--green);border:3px solid white;box-shadow:0 4px 16px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:24px;}
+.pin-stem{width:4px;height:20px;background:var(--green);border-radius:0 0 4px 4px;}
+.pin-shadow{width:14px;height:6px;background:rgba(0,0,0,.18);border-radius:50%;}
+.mpo-bottom{flex-shrink:0;background:white;padding:16px 20px calc(env(safe-area-inset-bottom,16px) + 4px);border-radius:20px 20px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);}
+.mpo-nearby-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.mpo-addr{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px;min-height:22px;}
+.mpo-coords{font-size:11px;color:var(--text3);font-family:monospace;margin-bottom:14px;}
 .mpo-nearby{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.mpo-nearby-item{
-  display:flex;align-items:center;gap:10px;
-  background:var(--parchment);border-radius:10px;padding:9px 12px;
-  cursor:pointer;border:1.5px solid transparent;transition:all .15s;
-}
+.mpo-nearby-item{display:flex;align-items:center;gap:10px;background:var(--parchment);border-radius:10px;padding:9px 12px;cursor:pointer;border:1.5px solid transparent;transition:all .15s;}
 .mpo-nearby-item:hover{border-color:var(--leaf);}
 .mpo-nearby-item .ni-icon{font-size:18px;flex-shrink:0;}
 .mpo-nearby-item .ni-name{font-size:13px;font-weight:600;color:var(--text);flex:1;}
 .mpo-nearby-item .ni-dist{font-size:11px;font-weight:600;color:var(--text3);background:rgba(0,0,0,.06);padding:2px 8px;border-radius:8px;white-space:nowrap;}
 .mpo-nearby-empty{font-size:12px;color:var(--text3);padding:4px 0 8px;display:flex;align-items:center;gap:6px;}
-.mpo-confirm{
-  width:100%;padding:15px;
-  background:var(--green);color:white;
-  border:none;border-radius:14px;
-  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
-  cursor:pointer;transition:all .2s;
-  box-shadow:0 4px 16px rgba(26,58,15,.3);
-}
+.mpo-confirm{width:100%;padding:15px;background:var(--green);color:white;border:none;border-radius:14px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(26,58,15,.3);}
 .mpo-confirm:active{transform:scale(.98);}
-/* Location locked state in form */
-.loc-locked{
-  display:none;background:var(--parchment);border:1.5px solid rgba(42,107,30,.2);
-  border-radius:12px;padding:12px 14px;align-items:center;gap:10px;
-}
+.loc-locked{display:none;background:var(--parchment);border:1.5px solid rgba(42,107,30,.2);border-radius:12px;padding:12px 14px;align-items:center;gap:10px;}
 .loc-locked.show{display:flex;}
 .loc-locked-icon{font-size:22px;flex-shrink:0;}
 .loc-locked-info{flex:1;}
@@ -204,22 +85,6 @@ textarea{resize:vertical;min-height:80px;}
 .loc-locked-coords{font-size:11px;color:var(--text3);font-family:monospace;margin-top:2px;}
 .loc-change-btn{font-size:12px;font-weight:600;color:var(--sage);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background .15s;}
 .loc-change-btn:hover{background:rgba(42,107,30,.08);}
-/* GPS */
-.gps-btn{
-  width:100%;padding:14px;background:linear-gradient(135deg,var(--green),var(--sage));
-  border:none;border-radius:12px;color:white;font-family:'Outfit',sans-serif;
-  font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-}
-.gps-btn:active{transform:scale(.98);}
-.gps-btn.locked{background:linear-gradient(135deg,#1e6b16,#3d9e2a);}
-.gps-readings{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
-.gps-r{background:var(--parchment);border-radius:8px;padding:8px;text-align:center;}
-.gps-r-val{font-size:13px;font-weight:700;color:var(--green);}
-.gps-r-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
-.gps-status{font-size:12px;color:var(--text3);margin-top:8px;text-align:center;display:none;}
-.gps-status.show{display:block;}
-/* DUPLICATE WARNING — improved to show all nearby trees */
 .dup-warn{background:#fef3cd;border:1px solid #f0d9a8;border-radius:10px;padding:12px;font-size:12px;color:#8a6400;line-height:1.5;margin-top:10px;display:none;}
 .dup-warn-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
 .dup-tree-row{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.6);border-radius:8px;padding:7px 10px;margin-bottom:5px;}
@@ -228,83 +93,38 @@ textarea{resize:vertical;min-height:80px;}
 .dup-tree-by{font-size:11px;color:#8a6400;}
 .dup-tree-dist{background:#f0d9a8;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;color:#7a5200;white-space:nowrap;}
 .dup-note{font-size:11px;color:#a07800;margin-top:8px;padding-top:8px;border-top:1px solid #f0d9a8;}
-/* PHOTOS */
-.photo-main-label{
-  display:block;cursor:pointer;
-  border:2px dashed #c8d8b8;border-radius:12px;
-  overflow:hidden;background:var(--parchment);
-  min-height:140px;position:relative;
-}
-.photo-placeholder{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;text-align:center;
-}
+.photo-main-label{display:block;cursor:pointer;border:2px dashed #c8d8b8;border-radius:12px;overflow:hidden;background:var(--parchment);min-height:140px;position:relative;}
+.photo-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;}
 .photo-placeholder-icon{font-size:36px;margin-bottom:8px;}
 .photo-placeholder-title{font-size:14px;font-weight:600;color:var(--text);}
 .photo-placeholder-sub{font-size:11px;color:var(--text3);margin-top:3px;}
 #main-preview{width:100%;max-height:200px;object-fit:cover;display:none;border-radius:10px;}
 .photo-change{background:rgba(0,0,0,.6);color:white;font-size:12px;font-weight:600;padding:8px;text-align:center;display:none;}
-
-/* PHOTO VALIDATION STATES */
-.photo-checking{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;text-align:center;
-}
-.photo-checking-spinner{
-  width:36px;height:36px;border:3px solid var(--border);
-  border-top-color:var(--leaf);border-radius:50%;
-  animation:spin .8s linear infinite;margin-bottom:10px;
-}
+.photo-checking-spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--leaf);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.photo-checking-title{font-size:14px;font-weight:600;color:var(--text);}
-.photo-checking-sub{font-size:11px;color:var(--text3);margin-top:3px;}
-.photo-rejected{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:28px;text-align:center;
-  background:#fff5f5;
-}
+.photo-rejected{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;background:#fff5f5;}
 .photo-rejected-icon{font-size:36px;margin-bottom:8px;}
 .photo-rejected-title{font-size:14px;font-weight:700;color:#c03222;}
 .photo-rejected-sub{font-size:11px;color:#8a4040;margin-top:3px;line-height:1.5;}
-
 .season-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
-.season-item label{
-  display:block;cursor:pointer;
-  border:2px dashed var(--border);border-radius:10px;
-  padding:14px 10px;text-align:center;background:var(--parchment);
-  transition:border .2s;
-}
+.season-item label{display:block;cursor:pointer;border:2px dashed var(--border);border-radius:10px;padding:14px 10px;text-align:center;background:var(--parchment);transition:border .2s;}
 .season-item label:active{border-color:var(--leaf);}
 .season-icon{font-size:22px;display:block;margin-bottom:4px;}
 .season-name{font-size:11px;font-weight:600;color:var(--text);display:block;}
 .season-tap{font-size:10px;color:var(--text3);margin-top:2px;display:block;}
 .season-preview{width:100%;height:70px;object-fit:cover;border-radius:7px;display:none;}
-/* SPECIES CHIPS */
 .species-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
-.sp-chip{padding:5px 11px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--text2);background:var(--parchment);cursor:pointer;transition:all .15px;}
+.sp-chip{padding:5px 11px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--text2);background:var(--parchment);cursor:pointer;transition:all .15s;}
 .sp-chip:active,.sp-chip.active{background:var(--sage);color:white;border-color:var(--sage);}
-/* CONDITION */
 .cond-row{display:flex;gap:8px;}
 .cond-btn{flex:1;padding:10px 6px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-weight:600;color:var(--text3);background:var(--parchment);cursor:pointer;text-align:center;transition:all .15s;}
 .cond-btn.active.good{background:#dcf5d0;border-color:#4a9e32;color:#2d6a1e;}
 .cond-btn.active.fair{background:#fef3cd;border-color:#c8922a;color:#8a6400;}
 .cond-btn.active.poor{background:#fde8e8;border-color:#c03222;color:#c03222;}
-/* SUBMIT */
-.submit-btn{
-  width:100%;padding:16px;
-  background:linear-gradient(135deg,var(--sage),var(--leaf));
-  border:none;border-radius:14px;color:white;
-  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
-  cursor:pointer;box-shadow:0 4px 16px rgba(42,106,30,.3);
-  transition:all .2s;margin-top:4px;
-}
+.submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--sage),var(--leaf));border:none;border-radius:14px;color:white;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(42,106,30,.3);transition:all .2s;margin-top:4px;}
 .submit-btn:active{transform:scale(.98);}
 .submit-btn:disabled{background:#ccc;box-shadow:none;}
-/* SUCCESS */
-.success-overlay{
-  position:fixed;inset:0;background:rgba(15,31,12,.92);z-index:200;
-  display:none;align-items:center;justify-content:center;padding:24px;
-}
+.success-overlay{position:fixed;inset:0;background:rgba(15,31,12,.92);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
 .success-overlay.show{display:flex;}
 .success-card{background:white;border-radius:20px;padding:32px 24px;text-align:center;max-width:380px;width:100%;}
 .success-icon{font-size:56px;margin-bottom:12px;}
@@ -317,7 +137,6 @@ textarea{resize:vertical;min-height:80px;}
 </style>
 </head>
 <body>
-<!-- AUTH GATE -->
 <script>
 (async function(){
   const SB=supabase.createClient('https://dcciktuwyjrvkynmxdjn.supabase.co','sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW');
@@ -329,7 +148,7 @@ textarea{resize:vertical;min-height:80px;}
     const {data:{session}}=await SB.auth.getSession();
     if(!session?.user){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Sign in to Add a Tree</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">You need an approved account to add trees to the map.</div><a href="login.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Sign In →</a><div style="margin-top:14px"><a href="index.html" style="font-size:12px;color:#7a9e68;text-decoration:none">← Back to Map</a></div></div>';return;}
     const {data:prof}=await SB.from('profiles').select('status').eq('id',session.user.id).single();
-    if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval. You\'ll be able to add trees once approved.</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">← Back to Map</a></div>';return;}
+    if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval.</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">← Back to Map</a></div>';return;}
     const name=prof?.full_name||session.user.user_metadata?.full_name||session.user.email.split('@')[0];
     setTimeout(()=>{const nf=document.getElementById('f-name');if(nf&&!nf.value) nf.value=name;},100);
     overlay.style.opacity='0';overlay.style.transition='opacity .3s';
@@ -339,11 +158,7 @@ textarea{resize:vertical;min-height:80px;}
 </script>
 <nav class="nav">
   <a href="index.html" class="nav-brand">
-    <div class="logo-main">
-      <span style="font-size:22px;line-height:1">🌳</span>
-      <span class="logo-name">Jor Bagh</span>
-      <span class="logo-tracker">Tree Tracker</span>
-    </div>
+    <div class="logo-main"><span style="font-size:22px;line-height:1">🌳</span><span class="logo-name">Jor Bagh</span><span class="logo-tracker">Tree Tracker</span></div>
     <div class="logo-tagline">New Delhi Urban Forest Map</div>
   </a>
   <div class="nav-links">
@@ -369,12 +184,9 @@ textarea{resize:vertical;min-height:80px;}
 <div class="wrap">
   <div class="page-title">🌿 Add a Tree</div>
   <div class="page-sub">Every tree you log becomes a permanent part of Delhi's urban forest record.</div>
-  <!-- UBER-STYLE LOCATION PICKER -->
   <div class="section">
     <div class="sec-label">📍 Location</div>
-    <button class="loc-picker-btn" id="loc-picker-btn" onclick="openMapPicker()">
-      📍 Set Tree Location on Map
-    </button>
+    <button class="loc-picker-btn" id="loc-picker-btn" onclick="openMapPicker()">📍 Set Tree Location on Map</button>
     <div class="loc-locked" id="loc-locked">
       <div class="loc-locked-icon">📍</div>
       <div class="loc-locked-info">
@@ -387,7 +199,6 @@ textarea{resize:vertical;min-height:80px;}
     <input type="hidden" id="f-lat">
     <input type="hidden" id="f-lng">
   </div>
-  <!-- FULL-SCREEN MAP OVERLAY -->
   <div id="map-overlay">
     <div class="mpo-header">
       <button class="mpo-back" onclick="closeMapPicker()">←</button>
@@ -395,11 +206,7 @@ textarea{resize:vertical;min-height:80px;}
     </div>
     <div id="map-area">
       <div id="picker-map"></div>
-      <div id="centre-pin">
-        <div class="pin-head">🌳</div>
-        <div class="pin-stem"></div>
-        <div class="pin-shadow"></div>
-      </div>
+      <div id="centre-pin"><div class="pin-head">🌳</div><div class="pin-stem"></div><div class="pin-shadow"></div></div>
     </div>
     <div class="mpo-bottom">
       <div class="mpo-nearby-label" id="mpo-nearby-label">Nearby trees</div>
@@ -409,40 +216,23 @@ textarea{resize:vertical;min-height:80px;}
       <button class="mpo-confirm" onclick="confirmLocation()">✅ Confirm Tree Location</button>
     </div>
   </div>
-  <!-- TREE IDENTITY -->
   <div class="section">
     <div class="sec-label">🌳 Tree Identity</div>
     <div class="species-chips" id="species-chips"></div>
-    <div class="field">
-      <label>Common Name *</label>
-      <input type="text" id="f-common" placeholder="e.g. Neem, Peepal, Gulmohar">
-    </div>
-    <div class="field">
-      <label>Scientific Name <span style="font-weight:400;color:var(--text3)">(optional)</span></label>
-      <input type="text" id="f-sci" placeholder="e.g. Azadirachta indica">
-    </div>
+    <div class="field"><label>Common Name *</label><input type="text" id="f-common" placeholder="e.g. Neem, Peepal, Gulmohar"></div>
+    <div class="field"><label>Scientific Name <span style="font-weight:400;color:var(--text3)">(optional)</span></label><input type="text" id="f-sci" placeholder="e.g. Azadirachta indica"></div>
   </div>
-  <!-- TREE DETAILS -->
   <div class="section">
     <div class="sec-label">📏 Details</div>
     <div class="row2">
       <div class="field">
         <label>Trunk Diameter (cm) <span style="font-size:10px;cursor:pointer;color:var(--sage)" onclick="document.getElementById('diam-tip').style.display=document.getElementById('diam-tip').style.display==='block'?'none':'block'">ℹ️</span></label>
         <input type="number" id="f-diam" placeholder="e.g. 45" min="1">
-        <div id="diam-tip" style="display:none;font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5;background:var(--parchment);padding:8px;border-radius:8px">Measure around the trunk, divide by 3.14. Small=10–20cm, Medium=30–50cm, Large=60cm+</div>
+        <div id="diam-tip" style="display:none;font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5;background:var(--parchment);padding:8px;border-radius:8px">Measure around the trunk, divide by 3.14.</div>
       </div>
-      <div class="field">
-        <label>Estimated Height</label>
-        <select id="f-height">
-          <option>Small (under 5m)</option>
-          <option selected>Medium (5–15m)</option>
-          <option>Large (15–25m)</option>
-          <option>Very Large (25m+)</option>
-        </select>
-      </div>
+      <div class="field"><label>Estimated Height</label><select id="f-height"><option>Small (under 5m)</option><option selected>Medium (5–15m)</option><option>Large (15–25m)</option><option>Very Large (25m+)</option></select></div>
     </div>
-    <div class="field">
-      <label>Condition</label>
+    <div class="field"><label>Condition</label>
       <div class="cond-row">
         <div class="cond-btn good active" onclick="setCond('Good',this)">💚 Good</div>
         <div class="cond-btn fair" onclick="setCond('Fair',this)">🟡 Fair</div>
@@ -450,12 +240,11 @@ textarea{resize:vertical;min-height:80px;}
       </div>
     </div>
   </div>
-  <!-- PHOTOS -->
   <div class="section">
     <div class="sec-label">📷 Photos</div>
     <div class="field">
       <label>Main Photo</label>
-      <label class="photo-main-label" for="f-photo-main" id="photo-main-label">
+      <label class="photo-main-label" for="f-photo-main">
         <div class="photo-placeholder" id="main-placeholder">
           <div class="photo-placeholder-icon">📷</div>
           <div class="photo-placeholder-title">Tap to add photo</div>
@@ -469,60 +258,20 @@ textarea{resize:vertical;min-height:80px;}
     <div class="field">
       <label>Seasonal Photos <span style="font-weight:400;color:var(--text3)">(optional)</span></label>
       <div class="season-grid">
-        <div class="season-item">
-          <label for="f-spring">
-            <img id="prev-spring" class="season-preview" alt="Spring">
-            <span class="season-icon" id="icon-spring">🌸</span>
-            <span class="season-name">Spring</span>
-            <span class="season-tap" id="tap-spring">Tap to add</span>
-          </label>
-          <input type="file" id="f-spring" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'spring')">
-        </div>
-        <div class="season-item">
-          <label for="f-summer">
-            <img id="prev-summer" class="season-preview" alt="Summer">
-            <span class="season-icon" id="icon-summer">☀️</span>
-            <span class="season-name">Summer</span>
-            <span class="season-tap" id="tap-summer">Tap to add</span>
-          </label>
-          <input type="file" id="f-summer" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'summer')">
-        </div>
-        <div class="season-item">
-          <label for="f-winter">
-            <img id="prev-winter" class="season-preview" alt="Winter">
-            <span class="season-icon" id="icon-winter">❄️</span>
-            <span class="season-name">Winter</span>
-            <span class="season-tap" id="tap-winter">Tap to add</span>
-          </label>
-          <input type="file" id="f-winter" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'winter')">
-        </div>
-        <div class="season-item">
-          <label for="f-autumn">
-            <img id="prev-autumn" class="season-preview" alt="Autumn">
-            <span class="season-icon" id="icon-autumn">🍂</span>
-            <span class="season-name">Autumn</span>
-            <span class="season-tap" id="tap-autumn">Tap to add</span>
-          </label>
-          <input type="file" id="f-autumn" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'autumn')">
-        </div>
+        <div class="season-item"><label for="f-spring"><img id="prev-spring" class="season-preview" alt="Spring"><span class="season-icon" id="icon-spring">🌸</span><span class="season-name">Spring</span><span class="season-tap" id="tap-spring">Tap to add</span></label><input type="file" id="f-spring" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'spring')"></div>
+        <div class="season-item"><label for="f-summer"><img id="prev-summer" class="season-preview" alt="Summer"><span class="season-icon" id="icon-summer">☀️</span><span class="season-name">Summer</span><span class="season-tap" id="tap-summer">Tap to add</span></label><input type="file" id="f-summer" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'summer')"></div>
+        <div class="season-item"><label for="f-winter"><img id="prev-winter" class="season-preview" alt="Winter"><span class="season-icon" id="icon-winter">❄️</span><span class="season-name">Winter</span><span class="season-tap" id="tap-winter">Tap to add</span></label><input type="file" id="f-winter" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'winter')"></div>
+        <div class="season-item"><label for="f-autumn"><img id="prev-autumn" class="season-preview" alt="Autumn"><span class="season-icon" id="icon-autumn">🍂</span><span class="season-name">Autumn</span><span class="season-tap" id="tap-autumn">Tap to add</span></label><input type="file" id="f-autumn" accept="image/*" style="display:none" onchange="onSeasonPhoto(this,'autumn')"></div>
       </div>
     </div>
   </div>
-  <!-- NOTES -->
   <div class="section">
     <div class="sec-label">📝 Notes & Info</div>
-    <div class="field">
-      <label>Observations</label>
-      <textarea id="f-notes" placeholder="Near which gate or landmark? Flowers or fruit visible? Any history?"></textarea>
-    </div>
-    <div class="field">
-      <label>Your Name</label>
-      <input type="text" id="f-name" placeholder="Your name, or leave blank for Anonymous">
-    </div>
+    <div class="field"><label>Observations</label><textarea id="f-notes" placeholder="Near which gate or landmark? Flowers or fruit visible? Any history?"></textarea></div>
+    <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="Your name, or leave blank for Anonymous"></div>
   </div>
   <button class="submit-btn" id="submit-btn" onclick="submitTree()">🌳 Add This Tree to the Map</button>
 </div>
-<!-- SUCCESS -->
 <div class="success-overlay" id="success-overlay">
   <div class="success-card">
     <div class="success-icon">🌳</div>
@@ -539,397 +288,218 @@ textarea{resize:vertical;min-height:80px;}
 const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
 const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
 const SB=supabase.createClient(SURL,SKEY);
-// State
-let gpsWatcher=null, gpsReadings=[], selectedCond='Good';
-let mainFile=null, seasonFiles={spring:null,summer:null,winter:null,autumn:null};
-// Species chips
+let gpsWatcher=null,gpsReadings=[],selectedCond='Good';
+let mainFile=null,seasonFiles={spring:null,summer:null,winter:null,autumn:null};
 const SPECIES=['Neem','Peepal','Gulmohar','Jamun','Amaltas','Ashoka','Arjun','Pilkhan','Bargad','Moringa','Figs','Areca'];
 const SCI={'Neem':'Azadirachta indica','Peepal':'Ficus religiosa','Gulmohar':'Delonix regia','Jamun':'Syzygium cumini','Amaltas':'Cassia fistula','Ashoka':'Saraca indica','Bargad':'Ficus benghalensis','Moringa':'Moringa oleifera'};
 (function(){
   const el=document.getElementById('species-chips');
   SPECIES.forEach(s=>{
     const c=document.createElement('div');
-    c.className='sp-chip'; c.textContent=s;
-    c.onclick=()=>{
-      document.querySelectorAll('.sp-chip').forEach(x=>x.classList.remove('active'));
-      c.classList.add('active');
-      document.getElementById('f-common').value=s;
-      if(SCI[s]) document.getElementById('f-sci').value=SCI[s];
-    };
+    c.className='sp-chip';c.textContent=s;
+    c.onclick=()=>{document.querySelectorAll('.sp-chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');document.getElementById('f-common').value=s;if(SCI[s])document.getElementById('f-sci').value=SCI[s];};
     el.appendChild(c);
   });
 })();
-// Condition
-function setCond(val,el){
-  selectedCond=val;
-  document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-}
-// ── MAP PICKER (Uber-style) ──
-let pickerMap=null, allTreesCache=[], moveTimer=null;
+function setCond(val,el){selectedCond=val;document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+// ── MAP PICKER ──
+let pickerMap=null,allTreesCache=[],moveTimer=null;
 function openMapPicker(){
   document.getElementById('map-overlay').classList.add('open');
   document.body.style.overflow='hidden';
-  requestAnimationFrame(()=>{
-    if(pickerMap){ pickerMap.invalidateSize(); return; }
-    initPickerMap();
-  });
+  requestAnimationFrame(()=>{if(pickerMap){pickerMap.invalidateSize();return;}initPickerMap();});
 }
 function initPickerMap(){
   if(!pickerMap){
-    const startLat=28.5925, startLng=77.2190;
-    pickerMap=L.map('picker-map',{
-      center:[startLat,startLng], zoom:17,
-      zoomControl:true, attributionControl:false
-    });
-    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
-      maxZoom:21
-    }).addTo(pickerMap);
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos=>{
-        pickerMap.setView([pos.coords.latitude,pos.coords.longitude],18);
-      },()=>{},{enableHighAccuracy:true,timeout:8000,maximumAge:30000});
-    }
-    pickerMap.on('movestart',()=>{
-      document.getElementById('centre-pin').classList.add('lifted');
-      document.getElementById('mpo-addr').textContent='Positioning...';
-    });
-    pickerMap.on('moveend',()=>{
-      document.getElementById('centre-pin').classList.remove('lifted');
-      const c=pickerMap.getCenter();
-      updatePickerInfo(c.lat,c.lng);
-    });
-    loadTreesCache();
-    updatePickerInfo(startLat,startLng);
+    const startLat=28.5925,startLng=77.2190;
+    pickerMap=L.map('picker-map',{center:[startLat,startLng],zoom:17,zoomControl:true,attributionControl:false});
+    L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:21}).addTo(pickerMap);
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{pickerMap.setView([pos.coords.latitude,pos.coords.longitude],18);},()=>{},{enableHighAccuracy:true,timeout:8000,maximumAge:30000});
+    pickerMap.on('movestart',()=>{document.getElementById('centre-pin').classList.add('lifted');document.getElementById('mpo-addr').textContent='Positioning...';});
+    pickerMap.on('moveend',()=>{document.getElementById('centre-pin').classList.remove('lifted');const c=pickerMap.getCenter();updatePickerInfo(c.lat,c.lng);});
+    loadTreesCache();updatePickerInfo(startLat,startLng);
   }
 }
-function closeMapPicker(){
-  document.getElementById('map-overlay').classList.remove('open');
-  document.body.style.overflow='';
-}
+function closeMapPicker(){document.getElementById('map-overlay').classList.remove('open');document.body.style.overflow='';}
 async function loadTreesCache(){
-  try{
-    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{
-      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}
-    });
-    allTreesCache=await r.json();
-  }catch(e){}
+  try{const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});allTreesCache=await r.json();}catch(e){}
 }
 function updatePickerInfo(lat,lng){
   document.getElementById('mpo-coords').textContent=lat.toFixed(6)+', '+lng.toFixed(6);
   clearTimeout(moveTimer);
   moveTimer=setTimeout(async()=>{
-    try{
-      const r=await fetch(
-        'https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json',
-        {headers:{'Accept-Language':'en'}}
-      );
-      const d=await r.json();
-      const addr=d.address;
-      const parts=[
-        addr.road||addr.pedestrian||addr.path,
-        addr.suburb||addr.neighbourhood||addr.quarter,
-        addr.city||addr.town||addr.village
-      ].filter(Boolean);
-      document.getElementById('mpo-addr').textContent=parts.join(', ')||d.display_name.split(',').slice(0,2).join(',');
-    }catch(e){
-      document.getElementById('mpo-addr').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5);
-    }
+    try{const r=await fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lng+'&format=json',{headers:{'Accept-Language':'en'}});const d=await r.json();const addr=d.address;const parts=[addr.road||addr.pedestrian||addr.path,addr.suburb||addr.neighbourhood||addr.quarter,addr.city||addr.town||addr.village].filter(Boolean);document.getElementById('mpo-addr').textContent=parts.join(', ')||d.display_name.split(',').slice(0,2).join(',');}catch(e){document.getElementById('mpo-addr').textContent='📍 '+lat.toFixed(5)+', '+lng.toFixed(5);}
   },600);
   showNearbyInPicker(lat,lng);
 }
 const SP_EMOJI={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌻','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳','Moringa':'🌱'};
 function showNearbyInPicker(lat,lng){
-  const nearby=allTreesCache
-    .map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)}))
-    .filter(t=>t.d<=50)
-    .sort((a,b)=>a.d-b.d)
-    .slice(0,3);
-  const box=document.getElementById('mpo-nearby');
-  const label=document.getElementById('mpo-nearby-label');
-  if(!nearby.length){
-    label.textContent='No trees logged here yet';
-    box.innerHTML='<div class="mpo-nearby-empty">🌱 Be the first to add a tree in this spot!</div>';
-    return;
-  }
+  const nearby=allTreesCache.map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)})).filter(t=>t.d<=50).sort((a,b)=>a.d-b.d).slice(0,3);
+  const box=document.getElementById('mpo-nearby'),label=document.getElementById('mpo-nearby-label');
+  if(!nearby.length){label.textContent='No trees logged here yet';box.innerHTML='<div class="mpo-nearby-empty">🌱 Be the first to add a tree in this spot!</div>';return;}
   label.textContent=nearby.length+' tree'+(nearby.length>1?'s':'')+' already logged nearby';
-  box.innerHTML=nearby.map(t=>`
-    <div class="mpo-nearby-item">
-      <span class="ni-icon">${SP_EMOJI[t.common_name]||'🌳'}</span>
-      <span class="ni-name">${t.common_name||'Unknown'}<br><span style="font-size:11px;font-weight:400;color:var(--text3)">by ${t.submitted_by||'Community'}</span></span>
-      <span class="ni-dist">${Math.round(t.d)}m</span>
-    </div>`).join('');
+  box.innerHTML=nearby.map(t=>`<div class="mpo-nearby-item"><span class="ni-icon">${SP_EMOJI[t.common_name]||'🌳'}</span><span class="ni-name">${t.common_name||'Unknown'}<br><span style="font-size:11px;font-weight:400;color:var(--text3)">by ${t.submitted_by||'Community'}</span></span><span class="ni-dist">${Math.round(t.d)}m</span></div>`).join('');
 }
 function confirmLocation(){
-  const c=pickerMap.getCenter();
-  const lat=c.lat, lng=c.lng;
-  document.getElementById('f-lat').value=lat.toFixed(7);
-  document.getElementById('f-lng').value=lng.toFixed(7);
-  const addrText=document.getElementById('mpo-addr').textContent;
-  document.getElementById('loc-locked-addr').textContent='📍 '+addrText;
+  const c=pickerMap.getCenter(),lat=c.lat,lng=c.lng;
+  document.getElementById('f-lat').value=lat.toFixed(7);document.getElementById('f-lng').value=lng.toFixed(7);
+  document.getElementById('loc-locked-addr').textContent='📍 '+document.getElementById('mpo-addr').textContent;
   document.getElementById('loc-locked-coords').textContent=lat.toFixed(5)+', '+lng.toFixed(5);
-  document.getElementById('loc-picker-btn').style.display='none';
-  document.getElementById('loc-locked').classList.add('show');
-  checkDuplicate(lat,lng);
-  closeMapPicker();
+  document.getElementById('loc-picker-btn').style.display='none';document.getElementById('loc-locked').classList.add('show');
+  checkDuplicate(lat,lng);closeMapPicker();
 }
-// ── DUPLICATE CHECK ──
 async function checkDuplicate(lat,lng){
   try{
-    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{
-      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}
-    });
+    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});
     const trees=await r.json();
-    const nearby=trees
-      .map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)}))
-      .filter(t=>t.d<=20)
-      .sort((a,b)=>a.d-b.d);
+    const nearby=trees.map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)})).filter(t=>t.d<=20).sort((a,b)=>a.d-b.d);
     const el=document.getElementById('dup-warn');
-    if(!nearby.length){ el.style.display='none'; return; }
-    const rows=nearby.map(t=>`
-      <div class="dup-tree-row">
-        <span class="dup-tree-name">${t.common_name||'Unknown tree'}</span>
-        <span class="dup-tree-by">by ${t.submitted_by||'someone'}</span>
-        <span class="dup-tree-dist">${Math.round(t.d)}m away</span>
-      </div>`).join('');
-    el.innerHTML=`
-      <div class="dup-warn-title">⚠️ ${nearby.length} tree${nearby.length>1?'s':''} already logged nearby</div>
-      ${rows}
-      <div class="dup-note">If your tree is different from the above, that's fine — go ahead and submit!</div>`;
+    if(!nearby.length){el.style.display='none';return;}
+    el.innerHTML=`<div class="dup-warn-title">⚠️ ${nearby.length} tree${nearby.length>1?'s':''} already logged nearby</div>${nearby.map(t=>`<div class="dup-tree-row"><span class="dup-tree-name">${t.common_name||'Unknown tree'}</span><span class="dup-tree-by">by ${t.submitted_by||'someone'}</span><span class="dup-tree-dist">${Math.round(t.d)}m away</span></div>`).join('')}<div class="dup-note">If your tree is different, go ahead and submit!</div>`;
     el.style.display='block';
   }catch(e){}
 }
-function dist(lat1,lng1,lat2,lng2){
-  const R=6371000,dL=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180;
-  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
+function dist(lat1,lng1,lat2,lng2){const R=6371000,dL=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180;const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 
-// ── PHOTO VALIDATION HELPERS ──
-function resizeForValidation(file, maxPx){
+// ── PHOTO VALIDATION ──
+function resizeForValidation(file,maxPx){
   return new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{
-      const ratio=Math.min(maxPx/img.width, maxPx/img.height, 1);
+      const ratio=Math.min(maxPx/img.width,maxPx/img.height,1);
       const c=document.createElement('canvas');
-      c.width=Math.round(img.width*ratio);
-      c.height=Math.round(img.height*ratio);
+      c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);
       c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      resolve(c.toDataURL('image/jpeg', 0.7));
+      resolve(c.toDataURL('image/jpeg',0.7));
     };
     img.onerror=()=>resolve('');
     img.src=URL.createObjectURL(file);
   });
 }
-
 function showPhotoPlaceholder(ph){
   ph.innerHTML='<div class="photo-placeholder-icon">📷</div><div class="photo-placeholder-title">Tap to add photo</div><div class="photo-placeholder-sub">Leaves, bark or full tree</div>';
   ph.style.display='flex';
 }
-
-// ── MAIN PHOTO with AI tree validation ──
-async function onMainPhoto(input){
-  const file=input.files[0]; if(!file) return;
-
-  const ph=document.getElementById('main-placeholder');
-
-  // Show checking spinner
-  ph.style.display='flex';
-  ph.innerHTML=`
-    <div class="photo-checking">
-      <div class="photo-checking-spinner"></div>
-      <div class="photo-checking-title">Checking photo…</div>
-      <div class="photo-checking-sub">Making sure it's a tree 🌳</div>
-    </div>`;
-
-  try{
-    // Resize to 512px before sending — keeps payload small
-    const smallB64=await resizeForValidation(file,512);
-
-    const r=await fetch(SURL+'/functions/v1/validate-photo',{
-      method:'POST',
-      headers:{
-        'apikey':SKEY,
-        'Authorization':'Bearer '+SKEY,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        imageBase64: smallB64.split(',')[1],
-        mediaType: file.type||'image/jpeg'
-      })
-    });
-    const result=await r.json();
-
-    if(!result.isTree){
-      // Rejected — show error, clear input
-      input.value='';
-      ph.innerHTML=`
-        <div class="photo-rejected">
-          <div class="photo-rejected-icon">🚫</div>
-          <div class="photo-rejected-title">That doesn't look like a tree</div>
-          <div class="photo-rejected-sub">Please upload a photo of the tree you're logging — leaves, trunk, or full tree.</div>
-        </div>`;
-      ph.style.display='flex';
-      // Reset back to default prompt after 4 seconds
-      setTimeout(()=>showPhotoPlaceholder(ph), 4000);
-      return;
-    }
-  }catch(e){
-    // If validation fails for any reason, fail open (allow the photo through)
-    console.warn('Photo validation unavailable, proceeding:', e.message);
-  }
-
-  // Passed — show preview
+function acceptPhoto(file){
   mainFile=file;
   const reader=new FileReader();
   reader.onload=e=>{
     const img=document.getElementById('main-preview');
-    img.src=e.target.result; img.style.display='block';
-    ph.style.display='none';
+    img.src=e.target.result;img.style.display='block';
+    document.getElementById('main-placeholder').style.display='none';
     document.getElementById('main-change').style.display='block';
   };
   reader.readAsDataURL(file);
 }
 
+async function onMainPhoto(input){
+  const file=input.files[0];if(!file) return;
+  const ph=document.getElementById('main-placeholder');
+
+  // ── HEIC/HEIF (iPhone photos) can't be processed by canvas in most browsers
+  //    so skip validation and accept them directly ──
+  const fname=file.name.toLowerCase();
+  const isHeic=file.type==='image/heic'||file.type==='image/heif'||fname.endsWith('.heic')||fname.endsWith('.heif');
+  if(isHeic){acceptPhoto(file);return;}
+
+  // Show checking spinner
+  ph.style.display='flex';
+  ph.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center"><div class="photo-checking-spinner"></div><div style="font-size:14px;font-weight:600;color:var(--text)">Checking photo…</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Making sure it's a tree 🌳</div></div>`;
+
+  try{
+    const smallB64=await resizeForValidation(file,512);
+    if(!smallB64){acceptPhoto(file);return;} // canvas failed — accept anyway
+
+    const r=await fetch(SURL+'/functions/v1/validate-photo',{
+      method:'POST',
+      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json'},
+      body:JSON.stringify({imageBase64:smallB64.split(',')[1],mediaType:file.type||'image/jpeg'})
+    });
+    const result=await r.json();
+
+    if(!result.isTree){
+      input.value='';
+      ph.innerHTML=`<div class="photo-rejected"><div class="photo-rejected-icon">🚫</div><div class="photo-rejected-title">That doesn't look like a tree</div><div class="photo-rejected-sub">Please upload a photo of the tree — leaves, trunk, or full tree.</div></div>`;
+      ph.style.display='flex';
+      setTimeout(()=>showPhotoPlaceholder(ph),4000);
+      return;
+    }
+  }catch(e){
+    console.warn('Photo validation unavailable, proceeding:',e.message);
+  }
+  acceptPhoto(file);
+}
+
 function onSeasonPhoto(input,season){
-  const file=input.files[0]; if(!file) return;
+  const file=input.files[0];if(!file) return;
   seasonFiles[season]=file;
   const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById('prev-'+season);
-    img.src=e.target.result; img.style.display='block';
-    document.getElementById('icon-'+season).style.display='none';
-    document.getElementById('tap-'+season).textContent='✅ Added';
-  };
+  reader.onload=e=>{const img=document.getElementById('prev-'+season);img.src=e.target.result;img.style.display='block';document.getElementById('icon-'+season).style.display='none';document.getElementById('tap-'+season).textContent='✅ Added';};
   reader.readAsDataURL(file);
 }
-// Upload
+
 async function uploadPhoto(file){
   try{
-    const blob=await new Promise(res=>{
-      const img=new Image();
-      img.onload=()=>{
-        const max=1200,ratio=Math.min(max/img.width,max/img.height,1);
-        const c=document.createElement('canvas');
-        c.width=Math.round(img.width*ratio); c.height=Math.round(img.height*ratio);
-        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-        c.toBlob(b=>res(b||file),'image/jpeg',0.85);
-      };
-      img.onerror=()=>res(file);
-      img.src=URL.createObjectURL(file);
-    });
+    const blob=await new Promise(res=>{const img=new Image();img.onload=()=>{const max=1200,ratio=Math.min(max/img.width,max/img.height,1);const c=document.createElement('canvas');c.width=Math.round(img.width*ratio);c.height=Math.round(img.height*ratio);c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>res(b||file),'image/jpeg',0.85);};img.onerror=()=>res(file);img.src=URL.createObjectURL(file);});
     const fname='tree_'+Date.now()+'_'+Math.random().toString(36).slice(2)+'.jpg';
-    const r=await fetch(SURL+'/storage/v1/object/tree-photos/'+fname,{
-      method:'POST',
-      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'image/jpeg','x-upsert':'true'},
-      body:blob
-    });
+    const r=await fetch(SURL+'/storage/v1/object/tree-photos/'+fname,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'image/jpeg','x-upsert':'true'},body:blob});
     if(!r.ok) throw new Error('Upload '+r.status);
     return SURL+'/storage/v1/object/public/tree-photos/'+fname;
   }catch(e){console.warn('Upload failed:',e.message);return null;}
 }
-// Submit
+
 async function submitTree(){
   const name=document.getElementById('f-common').value.trim();
   const lat=parseFloat(document.getElementById('f-lat').value);
   const lng=parseFloat(document.getElementById('f-lng').value);
   const btn=document.getElementById('submit-btn');
   if(!name){alert('Please enter the tree name');document.getElementById('f-common').focus();return;}
-  if(isNaN(lat)||isNaN(lng)){
-    const pb=document.getElementById('loc-picker-btn');
-    pb.textContent='📍 Please set location first!';
-    pb.style.background='#e8a820';
-    setTimeout(()=>{pb.textContent='📍 Set Tree Location on Map';pb.style.background='';},3000);
-    pb.scrollIntoView({behavior:'smooth',block:'center'});
-    return;
-  }
+  if(isNaN(lat)||isNaN(lng)){const pb=document.getElementById('loc-picker-btn');pb.textContent='📍 Please set location first!';pb.style.background='#e8a820';setTimeout(()=>{pb.textContent='📍 Set Tree Location on Map';pb.style.background='';},3000);pb.scrollIntoView({behavior:'smooth',block:'center'});return;}
   btn.disabled=true;
   let photoUrl=null,photoSpring=null,photoSummer=null,photoWinter=null,photoAutumn=null;
-  const uploads=[
-    {file:mainFile,label:'main'},
-    {file:seasonFiles.spring,label:'spring'},
-    {file:seasonFiles.summer,label:'summer'},
-    {file:seasonFiles.winter,label:'winter'},
-    {file:seasonFiles.autumn,label:'autumn'},
-  ].filter(u=>u.file);
+  const uploads=[{file:mainFile,label:'main'},{file:seasonFiles.spring,label:'spring'},{file:seasonFiles.summer,label:'summer'},{file:seasonFiles.winter,label:'winter'},{file:seasonFiles.autumn,label:'autumn'}].filter(u=>u.file);
   for(let i=0;i<uploads.length;i++){
     btn.textContent='📷 Uploading photo '+(i+1)+'/'+uploads.length+'...';
     const url=await uploadPhoto(uploads[i].file);
-    if(uploads[i].label==='main') photoUrl=url;
-    else if(uploads[i].label==='spring') photoSpring=url;
-    else if(uploads[i].label==='summer') photoSummer=url;
-    else if(uploads[i].label==='winter') photoWinter=url;
-    else if(uploads[i].label==='autumn') photoAutumn=url;
+    if(uploads[i].label==='main')photoUrl=url;
+    else if(uploads[i].label==='spring')photoSpring=url;
+    else if(uploads[i].label==='summer')photoSummer=url;
+    else if(uploads[i].label==='winter')photoWinter=url;
+    else if(uploads[i].label==='autumn')photoAutumn=url;
   }
   btn.textContent='🌱 Saving to map...';
-  const tree={
-    common_name:name,
-    scientific_name:document.getElementById('f-sci').value.trim()||null,
-    latitude:lat,longitude:lng,
-    trunk_diameter:parseInt(document.getElementById('f-diam').value)||null,
-    height:document.getElementById('f-height').value,
-    condition:selectedCond,
-    notes:document.getElementById('f-notes').value.trim()||null,
-    submitted_by:document.getElementById('f-name').value.trim()||'Anonymous',
-    photo_url:photoUrl,
-    photo_spring:photoSpring,
-    photo_summer:photoSummer,
-    photo_winter:photoWinter
-  };
+  const tree={common_name:name,scientific_name:document.getElementById('f-sci').value.trim()||null,latitude:lat,longitude:lng,trunk_diameter:parseInt(document.getElementById('f-diam').value)||null,height:document.getElementById('f-height').value,condition:selectedCond,notes:document.getElementById('f-notes').value.trim()||null,submitted_by:document.getElementById('f-name').value.trim()||'Anonymous',photo_url:photoUrl,photo_spring:photoSpring,photo_summer:photoSummer,photo_winter:photoWinter};
   try{
-    const r=await fetch(SURL+'/rest/v1/trees',{
-      method:'POST',
-      headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify(tree)
-    });
+    const r=await fetch(SURL+'/rest/v1/trees',{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tree)});
     if(!r.ok) throw new Error('Save failed '+r.status);
-  }catch(e){
-    alert('Failed to save tree: '+e.message);
-    btn.disabled=false; btn.textContent='🌳 Add This Tree to the Map';
-    return;
-  }
-  if(photoUrl){
-    const si=document.getElementById('success-img');
-    si.src=photoUrl; si.style.display='block';
-  }
+  }catch(e){alert('Failed to save tree: '+e.message);btn.disabled=false;btn.textContent='🌳 Add This Tree to the Map';return;}
+  if(photoUrl){const si=document.getElementById('success-img');si.src=photoUrl;si.style.display='block';}
   document.getElementById('success-overlay').classList.add('show');
-  btn.disabled=false; btn.textContent='🌳 Add This Tree to the Map';
+  btn.disabled=false;btn.textContent='🌳 Add This Tree to the Map';
 }
-// Reset
+
 function resetForm(){
   document.getElementById('success-overlay').classList.remove('show');
-  document.getElementById('f-common').value='';
-  document.getElementById('f-sci').value='';
-  document.getElementById('f-diam').value='';
-  document.getElementById('f-notes').value='';
-  document.getElementById('f-lat').value='';
-  document.getElementById('f-lng').value='';
+  ['f-common','f-sci','f-diam','f-notes','f-lat','f-lng'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('loc-picker-btn').style.display='flex';
   document.getElementById('loc-locked').classList.remove('show');
   document.getElementById('loc-locked-addr').textContent='Location set';
   document.getElementById('loc-locked-coords').textContent='';
   document.getElementById('dup-warn').style.display='none';
   document.getElementById('main-preview').style.display='none';
-  const ph=document.getElementById('main-placeholder');
-  showPhotoPlaceholder(ph);
+  showPhotoPlaceholder(document.getElementById('main-placeholder'));
   document.getElementById('main-change').style.display='none';
   document.getElementById('success-img').style.display='none';
-  ['spring','summer','winter','autumn'].forEach(s=>{
-    document.getElementById('prev-'+s).style.display='none';
-    document.getElementById('icon-'+s).style.display='block';
-    document.getElementById('tap-'+s).textContent='Tap to add';
-  });
-  mainFile=null; seasonFiles={spring:null,summer:null,winter:null,autumn:null};
+  ['spring','summer','winter','autumn'].forEach(s=>{document.getElementById('prev-'+s).style.display='none';document.getElementById('icon-'+s).style.display='block';document.getElementById('tap-'+s).textContent='Tap to add';});
+  mainFile=null;seasonFiles={spring:null,summer:null,winter:null,autumn:null};
   document.querySelectorAll('.sp-chip').forEach(c=>c.classList.remove('active'));
-  selectedCond='Good';
-  document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector('.cond-btn.good').classList.add('active');
+  selectedCond='Good';document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.cond-btn.good').classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
 }
-// Pre-fill from identify page
 const urlP=new URLSearchParams(window.location.search);
-if(urlP.get('common')) document.getElementById('f-common').value=urlP.get('common');
-if(urlP.get('sci')) document.getElementById('f-sci').value=urlP.get('sci');
+if(urlP.get('common'))document.getElementById('f-common').value=urlP.get('common');
+if(urlP.get('sci'))document.getElementById('f-sci').value=urlP.get('sci');
 </script>
 </body>
 </html>
