@@ -656,13 +656,23 @@ function updateStats(trees){
 }
 const DELHI_AREAS={jorbagh:{lat:28.5925,lng:77.2190,zoom:16},lodhi:{lat:28.5910,lng:77.2290,zoom:16},central:{lat:28.6358,lng:77.2245,zoom:14},south:{lat:28.5244,lng:77.1855,zoom:13},north:{lat:28.7274,lng:77.1834,zoom:13},east:{lat:28.6253,lng:77.3188,zoom:13},west:{lat:28.6519,lng:77.1025,zoom:13}};
 function zoomToArea(key){const a=DELHI_AREAS[key];if(!a||!mainMap)return;document.querySelectorAll('#area-filter-row .mf-chip').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');mainMap.flyTo([a.lat,a.lng],a.zoom,{duration:1.2});closePopup();}
+
+// Hide a gallery slide when its image fails; hide the whole gallery if all slides fail
+function photoError(img){
+  img.parentElement.style.display='none';
+  const gallery=img.closest('.photo-gallery');
+  if(gallery&&[...gallery.querySelectorAll('.gallery-slide')].every(s=>s.style.display==='none')){
+    gallery.style.display='none';
+  }
+}
+
 function buildPhotoGallery(t){
   const photos=[{url:t.photo_url,label:'🌳 Main Photo'},{url:t.photo_spring,label:'🌸 Spring'},{url:t.photo_summer,label:'☀️ Summer'},{url:t.photo_winter,label:'❄️ Winter'}].filter(p=>p.url);
   let gallery=document.getElementById('tpc-gallery');
   if(!gallery){gallery=document.createElement('div');gallery.id='tpc-gallery';gallery.className='photo-gallery';document.getElementById('tree-popup').insertBefore(gallery,document.getElementById('tree-popup').firstChild);}
   if(!photos.length){gallery.style.display='none';return;}
   gallery.style.display='block';
-  gallery.innerHTML=`<div class="gallery-slides" id="gallery-slides">${photos.map(p=>`<div class="gallery-slide"><img src="${p.url}" alt="${p.label}" onerror="this.parentElement.style.display='none'" style="cursor:zoom-in" onclick="openLightbox(this.src,this.alt)"><div class="season-badge">${p.label}</div></div>`).join('')}</div>${photos.length>1?`<button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">&#8249;</button><button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">&#8250;</button><div class="gallery-dots">${photos.map((_,i)=>`<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}</div>`:''}`;
+  gallery.innerHTML=`<div class="gallery-slides" id="gallery-slides">${photos.map(p=>`<div class="gallery-slide"><img src="${p.url}" alt="${p.label}" onerror="photoError(this)" style="cursor:zoom-in" onclick="openLightbox(this.src,this.alt)"><div class="season-badge">${p.label}</div></div>`).join('')}</div>${photos.length>1?`<button class="gallery-prev" onclick="event.stopPropagation();galleryNav(-1)">&#8249;</button><button class="gallery-next" onclick="event.stopPropagation();galleryNav(1)">&#8250;</button><div class="gallery-dots">${photos.map((_,i)=>`<div class="gallery-dot ${i===0?'active':''}" onclick="event.stopPropagation();galleryGo(${i})"></div>`).join('')}</div>`:''}`;
   window._galleryCount=photos.length;window._galleryCurrent=0;
 }
 function galleryNav(dir){if(event)event.stopPropagation();const count=window._galleryCount||1;window._galleryCurrent=(window._galleryCurrent+dir+count)%count;galleryGo(window._galleryCurrent);}
