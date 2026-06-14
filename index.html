@@ -200,6 +200,9 @@ footer{background:var(--ink);padding:56px 80px 40px;}
 .leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:var(--shadow-lg)!important;}
 .leaflet-popup-content{font-family:'Outfit',sans-serif!important;}
 .leaflet-control-zoom{border:1px solid var(--border)!important;border-radius:10px!important;overflow:hidden;}
+.leaflet-div-icon{background:transparent!important;border:none!important;}
+.leaflet-marker-icon{background:transparent!important;border:none!important;}
+.tree-pin{background:transparent!important;border:none!important;}
 /* ANIMATIONS */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{opacity:0;animation:fadeUp .7s ease forwards;}
@@ -581,7 +584,7 @@ function renderMarkers(trees){
       ? '<span style="font-size:'+size+'px;line-height:1;font-family:\'Apple Color Emoji\',\'Segoe UI Emoji\',\'Noto Color Emoji\',sans-serif;">'+ge(t.common_name)+'</span>'
       : '<span style="display:block;width:'+(size*0.5)+'px;height:'+(size*0.5)+'px;border-radius:50%;background:white;"></span>';
     const icon=L.divIcon({
-      className:'',
+      className:'tree-pin',
       iconSize:[size*2,size*2+8],
       iconAnchor:[size,size*2+8],
       html:'<div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));cursor:pointer;">'
