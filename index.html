@@ -585,12 +585,9 @@ function renderMarkers(trees){
       : '<span style="display:block;width:'+(size*0.5)+'px;height:'+(size*0.5)+'px;border-radius:50%;background:white;"></span>';
     const icon=L.divIcon({
       className:'tree-pin',
-      iconSize:[size*2,size*2+8],
-      iconAnchor:[size,size*2+8],
-      html:'<div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));cursor:pointer;">'
-        +'<div style="width:'+(size*2)+'px;height:'+(size*2)+'px;border-radius:50%;background:'+color+';border:2.5px solid white;display:flex;align-items:center;justify-content:center;">'+inner+'</div>'
-        +'<div style="width:3px;height:8px;background:'+color+';border-radius:0 0 2px 2px;margin-top:-1px;"></div>'
-        +'</div>'
+      iconSize:[size*2,size*2],
+      iconAnchor:[size,size],
+      html:'<div style="width:'+(size*2)+'px;height:'+(size*2)+'px;border-radius:50%;background:'+color+';border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;">'+inner+'</div>'
     });
     const m=L.marker([t.latitude,t.longitude],{icon});
     m.on('click',e=>{e.originalEvent.preventDefault();showPopup(t);});
