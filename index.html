@@ -355,7 +355,7 @@ footer{background:var(--ink);padding:56px 80px 40px;}
 <section id="hero">
   <div class="hero-left">
     <div class="hero-tag fade-up">🌿 Delhi's Urban Forest Map</div>
-    <h1 class="hero-title fade-up fade-up-1">Your Tree.<br>Your <em>Street.</em><br>Your Par<span style="font-family:'Noto Sans Devanagari',serif;color:var(--sage)">क</span>.<br>Your <span class="gold">Delhi.</span></h1>
+    <h1 class="hero-title fade-up fade-up-1">Your Tree.<br>Your <em>Street.</em><br>Your Par<span style="font-family:'Noto Sans Devanagari',serif;color:var(--sage)">क</span>.<br>Your <span class="gold">City.</span></h1>
     <p class="hero-desc fade-up fade-up-2">A community-powered map logging every tree across Delhi — one neighbourhood at a time. Join thousands of residents mapping, protecting and celebrating our urban forest.</p>
     <div class="hero-btns fade-up fade-up-3">
       <a href="#map-section" class="btn-fill">🗺️ Explore the Map</a>
@@ -546,8 +546,11 @@ async function fetchTrees(){
 function initHeroMap(trees){
   heroMap=L.map('hero-map',{center:[28.6139,77.2090],zoom:11,zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:false,touchZoom:false});
   L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:20,attribution:''}).addTo(heroMap);
-  trees.forEach(t=>{L.circleMarker([t.latitude,t.longitude],{radius:gr(t.trunk_diameter||30),fillColor:gc(t.common_name),fillOpacity:.95,color:'white',weight:2.5}).addTo(heroMap);});
-  if(trees.length>0)heroMap.fitBounds(L.latLngBounds(trees.map(t=>[t.latitude,t.longitude])),{padding:[40,40]});
+  const delhiTrees=trees.filter(t=>t.latitude>28.3&&t.latitude<28.9&&t.longitude>76.8&&t.longitude<77.6);
+  const heroTrees=delhiTrees.length?delhiTrees:trees;
+  heroTrees.forEach(t=>{L.circleMarker([t.latitude,t.longitude],{radius:gr(t.trunk_diameter||30),fillColor:gc(t.common_name),fillOpacity:.95,color:'transparent',weight:0}).addTo(heroMap);});
+  if(heroTrees.length>0)heroMap.fitBounds(L.latLngBounds(heroTrees.map(t=>[t.latitude,t.longitude])),{padding:[40,40],maxZoom:14});
+  else heroMap.setView([28.6139,77.2090],12);
 }
 function initMainMap(trees){
   mainMap=L.map('main-map',{center:[28.6139,77.2090],zoom:11,zoomControl:true});
@@ -563,7 +566,10 @@ function initMainMap(trees){
   mainMap.addLayer(clusterGroup);
   renderMarkers(trees);
   mainMap.on('click',e=>{if(!e.originalEvent.defaultPrevented)closePopup();});
-  if(trees.length>0)setTimeout(()=>{mainMap.fitBounds(L.latLngBounds(trees.map(t=>[t.latitude,t.longitude])),{padding:[50,60]});},300);
+  const delhiBounds=trees.filter(t=>t.latitude>28.3&&t.latitude<28.9&&t.longitude>76.8&&t.longitude<77.6);
+  const boundsSource=delhiBounds.length?delhiBounds:trees;
+  if(boundsSource.length>0)setTimeout(()=>{mainMap.fitBounds(L.latLngBounds(boundsSource.map(t=>[t.latitude,t.longitude])),{padding:[50,60],maxZoom:15});},300);
+  else mainMap.setView([28.6139,77.2090],12);
 }
 function renderMarkers(trees){
   clusterGroup.clearLayers();
@@ -603,7 +609,7 @@ function showPopup(t){
   const bw=document.getElementById('tpc-by-wrap');
   if(t.submitted_by){document.getElementById('tpc-by').textContent=t.submitted_by;bw.style.display='flex';}else bw.style.display='none';
   document.getElementById('tree-popup').classList.add('open');
-  mainMap.panTo([t.latitude,t.longitude]);
+  mainMap.flyTo([t.latitude,t.longitude],17,{duration:1.2});
   document.querySelectorAll('.msb-item').forEach(el=>el.classList.remove('active'));
   const si=document.getElementById('si-'+t.id);
   if(si){si.classList.add('active');si.scrollIntoView({behavior:'smooth',block:'nearest'});}
@@ -656,8 +662,6 @@ function updateStats(trees){
 }
 const DELHI_AREAS={jorbagh:{lat:28.5925,lng:77.2190,zoom:16},lodhi:{lat:28.5910,lng:77.2290,zoom:16},central:{lat:28.6358,lng:77.2245,zoom:14},south:{lat:28.5244,lng:77.1855,zoom:13},north:{lat:28.7274,lng:77.1834,zoom:13},east:{lat:28.6253,lng:77.3188,zoom:13},west:{lat:28.6519,lng:77.1025,zoom:13}};
 function zoomToArea(key){const a=DELHI_AREAS[key];if(!a||!mainMap)return;document.querySelectorAll('#area-filter-row .mf-chip').forEach(c=>c.classList.remove('active'));event.target.classList.add('active');mainMap.flyTo([a.lat,a.lng],a.zoom,{duration:1.2});closePopup();}
-
-// Hide a gallery slide when its image fails; hide the whole gallery if all slides fail
 function photoError(img){
   img.parentElement.style.display='none';
   const gallery=img.closest('.photo-gallery');
@@ -665,7 +669,6 @@ function photoError(img){
     gallery.style.display='none';
   }
 }
-
 function buildPhotoGallery(t){
   const photos=[{url:t.photo_url,label:'🌳 Main Photo'},{url:t.photo_spring,label:'🌸 Spring'},{url:t.photo_summer,label:'☀️ Summer'},{url:t.photo_winter,label:'❄️ Winter'}].filter(p=>p.url);
   let gallery=document.getElementById('tpc-gallery');
