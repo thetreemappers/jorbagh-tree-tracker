@@ -541,9 +541,23 @@ function closeNav(){document.getElementById('mobile-nav').classList.remove('open
 })();
 async function fetchTrees(){
   try{
-    const r=await fetch(SUPABASE_URL+'/rest/v1/trees?select=*&order=created_at.desc',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    const sb2=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const {data:{session}}=await sb2.auth.getSession();
+    const authHeader=session?.access_token?'Bearer '+session.access_token:'Bearer '+SUPABASE_KEY;
+    // Fetch public trees
+    const r=await fetch(SUPABASE_URL+'/rest/v1/trees?select=*&is_private=eq.false&order=created_at.desc',{headers:{'apikey':SUPABASE_KEY,'Authorization':authHeader}});
     if(!r.ok)throw new Error();
-    return await r.json();
+    const publicTrees=await r.json();
+    // If logged in, also fetch own private trees
+    if(session?.user){
+      window._myUserId=session.user.id;
+      const r2=await fetch(SUPABASE_URL+'/rest/v1/trees?select=*&is_private=eq.true&owner_id=eq.'+session.user.id+'&order=created_at.desc',{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+session.access_token}});
+      if(r2.ok){
+        const privateTrees=await r2.json();
+        return [...privateTrees,...publicTrees];
+      }
+    }
+    return publicTrees;
   }catch(e){return[];}
 }
 function initHeroMap(trees){
@@ -608,6 +622,15 @@ function showPopup(t){
   if(t.notes){ne.textContent=t.notes;ne.style.display='block';}else ne.style.display='none';
   const bw=document.getElementById('tpc-by-wrap');
   if(t.submitted_by){document.getElementById('tpc-by').textContent=t.submitted_by;bw.style.display='flex';}else bw.style.display='none';
+  // Private badge + actions
+  let privEl=document.getElementById('tpc-private-bar');
+  if(!privEl){privEl=document.createElement('div');privEl.id='tpc-private-bar';document.getElementById('tpc-body-inner')?document.getElementById('tpc-body-inner').appendChild(privEl):document.querySelector('.tpc-body').appendChild(privEl);}
+  if(t.is_private&&t.owner_id===window._myUserId){
+    privEl.innerHTML=`<div style="background:#fef3cd;border:1px solid #f0d9a8;border-radius:10px;padding:10px 12px;margin-top:10px"><div style="font-size:12px;font-weight:700;color:#8a6400;margin-bottom:8px">🔒 Your Private Tree</div><div style="display:flex;gap:8px"><button onclick="makePublic('${t.id}')" style="flex:1;padding:8px;background:#1e3d28;color:white;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🌍 Make Public</button><button onclick="copyShareLink('${t.id}')" style="flex:1;padding:8px;background:white;color:#1e3d28;border:1.5px solid #1e3d28;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🔗 Copy Link</button></div></div>`;
+    privEl.style.display='block';
+  } else {
+    privEl.style.display='none';
+  }
   document.getElementById('tree-popup').classList.add('open');
   mainMap.flyTo([t.latitude,t.longitude],17,{duration:1.2});
   document.querySelectorAll('.msb-item').forEach(el=>el.classList.remove('active'));
@@ -639,7 +662,7 @@ function filterMap(name,el){
 function buildSidebar(trees){
   const list=document.getElementById('msb-list');
   if(!trees.length){list.innerHTML='<div style="padding:20px;text-align:center;font-size:13px;color:rgba(255,255,255,.3)">No trees yet 🌱<br>Be the first!</div>';return;}
-  list.innerHTML=trees.map(t=>`<div class="msb-item" id="si-${t.id}" onclick="showPopup(${JSON.stringify(t).replace(/"/g,'&quot;')})">${t.photo_url?`<img class="msb-photo show" src="${t.photo_url}" onerror="this.classList.remove('show')" style="cursor:zoom-in" onclick="openLightbox(this.src,'')">` :`<div class="msb-av" style="background:${gc(t.common_name)}22">${ge(t.common_name)}</div>`}<div><div class="msb-name">${t.common_name}</div><div class="msb-sci">${t.scientific_name||''}</div><div class="msb-tags"><span class="msb-tag ${(t.condition||'good').toLowerCase()}">${t.condition||'Good'}</span><span class="msb-tag">${t.trunk_diameter||'?'}cm</span></div></div></div>`).join('');
+  list.innerHTML=trees.map(t=>`<div class="msb-item" id="si-${t.id}" onclick="showPopup(${JSON.stringify(t).replace(/"/g,'&quot;')})">${t.photo_url?`<img class="msb-photo show" src="${t.photo_url}" onerror="this.classList.remove('show')" style="cursor:zoom-in" onclick="openLightbox(this.src,'')">` :`<div class="msb-av" style="background:${gc(t.common_name)}22">${ge(t.common_name)}</div>`}<div><div class="msb-name">${t.common_name}${t.is_private?'<span style="font-size:10px;background:rgba(196,147,58,.2);color:#c4933a;padding:2px 6px;border-radius:6px;margin-left:6px;font-weight:600">🔒 Private</span>':''}</div><div class="msb-sci">${t.scientific_name||''}</div><div class="msb-tags"><span class="msb-tag ${(t.condition||'good').toLowerCase()}">${t.condition||'Good'}</span><span class="msb-tag">${t.trunk_diameter||'?'}cm</span></div></div></div>`).join('');
 }
 function sidebarSearch(q){
   const f=q?allTrees.filter(t=>t.common_name.toLowerCase().includes(q.toLowerCase())||(t.scientific_name||'').toLowerCase().includes(q.toLowerCase())||(t.submitted_by||'').toLowerCase().includes(q.toLowerCase())):allTrees;
@@ -680,6 +703,20 @@ function buildPhotoGallery(t){
 }
 function galleryNav(dir){if(event)event.stopPropagation();const count=window._galleryCount||1;window._galleryCurrent=(window._galleryCurrent+dir+count)%count;galleryGo(window._galleryCurrent);}
 function galleryGo(idx){window._galleryCurrent=idx;const slides=document.getElementById('gallery-slides');if(slides){slides.style.transition='transform .3s ease';slides.style.transform='translateX(-'+(idx*100)+'%)';}document.querySelectorAll('.gallery-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));}
+async function makePublic(id){
+  if(!confirm('Make this tree visible to everyone on the map?'))return;
+  try{
+    const sb2=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const {data:{session}}=await sb2.auth.getSession();
+    const r=await fetch(SUPABASE_URL+'/rest/v1/trees?id=eq.'+id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({is_private:false})});
+    if(r.ok){closePopup();const fresh=await fetchTrees();allTrees=fresh;renderMarkers(activeFilter?fresh.filter(t=>t.common_name===activeFilter):fresh);buildSidebar(fresh);alert('✅ Tree is now public on the map!');}
+    else alert('Could not update. Try again.');
+  }catch(e){alert('Error: '+e.message);}
+}
+function copyShareLink(id){
+  const url=window.location.origin+'/index.html?tree='+id;
+  navigator.clipboard.writeText(url).then(()=>alert('🔗 Link copied!\n\nAnyone with this link can view this tree.')).catch(()=>{prompt('Copy this link:',url);});
+}
 function openLightbox(src,caption){document.getElementById('lightbox-img').src=src;document.getElementById('lightbox-caption').textContent=caption||'';document.getElementById('lightbox').classList.add('open');document.body.style.overflow='hidden';}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});

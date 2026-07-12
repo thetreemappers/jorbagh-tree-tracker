@@ -99,6 +99,14 @@ textarea{resize:vertical;min-height:80px;}
 .cond-btn.active.good{background:#dcf5d0;border-color:#4a9e32;color:#2d6a1e;}
 .cond-btn.active.fair{background:#fef3cd;border-color:#c8922a;color:#8a6400;}
 .cond-btn.active.poor{background:#fde8e8;border-color:#c03222;color:#c03222;}
+/* Visibility toggle */
+.vis-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.vis-btn{border:2px solid var(--border);border-radius:12px;padding:14px;text-align:center;background:var(--parchment);cursor:pointer;transition:all .2s;}
+.vis-btn.active.public{border-color:#4a9e32;background:#dcf5d0;}
+.vis-btn.active.private{border-color:#c8922a;background:#fef3cd;}
+.vis-btn-icon{font-size:24px;margin-bottom:6px;}
+.vis-btn-title{font-size:13px;font-weight:700;color:var(--text);}
+.vis-btn-desc{font-size:10px;color:var(--text3);margin-top:3px;line-height:1.4;}
 .submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--sage),var(--leaf));border:none;border-radius:14px;color:white;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(42,106,30,.3);transition:all .2s;margin-top:4px;}
 .submit-btn:disabled{background:#ccc;box-shadow:none;}
 .success-overlay{position:fixed;inset:0;background:rgba(15,31,12,.92);z-index:200;display:none;align-items:center;justify-content:center;padding:24px;}
@@ -125,7 +133,8 @@ textarea{resize:vertical;min-height:80px;}
     const {data:{session}}=await SB.auth.getSession();
     if(!session?.user){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">🔒</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Sign in to Add a Tree</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">You need an approved account to add trees to the map.</div><a href="login.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Sign In</a></div>';return;}
     const {data:prof}=await SB.from('profiles').select('status,full_name').eq('id',session.user.id).single();
-    if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval.</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Back to Map</a></div>';return;}
+    if(prof?.status==='pending'||!prof?.status){overlay.innerHTML='<div style="text-align:center;padding:40px 24px;max-width:340px"><div style="font-size:48px;margin-bottom:12px">⏳</div><div style="font-size:20px;font-weight:700;color:#1a2118;margin-bottom:8px">Awaiting Approval</div><div style="font-size:13px;color:#7a9e68;margin-bottom:20px">Your account is pending admin approval. Please check back soon!</div><a href="index.html" style="display:block;padding:13px 24px;background:#1a3a0f;color:white;border-radius:12px;text-decoration:none;font-weight:700">Back to Map</a></div>';return;}
+    window._currentUserId=session.user.id;
     const name=prof?.full_name||session.user.user_metadata?.full_name||session.user.email.split('@')[0];
     setTimeout(()=>{const nf=document.getElementById('f-name');if(nf&&!nf.value)nf.value=name;},100);
     overlay.style.opacity='0';overlay.style.transition='opacity .3s';
@@ -158,7 +167,7 @@ textarea{resize:vertical;min-height:80px;}
 </div>
 <div class="wrap">
   <div class="page-title">🌿 Add a Tree</div>
-  <div class="page-sub">Every tree you log becomes a permanent part of Delhi's urban forest record.</div>
+  <div class="page-sub">Every tree you log becomes part of Delhi's urban forest record.</div>
   <div class="section">
     <div class="sec-label">📍 Location</div>
     <button class="loc-picker-btn" id="loc-picker-btn" onclick="openMapPicker()">📍 Set Tree Location on Map</button>
@@ -244,14 +253,32 @@ textarea{resize:vertical;min-height:80px;}
     <div class="field"><label>Observations</label><textarea id="f-notes" placeholder="Near which gate or landmark? Flowers or fruit visible? Any history?"></textarea></div>
     <div class="field"><label>Your Name</label><input type="text" id="f-name" placeholder="Your name, or leave blank for Anonymous"></div>
   </div>
+
+  <!-- Visibility -->
+  <div class="section">
+    <div class="sec-label">🔒 Visibility</div>
+    <div class="vis-grid">
+      <div class="vis-btn active public" id="vis-public" onclick="setVis('public')">
+        <div class="vis-btn-icon">🌍</div>
+        <div class="vis-btn-title">Public</div>
+        <div class="vis-btn-desc">Visible on the map to everyone</div>
+      </div>
+      <div class="vis-btn private" id="vis-private" onclick="setVis('private')">
+        <div class="vis-btn-icon">🔒</div>
+        <div class="vis-btn-title">Private</div>
+        <div class="vis-btn-desc">Only visible to you — save for yourself</div>
+      </div>
+    </div>
+  </div>
+
   <button class="submit-btn" id="submit-btn" onclick="submitTree()">🌳 Add This Tree to the Map</button>
 </div>
 <div class="success-overlay" id="success-overlay">
   <div class="success-card">
-    <div class="success-icon">🌳</div>
-    <div class="success-title">Tree Added!</div>
+    <div class="success-icon" id="success-icon">🌳</div>
+    <div class="success-title" id="success-title">Tree Added!</div>
     <img id="success-img" class="success-img" alt="Tree photo">
-    <div class="success-sub">Your tree is now permanently on the Delhi forest map. Thank you for contributing!</div>
+    <div class="success-sub" id="success-sub">Your tree is now on the map. Thank you!</div>
     <div class="success-actions">
       <a href="index.html" class="btn-map">🗺️ View on Map</a>
       <button class="btn-again" onclick="resetForm()">➕ Add Another Tree</button>
@@ -262,7 +289,7 @@ textarea{resize:vertical;min-height:80px;}
 const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
 const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
 const SB=supabase.createClient(SURL,SKEY);
-let selectedCond='Good';
+let selectedCond='Good',selectedVis='public';
 let mainFile=null,seasonFiles={spring:null,summer:null,winter:null,autumn:null};
 const SPECIES=['Neem','Peepal','Gulmohar','Jamun','Amaltas','Ashoka','Arjun','Pilkhan','Bargad','Moringa','Figs','Areca'];
 const SCI={'Neem':'Azadirachta indica','Peepal':'Ficus religiosa','Gulmohar':'Delonix regia','Jamun':'Syzygium cumini','Amaltas':'Cassia fistula','Ashoka':'Saraca indica','Bargad':'Ficus benghalensis','Moringa':'Moringa oleifera'};
@@ -275,6 +302,13 @@ const SCI={'Neem':'Azadirachta indica','Peepal':'Ficus religiosa','Gulmohar':'De
   });
 })();
 function setCond(val,el){selectedCond=val;document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function setVis(val){
+  selectedVis=val;
+  document.getElementById('vis-public').classList.toggle('active',val==='public');
+  document.getElementById('vis-private').classList.toggle('active',val==='private');
+  const btn=document.getElementById('submit-btn');
+  btn.textContent=val==='private'?'🔒 Save as Private Tree':'🌳 Add This Tree to the Map';
+}
 function isHeicFile(file){const n=file.name.toLowerCase();return file.type==='image/heic'||file.type==='image/heif'||n.endsWith('.heic')||n.endsWith('.heif');}
 let pickerMap=null,allTreesCache=[],moveTimer=null;
 function openMapPicker(){document.getElementById('map-overlay').classList.add('open');document.body.style.overflow='hidden';requestAnimationFrame(()=>{if(pickerMap){pickerMap.invalidateSize();return;}initPickerMap();});}
@@ -290,7 +324,7 @@ function initPickerMap(){
   }
 }
 function closeMapPicker(){document.getElementById('map-overlay').classList.remove('open');document.body.style.overflow='';}
-async function loadTreesCache(){try{const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});allTreesCache=await r.json();}catch(e){}}
+async function loadTreesCache(){try{const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude&is_private=eq.false',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});allTreesCache=await r.json();}catch(e){}}
 function updatePickerInfo(lat,lng){
   document.getElementById('mpo-coords').textContent=lat.toFixed(6)+', '+lng.toFixed(6);
   clearTimeout(moveTimer);
@@ -315,7 +349,7 @@ function confirmLocation(){
 }
 async function checkDuplicate(lat,lng){
   try{
-    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});
+    const r=await fetch(SURL+'/rest/v1/trees?select=common_name,submitted_by,latitude,longitude&is_private=eq.false',{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});
     const trees=await r.json();
     const nearby=trees.map(t=>({...t,d:dist(lat,lng,t.latitude,t.longitude)})).filter(t=>t.d<=20).sort((a,b)=>a.d-b.d);
     const el=document.getElementById('dup-warn');
@@ -325,7 +359,6 @@ async function checkDuplicate(lat,lng){
   }catch(e){}
 }
 function dist(lat1,lng1,lat2,lng2){const R=6371000,dL=(lat2-lat1)*Math.PI/180,dl=(lng2-lng1)*Math.PI/180;const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-function showPhotoPlaceholder(ph){ph.innerHTML='<div class="photo-placeholder-icon">📷</div><div class="photo-placeholder-title">Tap to add photo</div><div class="photo-placeholder-sub">Leaves, bark or full tree</div>';ph.style.display='flex';}
 function onMainPhoto(input){
   const file=input.files[0];if(!file) return;
   mainFile=file;
@@ -385,32 +418,51 @@ async function submitTree(){
     else if(uploads[i].label==='winter')photoWinter=url;
     else if(uploads[i].label==='autumn')photoAutumn=url;
   }
-  btn.textContent='🌱 Saving to map...';
-  const tree={common_name:name,scientific_name:document.getElementById('f-sci').value.trim()||null,latitude:lat,longitude:lng,trunk_diameter:parseInt(document.getElementById('f-diam').value)||null,height:document.getElementById('f-height').value,condition:selectedCond,notes:document.getElementById('f-notes').value.trim()||null,submitted_by:document.getElementById('f-name').value.trim()||'Anonymous',photo_url:photoUrl,photo_spring:photoSpring,photo_summer:photoSummer,photo_winter:photoWinter};
+  btn.textContent='🌱 Saving...';
+  const isPrivate=selectedVis==='private';
+  const tree={
+    common_name:name,
+    scientific_name:document.getElementById('f-sci').value.trim()||null,
+    latitude:lat,longitude:lng,
+    trunk_diameter:parseInt(document.getElementById('f-diam').value)||null,
+    height:document.getElementById('f-height').value,
+    condition:selectedCond,
+    notes:document.getElementById('f-notes').value.trim()||null,
+    submitted_by:document.getElementById('f-name').value.trim()||'Anonymous',
+    photo_url:photoUrl,photo_spring:photoSpring,photo_summer:photoSummer,photo_winter:photoWinter,
+    is_private:isPrivate,
+    owner_id:window._currentUserId||null
+  };
   try{
-    const r=await fetch(SURL+'/rest/v1/trees',{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(tree)});
+    const {data:{session}}=await SB.auth.getSession();
+    const headers={'apikey':SKEY,'Content-Type':'application/json','Prefer':'return=minimal'};
+    if(session?.access_token)headers['Authorization']='Bearer '+session.access_token;
+    const r=await fetch(SURL+'/rest/v1/trees',{method:'POST',headers,body:JSON.stringify(tree)});
     if(!r.ok) throw new Error('Save failed '+r.status);
-  }catch(e){alert('Failed to save tree: '+e.message);btn.disabled=false;btn.textContent='🌳 Add This Tree to the Map';return;}
+  }catch(e){alert('Failed to save tree: '+e.message);btn.disabled=false;btn.textContent=isPrivate?'🔒 Save as Private Tree':'🌳 Add This Tree to the Map';return;}
   if(photoUrl){const si=document.getElementById('success-img');si.src=photoUrl;si.style.display='block';}
+  document.getElementById('success-icon').textContent=isPrivate?'🔒':'🌳';
+  document.getElementById('success-title').textContent=isPrivate?'Saved Privately!':'Tree Added!';
+  document.getElementById('success-sub').textContent=isPrivate?'This tree is saved to your private collection. Only you can see it.':'Your tree is now on the Delhi forest map. Thank you!';
   document.getElementById('success-overlay').classList.add('show');
-  btn.disabled=false;btn.textContent='🌳 Add This Tree to the Map';
+  btn.disabled=false;btn.textContent=isPrivate?'🔒 Save as Private Tree':'🌳 Add This Tree to the Map';
 }
 function resetForm(){
   document.getElementById('success-overlay').classList.remove('show');
   ['f-common','f-sci','f-diam','f-notes','f-lat','f-lng'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('loc-picker-btn').style.display='flex';
   document.getElementById('loc-locked').classList.remove('show');
-  document.getElementById('loc-locked-addr').textContent='Location set';
-  document.getElementById('loc-locked-coords').textContent='';
   document.getElementById('dup-warn').style.display='none';
   document.getElementById('main-preview').style.display='none';
-  showPhotoPlaceholder(document.getElementById('main-placeholder'));
+  document.getElementById('main-placeholder').innerHTML='<div class="photo-placeholder-icon">📷</div><div class="photo-placeholder-title">Tap to add photo</div><div class="photo-placeholder-sub">Leaves, bark or full tree</div>';
+  document.getElementById('main-placeholder').style.display='flex';
   document.getElementById('main-change').style.display='none';
   document.getElementById('success-img').style.display='none';
   ['spring','summer','winter','autumn'].forEach(s=>{document.getElementById('prev-'+s).style.display='none';document.getElementById('icon-'+s).style.display='block';document.getElementById('tap-'+s).textContent='Tap to add';});
   mainFile=null;seasonFiles={spring:null,summer:null,winter:null,autumn:null};
   document.querySelectorAll('.sp-chip').forEach(c=>c.classList.remove('active'));
   selectedCond='Good';document.querySelectorAll('.cond-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.cond-btn.good').classList.add('active');
+  setVis('public');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 const urlP=new URLSearchParams(window.location.search);
