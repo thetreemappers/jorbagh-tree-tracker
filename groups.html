@@ -169,14 +169,20 @@ async function loadGroups(){
   try{
     const {data:{session}}=await SB.auth.getSession();
     const status=currentTab==='mine'?'active':'pending';
-    const r=await fetch(`${SURL}/rest/v1/group_members?select=*,groups(*)&user_id=eq.${myUserId}&status=eq.${status}`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    // Step 1: get membership rows
+    const r=await fetch(`${SURL}/rest/v1/group_members?user_id=eq.${myUserId}&status=eq.${status}&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
     const memberships=await r.json();
     if(!memberships.length){
       grid.innerHTML=`<div class="empty"><div class="empty-icon">${currentTab==='mine'?'🌳':'⏳'}</div><div class="empty-title">${currentTab==='mine'?'No groups yet':'No pending requests'}</div><div class="empty-desc">${currentTab==='mine'?'Create your first group or ask someone to share their invite link with you.':'You have no pending join requests.'}</div>${currentTab==='mine'?'<button class="btn-create" onclick="openCreate()" style="margin:0 auto">＋ Create Group</button>':''}</div>`;
       return;
     }
+    // Step 2: fetch group details for each membership
+    const groupIds=memberships.map(m=>m.group_id).join(',');
+    const r2=await fetch(`${SURL}/rest/v1/groups?id=in.(${groupIds})&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    const groups=await r2.json();
+    const groupMap={};groups.forEach(g=>groupMap[g.id]=g);
     grid.innerHTML=memberships.map(m=>{
-      const g=m.groups;if(!g)return'';
+      const g=groupMap[m.group_id];if(!g)return'';
       return`<a href="group.html?id=${g.id}" class="group-card">
         <div class="group-card-top">
           <div class="group-emoji">${g.cover_emoji||'🌳'}</div>
@@ -188,15 +194,14 @@ async function loadGroups(){
         </div>
       </a>`;
     }).join('');
-    // Load member counts
+    // Step 3: load member counts
     memberships.forEach(async m=>{
-      if(!m.groups)return;
-      const r2=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${m.groups.id}&status=eq.active&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Prefer':'count=exact'}});
-      const count=r2.headers.get('content-range')?.split('/')[1]||'?';
-      const el=document.getElementById('mc-'+m.groups.id);
+      const r3=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${m.group_id}&status=eq.active&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Prefer':'count=exact'}});
+      const count=r3.headers.get('content-range')?.split('/')[1]||'?';
+      const el=document.getElementById('mc-'+m.group_id);
       if(el)el.textContent=count;
     });
-  }catch(e){grid.innerHTML='<div class="loading">Error loading groups. Please refresh.</div>';}
+  }catch(e){grid.innerHTML='<div class="loading">Error loading groups. Please refresh.</div>';console.error(e);}
 }
 
 async function createGroup(){
