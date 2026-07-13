@@ -227,17 +227,18 @@ async function loadTrees(){
 }
 
 async function loadMembers(){
-  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.active&select=*,profiles(full_name,status)&order=role.asc`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.active&select=*&order=role.asc`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
   const members=await r.json();
   const list=document.getElementById('members-list');
   if(!members.length){list.innerHTML='<div class="empty-state"><div class="empty-state-text">No members yet.</div></div>';return;}
   list.innerHTML='<div class="member-list">'+members.map(m=>{
-    const name=m.profiles?.full_name||'Member';
-    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const isAdmin=myRole==='admin'&&m.user_id!==myUserId;
+    const isMe=m.user_id===myUserId;
+    const initials=isMe?'ME':'👤';
+    const label=isMe?'You':'Member';
+    const isAdmin=myRole==='admin'&&!isMe;
     return`<div class="member-row">
-      <div class="member-av">${initials}</div>
-      <div style="flex:1"><div class="member-name">${name}${m.user_id===myUserId?' (you)':''}</div></div>
+      <div class="member-av" style="font-size:${isMe?'12px':'18px'}">${initials}</div>
+      <div style="flex:1"><div class="member-name">${label}</div></div>
       <span class="role-badge ${m.role}">${m.role}</span>
       ${isAdmin?`<div class="member-actions"><button class="btn-sm btn-remove" onclick="removeMember('${m.id}','${m.user_id}')">Remove</button></div>`:''}
     </div>`;
@@ -245,19 +246,17 @@ async function loadMembers(){
 }
 
 async function loadPending(){
-  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=*,profiles(full_name)`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
   const pending=await r.json();
   const countEl=document.getElementById('pending-count');
   countEl.textContent=pending.length||'';
   countEl.style.display=pending.length?'inline':'none';
   const list=document.getElementById('pending-list');
   if(!pending.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">No pending requests.</div></div>';return;}
-  list.innerHTML='<div class="members-section"><div class="section-title">⏳ Pending Join Requests ('+pending.length+')</div><div class="member-list">'+pending.map(m=>{
-    const name=m.profiles?.full_name||'Unknown User';
-    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  list.innerHTML='<div class="members-section"><div class="section-title">⏳ Pending Join Requests ('+pending.length+')</div><div class="member-list">'+pending.map((m,i)=>{
     return`<div class="member-row">
-      <div class="member-av">${initials}</div>
-      <div style="flex:1"><div class="member-name">${name}</div></div>
+      <div class="member-av" style="font-size:18px">👤</div>
+      <div style="flex:1"><div class="member-name">Member ${i+1}</div><div class="member-email" style="font-size:11px;color:var(--text3)">Waiting for approval</div></div>
       <div class="member-actions">
         <button class="btn-sm btn-approve" onclick="approveMember('${m.id}')">✅ Approve</button>
         <button class="btn-sm btn-remove" onclick="rejectMember('${m.id}')">✕ Reject</button>
