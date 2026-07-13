@@ -248,6 +248,7 @@ async function loadMembers(){
 async function loadPending(){
   const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
   const pending=await r.json();
+  console.log('PENDING REQUESTS:', JSON.stringify(pending));
   const countEl=document.getElementById('pending-count');
   countEl.textContent=pending.length||'';
   countEl.style.display=pending.length?'inline':'none';
