@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Join Group · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:#f8f4ed;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.card{background:white;border-radius:24px;padding:40px 32px;max-width:440px;width:100%;box-shadow:0 16px 56px rgba(26,33,24,0.12);border:1px solid rgba(42,107,30,0.1);text-align:center;}
+.site-logo{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:32px;}
+.site-logo-icon{font-size:32px;}
+.site-logo-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:#1a2118;}
+.site-logo-name span{color:#5aad3f;}
+.site-logo-tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#8b6347;font-weight:500;}
+.group-icon{font-size:64px;margin-bottom:12px;display:block;}
+.group-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#1a2118;margin-bottom:8px;}
+.group-desc{font-size:14px;color:#7a9e68;line-height:1.6;margin-bottom:20px;}
+.group-stats{display:flex;justify-content:center;gap:24px;margin-bottom:28px;padding:16px;background:#f8f4ed;border-radius:12px;}
+.gstat{text-align:center;}
+.gstat-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#1e3d28;}
+.gstat-label{font-size:11px;color:#7a9e68;margin-top:2px;}
+.btn-join{width:100%;padding:15px;background:linear-gradient(135deg,#1e3d28,#3d6b4a);color:white;border:none;border-radius:14px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(30,61,40,.25);transition:all .2s;margin-bottom:10px;}
+.btn-join:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(30,61,40,.3);}
+.btn-join:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-secondary{display:block;width:100%;padding:13px;background:#efe9da;color:#3d5c30;border:1.5px solid rgba(42,107,30,.14);border-radius:14px;font-size:14px;font-weight:600;text-align:center;text-decoration:none;transition:all .2s;cursor:pointer;border:none;font-family:'Outfit',sans-serif;}
+.status-box{border-radius:14px;padding:20px;margin-bottom:16px;}
+.status-box.pending{background:#fef3cd;border:1px solid #f0d9a8;}
+.status-box.active{background:#dcf5d0;border:1px solid #b8e0a8;}
+.status-box.error{background:#fde8e8;border:1px solid #f5c0b8;}
+.status-icon{font-size:36px;margin-bottom:8px;}
+.status-title{font-size:16px;font-weight:700;color:#1a2118;margin-bottom:4px;}
+.status-desc{font-size:13px;color:#7a9e68;line-height:1.5;}
+.spinner{width:28px;height:28px;border:3px solid rgba(42,106,30,.15);border-top-color:#2d6a1e;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#7a9e68;}
+#loading-state,#group-state,#status-state,#error-state,#login-state{display:none;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="site-logo">
+    <div class="site-logo-icon">🌳</div>
+    <div class="site-logo-name">Jor Bagh <span>Tree</span> Tracker</div>
+    <div class="site-logo-tag">New Delhi Urban Forest Map</div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading group...</div>
+  </div>
+
+  <!-- Group info + join -->
+  <div id="group-state">
+    <span class="group-icon" id="g-icon">🌳</span>
+    <div class="group-name" id="g-name">—</div>
+    <div class="group-desc" id="g-desc"></div>
+    <div class="group-stats">
+      <div class="gstat"><div class="gstat-val" id="g-members">—</div><div class="gstat-label">Members</div></div>
+      <div class="gstat"><div class="gstat-val" id="g-trees">—</div><div class="gstat-label">Trees</div></div>
+    </div>
+    <button class="btn-join" id="join-btn" onclick="requestJoin()">🌿 Request to Join</button>
+    <a href="login.html" class="btn-secondary" id="signin-prompt" style="display:none">Sign in to Join →</a>
+  </div>
+
+  <!-- Status (pending / already member) -->
+  <div id="status-state">
+    <div class="status-box" id="status-box">
+      <div class="status-icon" id="status-icon"></div>
+      <div class="status-title" id="status-title"></div>
+      <div class="status-desc" id="status-desc"></div>
+    </div>
+    <a href="index.html" class="btn-secondary" style="display:block;text-align:center;text-decoration:none">← Back to Map</a>
+  </div>
+
+  <!-- Not found -->
+  <div id="error-state">
+    <div class="status-box error">
+      <div class="status-icon">🔗</div>
+      <div class="status-title">Invalid Link</div>
+      <div class="status-desc">This invite link is invalid or has expired. Ask the group admin for a new link.</div>
+    </div>
+    <a href="index.html" class="btn-secondary" style="display:block;text-align:center;text-decoration:none">← Back to Map</a>
+  </div>
+</div>
+
+<script>
+const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+const SB=supabase.createClient(SURL,SKEY);
+let group=null,myUserId=null;
+
+function show(id){['loading-state','group-state','status-state','error-state'].forEach(s=>document.getElementById(s).style.display=s===id?'block':'none');}
+function showStatus(icon,title,desc,type='pending'){
+  document.getElementById('status-icon').textContent=icon;
+  document.getElementById('status-title').textContent=title;
+  document.getElementById('status-desc').textContent=desc;
+  document.getElementById('status-box').className='status-box '+type;
+  show('status-state');
+}
+
+(async()=>{
+  show('loading-state');
+  const token=new URLSearchParams(window.location.search).get('token');
+  if(!token){show('error-state');return;}
+  try{
+    // Fetch group by invite token
+    const r=await fetch(`${SURL}/rest/v1/groups?invite_token=eq.${token}&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY}});
+    const groups=await r.json();
+    if(!groups.length){show('error-state');return;}
+    group=groups[0];
+    document.getElementById('g-icon').textContent=group.cover_emoji||'🌳';
+    document.getElementById('g-name').textContent=group.name;
+    document.getElementById('g-desc').textContent=group.description||'Join this group to collaborate on mapping trees.';
+    // Member count
+    const r2=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${group.id}&status=eq.active&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Prefer':'count=exact'}});
+    document.getElementById('g-members').textContent=r2.headers.get('content-range')?.split('/')[1]||'0';
+    // Tree count
+    const r3=await fetch(`${SURL}/rest/v1/trees?group_id=eq.${group.id}&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+SKEY,'Prefer':'count=exact'}});
+    document.getElementById('g-trees').textContent=r3.headers.get('content-range')?.split('/')[1]||'0';
+    // Check login
+    const {data:{session}}=await SB.auth.getSession();
+    if(!session?.user){
+      document.getElementById('join-btn').style.display='none';
+      document.getElementById('signin-prompt').style.display='block';
+      // Store token to redirect back after login
+      sessionStorage.setItem('join_token',token);
+      show('group-state');return;
+    }
+    myUserId=session.user.id;
+    // Check if already a member
+    const r4=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${group.id}&user_id=eq.${myUserId}&select=status,role`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    const existing=await r4.json();
+    if(existing.length){
+      const m=existing[0];
+      if(m.status==='active')showStatus('✅','You\'re already a member!','You have access to this group.',m.role==='admin'?'active':'active');
+      else if(m.status==='pending')showStatus('⏳','Request Pending','Your request to join is waiting for admin approval.','pending');
+      else showStatus('❌','Access Removed','You have been removed from this group. Contact the admin.','error');
+      return;
+    }
+    // If open group, update join button text
+    if(group.is_public)document.getElementById('join-btn').textContent='🌿 Join Group';
+    show('group-state');
+  }catch(e){show('error-state');}
+})();
+
+async function requestJoin(){
+  const btn=document.getElementById('join-btn');
+  btn.disabled=true;btn.textContent='Joining...';
+  try{
+    const {data:{session}}=await SB.auth.getSession();
+    const status=group.is_public?'active':'pending';
+    const r=await fetch(`${SURL}/rest/v1/group_members`,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({group_id:group.id,user_id:myUserId,role:'member',status})});
+    if(!r.ok)throw new Error(await r.text());
+    if(group.is_public){
+      showStatus('✅','You\'ve joined!','Welcome to '+group.name+'. You can now add trees to this group.','active');
+      setTimeout(()=>window.location.href='group.html?id='+group.id,1500);
+    } else {
+      showStatus('⏳','Request Sent!','Your request to join "'+group.name+'" has been sent. The admin will review it shortly.','pending');
+    }
+  }catch(e){btn.disabled=false;btn.textContent='🌿 Request to Join';alert('Error: '+e.message);}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Groups · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--green:#1a3a0f;--sage:#2d6a1e;--leaf:#4a9e32;--cream:#f8f4ed;--parchment:#efe9da;--gold:#c8922a;--text:#1a2118;--text2:#3d5c30;--text3:#7a9e68;--border:rgba(42,107,30,0.14);--r:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+.nav{background:rgba(247,242,232,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;flex-direction:column;gap:1px;text-decoration:none;line-height:1;}
+.logo-main{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;}
+.logo-name{color:#5aad3f;}.logo-tracker{color:#c9a84c;}
+.logo-tagline{font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:#8b6347;padding-left:32px;}
+.nav-links{display:flex;align-items:center;gap:24px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;}
+.nav-cta{background:var(--green);color:white!important;padding:9px 18px;border-radius:20px;font-weight:600!important;}
+.nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:none;border:none;}
+.nav-ham span{display:block;width:22px;height:2px;background:var(--green);border-radius:2px;}
+@media(max-width:900px){.nav{padding:0 20px;}.nav-links{display:none;}.nav-ham{display:flex;}}
+.wrap{max-width:900px;margin:0 auto;padding:40px 20px 60px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--text);}
+.page-sub{font-size:13px;color:var(--text3);margin-top:3px;}
+.btn-create{display:flex;align-items:center;gap:8px;background:var(--green);color:white;padding:12px 22px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(26,58,15,.25);}
+.btn-create:hover{background:var(--sage);transform:translateY(-1px);}
+/* Tabs */
+.tabs{display:flex;gap:4px;background:white;border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content;}
+.tab{padding:8px 20px;border-radius:9px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .2s;border:none;background:none;}
+.tab.active{background:var(--green);color:white;}
+/* Groups grid */
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.group-card{background:white;border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:all .22s;box-shadow:0 2px 8px rgba(0,0,0,.05);position:relative;overflow:hidden;text-decoration:none;display:block;color:inherit;}
+.group-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.group-card-top{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;}
+.group-emoji{font-size:36px;line-height:1;flex-shrink:0;}
+.group-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:4px;}
+.group-desc{font-size:12px;color:var(--text3);line-height:1.5;}
+.group-meta{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
+.group-stats{display:flex;gap:12px;}
+.gstat{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:4px;}
+.gstat strong{color:var(--text);font-weight:700;}
+.role-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:6px;text-transform:uppercase;}
+.role-badge.admin{background:#dcf5d0;color:#2d6a1e;}
+.role-badge.member{background:var(--parchment);color:var(--text3);}
+.role-badge.pending{background:#fef3cd;color:#8a6400;}
+/* Empty state */
+.empty{text-align:center;padding:60px 20px;}
+.empty-icon{font-size:56px;margin-bottom:16px;}
+.empty-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.empty-desc{font-size:14px;color:var(--text3);line-height:1.7;max-width:360px;margin:0 auto 24px;}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:white;border-radius:20px;padding:32px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;margin-bottom:20px;color:var(--text);}
+.modal label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.modal input,.modal textarea,.modal select{width:100%;padding:11px 13px;border:1.5px solid #ddd5c8;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);background:var(--cream);outline:none;transition:border .2s;margin-bottom:14px;}
+.modal input:focus,.modal textarea:focus{border-color:var(--leaf);background:white;}
+.modal textarea{resize:vertical;min-height:70px;}
+.emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.emoji-opt{font-size:24px;padding:6px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.emoji-opt.selected{border-color:var(--leaf);background:var(--parchment);}
+.vis-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.vis-opt{border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--parchment);}
+.vis-opt.selected{border-color:var(--leaf);background:#dcf5d0;}
+.vis-opt-icon{font-size:20px;margin-bottom:4px;}
+.vis-opt-label{font-size:12px;font-weight:700;color:var(--text);}
+.vis-opt-desc{font-size:10px;color:var(--text3);margin-top:2px;}
+.modal-actions{display:flex;gap:10px;margin-top:4px;}
+.btn-submit{flex:1;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-submit:hover{background:var(--sage);}
+.btn-cancel{padding:13px 20px;background:var(--parchment);color:var(--text2);border:1.5px solid var(--border);border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.loading{text-align:center;padding:40px;color:var(--text3);font-size:14px;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-main"><span style="font-size:22px">🌳</span><span class="logo-name">Jor Bagh</span><span class="logo-tracker">Tree Tracker</span></div>
+    <div class="logo-tagline">New Delhi Urban Forest Map</div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Map</a>
+    <a href="groups.html" style="color:var(--green);font-weight:700">👥 Groups</a>
+    <a href="submit.html" class="nav-cta">➕ Add a Tree</a>
+  </div>
+  <button class="nav-ham" onclick="this.nextElementSibling&&(this.nextElementSibling.style.display='block')"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="wrap">
+  <div class="page-header">
+    <div>
+      <div class="page-title">👥 My Groups</div>
+      <div class="page-sub">Collaborate with your colony, school or organisation</div>
+    </div>
+    <button class="btn-create" onclick="openCreate()">＋ Create Group</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('mine',this)">My Groups</button>
+    <button class="tab" onclick="switchTab('pending',this)">Pending Requests</button>
+  </div>
+
+  <div id="groups-grid" class="groups-grid"><div class="loading">🌿 Loading groups...</div></div>
+</div>
+
+<!-- Create modal -->
+<div class="modal-bg" id="create-modal">
+  <div class="modal">
+    <div class="modal-title">Create a New Group</div>
+    <label>Group Icon</label>
+    <div class="emoji-row" id="emoji-row">
+      🌳 🌿 🌲 🌴 🍀 🌸 🌻 🏡 🏫 🏢 🌍 🦜
+    </div>
+    <label>Group Name *</label>
+    <input type="text" id="g-name" placeholder="e.g. Jor Bagh RWA Trees">
+    <label>Description</label>
+    <textarea id="g-desc" placeholder="What is this group for?"></textarea>
+    <label>Who can join?</label>
+    <div class="vis-row">
+      <div class="vis-opt selected" id="vis-invite" onclick="selVis('invite')">
+        <div class="vis-opt-icon">🔗</div>
+        <div class="vis-opt-label">Invite Only</div>
+        <div class="vis-opt-desc">Admin approves members</div>
+      </div>
+      <div class="vis-opt" id="vis-open" onclick="selVis('open')">
+        <div class="vis-opt-icon">🌍</div>
+        <div class="vis-opt-label">Open</div>
+        <div class="vis-opt-desc">Anyone with link can join</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCreate()">Cancel</button>
+      <button class="btn-submit" id="create-btn" onclick="createGroup()">🌳 Create Group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+const SB=supabase.createClient(SURL,SKEY);
+let myUserId=null,currentTab='mine',selectedEmoji='🌳',selectedVis='invite';
+
+// Auth check
+(async()=>{
+  const {data:{session}}=await SB.auth.getSession();
+  if(!session?.user){window.location.href='login.html';return;}
+  myUserId=session.user.id;
+  loadGroups();
+})();
+
+// Emoji picker
+document.getElementById('emoji-row').innerHTML=['🌳','🌿','🌲','🌴','🍀','🌸','🌻','🏡','🏫','🏢','🌍','🦜'].map(e=>`<span class="emoji-opt${e==='🌳'?' selected':''}" onclick="pickEmoji(this,'${e}')">${e}</span>`).join('');
+
+function pickEmoji(el,e){selectedEmoji=e;document.querySelectorAll('.emoji-opt').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');}
+function selVis(v){selectedVis=v;document.getElementById('vis-invite').classList.toggle('selected',v==='invite');document.getElementById('vis-open').classList.toggle('selected',v==='open');}
+function openCreate(){document.getElementById('create-modal').classList.add('open');}
+function closeCreate(){document.getElementById('create-modal').classList.remove('open');}
+function switchTab(tab,el){currentTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');loadGroups();}
+
+async function loadGroups(){
+  const grid=document.getElementById('groups-grid');
+  grid.innerHTML='<div class="loading">🌿 Loading...</div>';
+  try{
+    const {data:{session}}=await SB.auth.getSession();
+    const status=currentTab==='mine'?'active':'pending';
+    const r=await fetch(`${SURL}/rest/v1/group_members?select=*,groups(*)&user_id=eq.${myUserId}&status=eq.${status}`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    const memberships=await r.json();
+    if(!memberships.length){
+      grid.innerHTML=`<div class="empty"><div class="empty-icon">${currentTab==='mine'?'🌳':'⏳'}</div><div class="empty-title">${currentTab==='mine'?'No groups yet':'No pending requests'}</div><div class="empty-desc">${currentTab==='mine'?'Create your first group or ask someone to share their invite link with you.':'You have no pending join requests.'}</div>${currentTab==='mine'?'<button class="btn-create" onclick="openCreate()" style="margin:0 auto">＋ Create Group</button>':''}</div>`;
+      return;
+    }
+    grid.innerHTML=memberships.map(m=>{
+      const g=m.groups;if(!g)return'';
+      return`<a href="group.html?id=${g.id}" class="group-card">
+        <div class="group-card-top">
+          <div class="group-emoji">${g.cover_emoji||'🌳'}</div>
+          <div><div class="group-name">${g.name}</div><div class="group-desc">${g.description||'No description'}</div></div>
+        </div>
+        <div class="group-meta">
+          <div class="group-stats"><span class="gstat">👥 <strong id="mc-${g.id}">—</strong> members</span></div>
+          <span class="role-badge ${m.role}">${m.role}</span>
+        </div>
+      </a>`;
+    }).join('');
+    // Load member counts
+    memberships.forEach(async m=>{
+      if(!m.groups)return;
+      const r2=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${m.groups.id}&status=eq.active&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Prefer':'count=exact'}});
+      const count=r2.headers.get('content-range')?.split('/')[1]||'?';
+      const el=document.getElementById('mc-'+m.groups.id);
+      if(el)el.textContent=count;
+    });
+  }catch(e){grid.innerHTML='<div class="loading">Error loading groups. Please refresh.</div>';}
+}
+
+async function createGroup(){
+  const name=document.getElementById('g-name').value.trim();
+  if(!name){alert('Please enter a group name');return;}
+  const btn=document.getElementById('create-btn');
+  btn.disabled=true;btn.textContent='Creating...';
+  try{
+    const {data:{session}}=await SB.auth.getSession();
+    // Create group
+    const r=await fetch(`${SURL}/rest/v1/groups`,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,description:document.getElementById('g-desc').value.trim()||null,cover_emoji:selectedEmoji,created_by:myUserId,is_public:selectedVis==='open'})});
+    if(!r.ok)throw new Error(await r.text());
+    const [group]=await r.json();
+    // Add creator as admin member
+    await fetch(`${SURL}/rest/v1/group_members`,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({group_id:group.id,user_id:myUserId,role:'admin',status:'active'})});
+    closeCreate();
+    window.location.href='group.html?id='+group.id;
+  }catch(e){alert('Error creating group: '+e.message);btn.disabled=false;btn.textContent='🌳 Create Group';}
+}
+</script>
+</body>
+</html>

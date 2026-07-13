@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group · The Tree Mappers</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--green:#1a3a0f;--sage:#2d6a1e;--leaf:#4a9e32;--cream:#f8f4ed;--parchment:#efe9da;--gold:#c8922a;--text:#1a2118;--text2:#3d5c30;--text3:#7a9e68;--border:rgba(42,107,30,0.14);--r:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Outfit',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+.nav{background:rgba(247,242,232,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;flex-direction:column;gap:1px;text-decoration:none;line-height:1;}
+.logo-main{display:flex;align-items:center;gap:8px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;}
+.logo-name{color:#5aad3f;}.logo-tracker{color:#c9a84c;}
+.logo-tagline{font-size:9px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:#8b6347;padding-left:32px;}
+.nav-links{display:flex;align-items:center;gap:24px;}
+.nav-links a{font-size:14px;font-weight:500;color:var(--text2);text-decoration:none;}
+.nav-cta{background:var(--green);color:white!important;padding:9px 18px;border-radius:20px;font-weight:600!important;}
+.nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;background:none;border:none;}
+.nav-ham span{display:block;width:22px;height:2px;background:var(--green);border-radius:2px;}
+@media(max-width:900px){.nav{padding:0 20px;}.nav-links{display:none;}.nav-ham{display:flex;}}
+/* Group header */
+.group-header{background:linear-gradient(135deg,var(--sage),var(--green));color:white;padding:32px 48px;}
+.gh-top{display:flex;align-items:flex-start;gap:20px;margin-bottom:20px;}
+.gh-emoji{font-size:56px;line-height:1;flex-shrink:0;}
+.gh-info{flex:1;}
+.gh-name{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;line-height:1.1;margin-bottom:6px;}
+.gh-desc{font-size:14px;color:rgba(255,255,255,.7);line-height:1.6;max-width:500px;}
+.gh-stats{display:flex;gap:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.15);}
+.ghstat-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:white;line-height:1;}
+.ghstat-label{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;}
+.gh-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+.btn-invite{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;border:1.5px solid rgba(255,255,255,.25);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;}
+.btn-invite:hover{background:rgba(255,255,255,.25);}
+.btn-add-tree{display:flex;align-items:center;gap:8px;background:white;color:var(--green);padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'Outfit',sans-serif;text-decoration:none;transition:all .2s;}
+.btn-add-tree:hover{background:#f0ede6;}
+@media(max-width:768px){.group-header{padding:20px;}.gh-top{flex-direction:column;gap:12px;}.gh-emoji{font-size:44px;}.gh-name{font-size:26px;}}
+/* Tabs */
+.tabs-bar{background:white;border-bottom:1px solid var(--border);padding:0 48px;display:flex;gap:4px;}
+.tab{padding:14px 18px;font-size:14px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Outfit',sans-serif;}
+.tab.active{color:var(--green);border-bottom-color:var(--green);}
+@media(max-width:768px){.tabs-bar{padding:0 16px;}.tab{padding:12px 12px;font-size:13px;}}
+/* Content */
+.tab-content{display:none;padding:32px 48px;}
+.tab-content.active{display:block;}
+@media(max-width:768px){.tab-content{padding:20px 16px;}}
+/* Map */
+#group-map{height:420px;border-radius:14px;overflow:hidden;border:1px solid var(--border);}
+.leaflet-control-attribution{display:none!important;}
+.tree-pin{background:transparent!important;border:none!important;}
+/* Trees list */
+.trees-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:20px;}
+.tree-card{background:white;border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.tree-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1);}
+.tree-card-img{width:100%;height:140px;object-fit:cover;background:var(--parchment);display:flex;align-items:center;justify-content:center;font-size:40px;}
+.tree-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.tree-card-body{padding:14px;}
+.tree-card-name{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.tree-card-meta{font-size:11px;color:var(--text3);}
+.tree-card-badges{display:flex;gap:6px;margin-top:8px;}
+.badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;background:var(--parchment);color:var(--text3);}
+.badge.good{background:#dcf5d0;color:#2d6a1e;}
+/* Members */
+.members-section{margin-bottom:28px;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.member-list{display:flex;flex-direction:column;gap:8px;}
+.member-row{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--border);border-radius:12px;padding:12px 16px;}
+.member-av{width:38px;height:38px;border-radius:50%;background:var(--leaf);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;}
+.member-name{font-size:14px;font-weight:600;color:var(--text);flex:1;}
+.member-email{font-size:11px;color:var(--text3);}
+.role-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:6px;text-transform:uppercase;}
+.role-badge.admin{background:#dcf5d0;color:#2d6a1e;}
+.role-badge.member{background:var(--parchment);color:var(--text3);}
+.member-actions{display:flex;gap:6px;}
+.btn-sm{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .15s;}
+.btn-approve{background:#dcf5d0;color:#2d6a1e;}
+.btn-approve:hover{background:#b8e0a8;}
+.btn-remove{background:#fde8e8;color:#c03222;}
+.btn-remove:hover{background:#f5c0b8;}
+/* Invite link */
+.invite-box{background:white;border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px;}
+.invite-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.invite-link-row{display:flex;gap:8px;}
+.invite-link-input{flex:1;padding:10px 13px;border:1.5px solid #ddd5c8;border-radius:10px;font-family:monospace;font-size:12px;color:var(--text);background:var(--parchment);outline:none;}
+.btn-copy{padding:10px 16px;background:var(--green);color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;}
+.invite-note{font-size:11px;color:var(--text3);margin-top:8px;}
+/* Empty */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);}
+.empty-state-icon{font-size:40px;margin-bottom:10px;}
+.empty-state-text{font-size:14px;line-height:1.6;}
+.loading{text-align:center;padding:32px;color:var(--text3);font-size:14px;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-main"><span style="font-size:22px">🌳</span><span class="logo-name">Jor Bagh</span><span class="logo-tracker">Tree Tracker</span></div>
+    <div class="logo-tagline">New Delhi Urban Forest Map</div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Map</a>
+    <a href="groups.html">👥 Groups</a>
+    <a href="submit.html" class="nav-cta">➕ Add a Tree</a>
+  </div>
+  <button class="nav-ham"><span></span><span></span><span></span></button>
+</nav>
+
+<div class="group-header" id="group-header" style="display:none">
+  <div class="gh-top">
+    <div class="gh-emoji" id="gh-emoji">🌳</div>
+    <div class="gh-info">
+      <div class="gh-name" id="gh-name">Loading...</div>
+      <div class="gh-desc" id="gh-desc"></div>
+    </div>
+  </div>
+  <div class="gh-stats">
+    <div><div class="ghstat-val" id="gh-members">—</div><div class="ghstat-label">Members</div></div>
+    <div><div class="ghstat-val" id="gh-trees">—</div><div class="ghstat-label">Trees Logged</div></div>
+  </div>
+  <div class="gh-actions">
+    <button class="btn-invite" onclick="copyInvite()">🔗 Copy Invite Link</button>
+    <a class="btn-add-tree" id="add-tree-btn" href="#">➕ Add Tree to Group</a>
+  </div>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab active" onclick="switchTab('map',this)">🗺️ Map</button>
+  <button class="tab" onclick="switchTab('trees',this)">🌳 Trees</button>
+  <button class="tab" onclick="switchTab('members',this)">👥 Members</button>
+  <button class="tab" id="pending-tab" onclick="switchTab('pending',this)" style="display:none">⏳ Requests <span id="pending-count" style="background:#e74c3c;color:white;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px"></span></button>
+</div>
+
+<div class="tab-content active" id="tab-map">
+  <div id="group-map"></div>
+</div>
+<div class="tab-content" id="tab-trees">
+  <div id="trees-list"><div class="loading">🌿 Loading trees...</div></div>
+</div>
+<div class="tab-content" id="tab-members">
+  <div class="invite-box" id="invite-box" style="display:none">
+    <div class="invite-title">🔗 Invite Link — Share this to invite people</div>
+    <div class="invite-link-row">
+      <input class="invite-link-input" id="invite-link-input" readonly>
+      <button class="btn-copy" onclick="copyInvite()">Copy</button>
+    </div>
+    <div class="invite-note">Anyone with this link can request to join your group.</div>
+  </div>
+  <div id="members-list"><div class="loading">👥 Loading members...</div></div>
+</div>
+<div class="tab-content" id="tab-pending">
+  <div id="pending-list"><div class="loading">⏳ Loading requests...</div></div>
+</div>
+
+<script>
+const SURL='https://dcciktuwyjrvkynmxdjn.supabase.co';
+const SKEY='sb_publishable_P7huX1OveJrk5zvTYufakw_KlOmJ8JW';
+const SB=supabase.createClient(SURL,SKEY);
+const SP={'Neem':'🌿','Peepal':'🍀','Gulmohar':'🌸','Jamun':'🫐','Amaltas':'🌼','Ashoka':'🌲','Arjun':'🪵','Pilkhan':'🍃','Bargad':'🌳'};
+const SP_COL={'Neem':'#4a8c3f','Peepal':'#8c6a3f','Gulmohar':'#c94e2a','Jamun':'#5a2d82','Amaltas':'#c9a030','Ashoka':'#2d6e4a','Arjun':'#7a5c2e','Pilkhan':'#3a7a6e','Bargad':'#6b5e3a'};
+let groupId=null,groupData=null,myUserId=null,myRole=null,groupMap=null,session=null;
+
+(async()=>{
+  groupId=new URLSearchParams(window.location.search).get('id');
+  if(!groupId){window.location.href='groups.html';return;}
+  const {data:{session:s}}=await SB.auth.getSession();
+  if(!s?.user){window.location.href='login.html';return;}
+  session=s;myUserId=s.user.id;
+  await loadGroup();
+})();
+
+async function loadGroup(){
+  try{
+    // Fetch group
+    const r=await fetch(`${SURL}/rest/v1/groups?id=eq.${groupId}&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    const groups=await r.json();
+    if(!groups.length){window.location.href='groups.html';return;}
+    groupData=groups[0];
+    document.title=groupData.name+' · The Tree Mappers';
+    document.getElementById('gh-emoji').textContent=groupData.cover_emoji||'🌳';
+    document.getElementById('gh-name').textContent=groupData.name;
+    document.getElementById('gh-desc').textContent=groupData.description||'';
+    document.getElementById('add-tree-btn').href=`submit.html?group_id=${groupId}&group_name=${encodeURIComponent(groupData.name)}`;
+    const inviteUrl=window.location.origin+'/join.html?token='+groupData.invite_token;
+    document.getElementById('invite-link-input').value=inviteUrl;
+    document.getElementById('group-header').style.display='block';
+    // Check my membership
+    const r2=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&user_id=eq.${myUserId}&select=role,status`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+    const mems=await r2.json();
+    if(mems.length)myRole=mems[0].role;
+    // Show admin features
+    if(myRole==='admin'||groupData.created_by===myUserId){
+      myRole='admin';
+      document.getElementById('pending-tab').style.display='block';
+      document.getElementById('invite-box').style.display='block';
+      loadPending();
+    }
+    // Stats
+    const r3=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.active&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Prefer':'count=exact'}});
+    document.getElementById('gh-members').textContent=r3.headers.get('content-range')?.split('/')[1]||'0';
+    const r4=await fetch(`${SURL}/rest/v1/trees?group_id=eq.${groupId}&select=id`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Prefer':'count=exact'}});
+    document.getElementById('gh-trees').textContent=r4.headers.get('content-range')?.split('/')[1]||'0';
+    await loadTrees();
+    loadMembers();
+    initMap();
+  }catch(e){console.error(e);}
+}
+
+async function loadTrees(){
+  const r=await fetch(`${SURL}/rest/v1/trees?group_id=eq.${groupId}&select=*&order=created_at.desc`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const trees=await r.json();
+  window._groupTrees=trees;
+  const list=document.getElementById('trees-list');
+  if(!trees.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">🌱</div><div class="empty-state-text">No trees logged yet.<br>Be the first to add one!</div></div>';return;}
+  list.innerHTML='<div class="trees-grid">'+trees.map(t=>`
+    <div class="tree-card">
+      <div class="tree-card-img">${t.photo_url?`<img src="${t.photo_url}" alt="${t.common_name}" onerror="this.parentElement.innerHTML='${SP[t.common_name]||'🌳'}'">`:SP[t.common_name]||'🌳'}</div>
+      <div class="tree-card-body">
+        <div class="tree-card-name">${t.common_name}</div>
+        <div class="tree-card-meta">${t.scientific_name?'<i>'+t.scientific_name+'</i><br>':''} by ${t.submitted_by||'Anonymous'}</div>
+        <div class="tree-card-badges"><span class="badge ${(t.condition||'').toLowerCase()}">${t.condition||'Good'}</span><span class="badge">${t.trunk_diameter||'?'}cm</span></div>
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+async function loadMembers(){
+  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.active&select=*,profiles(full_name,status)&order=role.asc`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const members=await r.json();
+  const list=document.getElementById('members-list');
+  if(!members.length){list.innerHTML='<div class="empty-state"><div class="empty-state-text">No members yet.</div></div>';return;}
+  list.innerHTML='<div class="member-list">'+members.map(m=>{
+    const name=m.profiles?.full_name||'Member';
+    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const isAdmin=myRole==='admin'&&m.user_id!==myUserId;
+    return`<div class="member-row">
+      <div class="member-av">${initials}</div>
+      <div style="flex:1"><div class="member-name">${name}${m.user_id===myUserId?' (you)':''}</div></div>
+      <span class="role-badge ${m.role}">${m.role}</span>
+      ${isAdmin?`<div class="member-actions"><button class="btn-sm btn-remove" onclick="removeMember('${m.id}','${m.user_id}')">Remove</button></div>`:''}
+    </div>`;
+  }).join('')+'</div>';
+}
+
+async function loadPending(){
+  const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=*,profiles(full_name)`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const pending=await r.json();
+  const countEl=document.getElementById('pending-count');
+  countEl.textContent=pending.length||'';
+  countEl.style.display=pending.length?'inline':'none';
+  const list=document.getElementById('pending-list');
+  if(!pending.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">No pending requests.</div></div>';return;}
+  list.innerHTML='<div class="members-section"><div class="section-title">⏳ Pending Join Requests ('+pending.length+')</div><div class="member-list">'+pending.map(m=>{
+    const name=m.profiles?.full_name||'Unknown User';
+    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return`<div class="member-row">
+      <div class="member-av">${initials}</div>
+      <div style="flex:1"><div class="member-name">${name}</div></div>
+      <div class="member-actions">
+        <button class="btn-sm btn-approve" onclick="approveMember('${m.id}')">✅ Approve</button>
+        <button class="btn-sm btn-remove" onclick="rejectMember('${m.id}')">✕ Reject</button>
+      </div>
+    </div>`;
+  }).join('')+'</div></div>';
+}
+
+async function approveMember(id){
+  await fetch(`${SURL}/rest/v1/group_members?id=eq.${id}`,{method:'PATCH',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({status:'active'})});
+  loadPending();loadMembers();loadGroup();
+}
+async function rejectMember(id){
+  await fetch(`${SURL}/rest/v1/group_members?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  loadPending();
+}
+async function removeMember(id,userId){
+  if(!confirm('Remove this member from the group?'))return;
+  await fetch(`${SURL}/rest/v1/group_members?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  loadMembers();
+}
+
+function initMap(){
+  groupMap=L.map('group-map',{center:[28.5925,77.2190],zoom:14});
+  L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:21}).addTo(groupMap);
+  const trees=window._groupTrees||[];
+  if(!trees.length)return;
+  trees.forEach(t=>{
+    const color=SP_COL[t.common_name]||'#4a9e32';
+    const emoji=SP[t.common_name]||'🌳';
+    const size=18;
+    const icon=L.divIcon({className:'tree-pin',iconSize:[size*2,size*2],iconAnchor:[size,size],html:`<div style="width:${size*2}px;height:${size*2}px;border-radius:50%;background:${color};border:2px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;font-size:${size}px;line-height:1">${emoji}</div>`});
+    L.marker([t.latitude,t.longitude],{icon}).bindPopup(`<b>${t.common_name}</b><br><small>${t.submitted_by||'Anonymous'}</small>`).addTo(groupMap);
+  });
+  groupMap.fitBounds(L.latLngBounds(trees.map(t=>[t.latitude,t.longitude])),{padding:[40,40],maxZoom:16});
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='map'&&groupMap)setTimeout(()=>groupMap.invalidateSize(),100);
+}
+
+function copyInvite(){
+  const url=window.location.origin+'/join.html?token='+groupData.invite_token;
+  navigator.clipboard.writeText(url).then(()=>{const btn=event.target;const orig=btn.textContent;btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent=orig,2000);}).catch(()=>prompt('Copy this invite link:',url));
+}
+</script>
+</body>
+</html>
