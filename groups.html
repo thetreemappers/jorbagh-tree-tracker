@@ -212,7 +212,7 @@ async function createGroup(){
   try{
     const {data:{session}}=await SB.auth.getSession();
     // Create group
-    const r=await fetch(`${SURL}/rest/v1/groups`,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,description:document.getElementById('g-desc').value.trim()||null,cover_emoji:selectedEmoji,created_by:myUserId,is_public:selectedVis==='open'})});
+    const r=await fetch(`${SURL}/rest/v1/groups`,{method:'POST',headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify({name,description:document.getElementById('g-desc').value.trim()||null,cover_emoji:selectedEmoji,created_by:myUserId,is_public:selectedVis==='open',invite_token:crypto.randomUUID()})});
     if(!r.ok)throw new Error(await r.text());
     const [group]=await r.json();
     // Add creator as admin member
