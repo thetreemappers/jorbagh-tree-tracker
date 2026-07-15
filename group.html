@@ -248,7 +248,7 @@ async function loadMembers(){
     const isAdmin=myRole==='admin'&&!isMe;
     return`<div class="member-row">
       <div class="member-av" style="font-size:${isMe?'12px':'14px'}">${initials}</div>
-      <div style="flex:1"><div class="member-name">${name}</div>${p?.email&&!isMe?`<div class="member-email">${p.email}</div>`:''}</div>
+      <div style="flex:1"><div class="member-name">${name}</div>${myRole==='admin'&&p?.email&&!isMe?`<div class="member-email">${p.email}</div>`:''}</div>
       <span class="role-badge ${m.role}">${m.role}</span>
       ${isAdmin?`<div class="member-actions"><button class="btn-sm btn-remove" onclick="removeMember('${m.id}','${m.user_id}')">Remove</button></div>`:''}
     </div>`;
