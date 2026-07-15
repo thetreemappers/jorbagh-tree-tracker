@@ -226,19 +226,29 @@ async function loadTrees(){
     </div>`).join('')+'</div>';
 }
 
+async function fetchProfiles(userIds){
+  if(!userIds.length)return{};
+  const r=await fetch(`${SURL}/rest/v1/profiles?id=in.(${userIds.join(',')})&select=id,full_name,email`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
+  const profiles=await r.json();
+  const map={};profiles.forEach(p=>map[p.id]=p);
+  return map;
+}
+
 async function loadMembers(){
   const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.active&select=*&order=role.asc`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
   const members=await r.json();
   const list=document.getElementById('members-list');
   if(!members.length){list.innerHTML='<div class="empty-state"><div class="empty-state-text">No members yet.</div></div>';return;}
+  const profiles=await fetchProfiles(members.map(m=>m.user_id));
   list.innerHTML='<div class="member-list">'+members.map(m=>{
     const isMe=m.user_id===myUserId;
-    const initials=isMe?'ME':'👤';
-    const label=isMe?'You':'Member';
+    const p=profiles[m.user_id];
+    const name=isMe?'You':(p?.full_name||p?.email||'Member');
+    const initials=name==='You'?'ME':name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const isAdmin=myRole==='admin'&&!isMe;
     return`<div class="member-row">
-      <div class="member-av" style="font-size:${isMe?'12px':'18px'}">${initials}</div>
-      <div style="flex:1"><div class="member-name">${label}</div></div>
+      <div class="member-av" style="font-size:${isMe?'12px':'14px'}">${initials}</div>
+      <div style="flex:1"><div class="member-name">${name}</div>${p?.email&&!isMe?`<div class="member-email">${p.email}</div>`:''}</div>
       <span class="role-badge ${m.role}">${m.role}</span>
       ${isAdmin?`<div class="member-actions"><button class="btn-sm btn-remove" onclick="removeMember('${m.id}','${m.user_id}')">Remove</button></div>`:''}
     </div>`;
@@ -248,16 +258,19 @@ async function loadMembers(){
 async function loadPending(){
   const r=await fetch(`${SURL}/rest/v1/group_members?group_id=eq.${groupId}&status=eq.pending&select=*`,{headers:{'apikey':SKEY,'Authorization':'Bearer '+session.access_token}});
   const pending=await r.json();
-  console.log('PENDING REQUESTS:', JSON.stringify(pending));
   const countEl=document.getElementById('pending-count');
   countEl.textContent=pending.length||'';
   countEl.style.display=pending.length?'inline':'none';
   const list=document.getElementById('pending-list');
   if(!pending.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">No pending requests.</div></div>';return;}
-  list.innerHTML='<div class="members-section"><div class="section-title">⏳ Pending Join Requests ('+pending.length+')</div><div class="member-list">'+pending.map((m,i)=>{
+  const profiles=await fetchProfiles(pending.map(m=>m.user_id));
+  list.innerHTML='<div class="members-section"><div class="section-title">⏳ Pending Join Requests ('+pending.length+')</div><div class="member-list">'+pending.map(m=>{
+    const p=profiles[m.user_id];
+    const name=p?.full_name||p?.email||'Unknown';
+    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     return`<div class="member-row">
-      <div class="member-av" style="font-size:18px">👤</div>
-      <div style="flex:1"><div class="member-name">Member ${i+1}</div><div class="member-email" style="font-size:11px;color:var(--text3)">Waiting for approval</div></div>
+      <div class="member-av" style="font-size:14px">${initials}</div>
+      <div style="flex:1"><div class="member-name">${name}</div>${p?.email?`<div class="member-email">${p.email}</div>`:''}</div>
       <div class="member-actions">
         <button class="btn-sm btn-approve" onclick="approveMember('${m.id}')">✅ Approve</button>
         <button class="btn-sm btn-remove" onclick="rejectMember('${m.id}')">✕ Reject</button>
